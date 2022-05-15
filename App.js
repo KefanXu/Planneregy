@@ -19,24 +19,32 @@ import * as Font from "expo-font";
 const Stack = createNativeStackNavigator();
 
 export default class App extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      fontsLoaded: false,
+    };
+  }
 
   async loadFonts() {
     await Font.loadAsync({
-      RobotoBoldBlack: require("./assets/fonts/Roboto/Roboto-Black.ttf"),
-      RobotoBoldItalic: require("./assets/fonts/Roboto/Roboto-BlackItalic.ttf"),
+      "RobotoBoldBold": require("./assets/fonts/Roboto/Roboto-Bold.ttf"),
+      "RobotoBoldBlack": require("./assets/fonts/Roboto/Roboto-Black.ttf"),
+      "RobotoBoldItalic": require("./assets/fonts/Roboto/Roboto-BlackItalic.ttf"),
+      "RobotoRegular": require("./assets/fonts/Roboto/Roboto-Regular.ttf"),
     });
     this.setState({ fontsLoaded: true });
   }
 
   componentDidMount() {
     this.loadFonts();
-    
   }
 
   headerTitle = (headerName) => {
     let headerStyle = {
       gestureEnabled: false,
-      headerBackVisible:false,
+      headerBackVisible: false,
       title: headerName,
       headerShadowVisible: false,
       headerBackTitleVisible: false,
@@ -48,36 +56,42 @@ export default class App extends React.Component {
         fontWeight: "bold",
         color: "black",
         fontFamily: "RobotoBoldItalic",
-      }
-    }
+      },
+    };
     return headerStyle;
-  }
+  };
   render() {
-    return (
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="BeforeLoginScreen">
-        <Stack.Screen
-            options={{ headerShown: false }}
-            name="BeforeLoginScreen"
-            component={BeforeLoginScreen}
-          />
-          <Stack.Screen
-            options={{ headerShown: false }}
-            name="Login"
-            component={Login}
-          />
-          <Stack.Screen
-            options={this.headerTitle("Welcome to Planneregy Study")}
-            name="OnboardingScreen"
-            component={OnboardingScreen}
-          />
-          <Stack.Screen
-            options={{ headerShown: false }}
-            name="PlanOnCalendar"
-            component={PlanOnCalendar}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    );
+    console.log("this.state.fontsLoaded", this.state.fontsLoaded);
+    if (this.state.fontsLoaded) {
+      console.log("font loaded");
+      return (
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="OnboardingScreen">
+            <Stack.Screen
+              options={{ headerShown: false }}
+              name="BeforeLoginScreen"
+              component={BeforeLoginScreen}
+            />
+            <Stack.Screen
+              options={{ headerShown: false }}
+              name="Login"
+              component={Login}
+            />
+            <Stack.Screen
+              options={this.headerTitle("Welcome to Planneregy Study")}
+              name="OnboardingScreen"
+              component={OnboardingScreen}
+            />
+            <Stack.Screen
+              options={{ headerShown: false, gestureEnabled: false, }}
+              name="PlanOnCalendar"
+              component={PlanOnCalendar}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      );
+    } else {
+      return <Text>Loading</Text>;
+    }
   }
 }
