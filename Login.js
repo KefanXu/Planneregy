@@ -5,14 +5,16 @@ import { getDataModel } from "./DataModel";
 import { googleLoginConfig } from "./secret";
 import * as Google from "expo-auth-session/providers/google";
 import * as SecureStore from "expo-secure-store";
+import * as Location from "expo-location";
 
-export function Login(props) {
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+export function Login({navigation}) {
   const [request, response, promptAsync] =
     Google.useAuthRequest(googleLoginConfig);
   let auth;
   let dataModel = getDataModel();
-  const { navUserCenter, dismissLoginModal, saveSchedule, entry, alertSignIn } =
-    props;
   const [requestFrom, setRequestFrom] = React.useState("");
 
   React.useEffect(async () => {
@@ -35,9 +37,24 @@ export function Login(props) {
       if (Platform.OS !== "web") {
         // Securely store the auth on your device
         SecureStore.setItemAsync("USER_EMAIL", userEmail);
+        SecureStore.setItemAsync("ACCESS_TOKEN", accessToken);
+        navigation.navigate("OnboardingScreen", {userEmail: userEmail});
       }
     }
   }, [response]);
+
+  const fetchWeatherInfo = () => {
+    console.log("test function");
+  }
+  const getLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      console.log("Permission Denied");
+      return;
+    }
+    let location = await Location.getCurrentPositionAsync({});
+    return location;
+  };
 
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>

@@ -8,14 +8,6 @@ import { PlanOnCalendar } from "./PlanOnCalendar";
 import { BeforeLoginScreen } from "./BeforeLoginScreen";
 import * as Font from "expo-font";
 
-// function HomeScreen() {
-//   return (
-//     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-//       <Text>Home Screen</Text>
-//     </View>
-//   );
-// }
-
 const Stack = createNativeStackNavigator();
 
 export default class App extends React.Component {
@@ -66,7 +58,7 @@ export default class App extends React.Component {
       console.log("font loaded");
       return (
         <NavigationContainer>
-          <Stack.Navigator initialRouteName="OnboardingScreen">
+          <Stack.Navigator initialRouteName="Login">
             <Stack.Screen
               options={{ headerShown: false }}
               name="BeforeLoginScreen"

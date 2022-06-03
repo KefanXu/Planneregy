@@ -18,16 +18,31 @@ import PlanActivities from "./assets/svg/planActivities.svg";
 import SlidingUpPanelTxt from "./assets/svg/slideUpPanelTxt.svg";
 import SlidingUpPanelTxt2 from "./assets/svg/slideUpPanelTxt2.svg";
 import AddActivityBtn from "./assets/svg/addActivityBtn.svg";
+import SummarizePlanningStrategy from "./assets/svg/summarizePlanningStrategy.svg";
+import CalendarHeader from "./assets/svg/calendarHeader.svg";
+import Indicator from "./assets/svg/indicator.svg";
+
+import { Feather } from "@expo/vector-icons";
 
 import SlidingUpPanel from "rn-sliding-up-panel";
 import ModalSelector from "react-native-modal-selector";
 import { Ionicons } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { generalStyles } from "./styles/GeneralStyling";
+import Popover from "react-native-popover-view";
+
 import ChipsList from "react-native-expandable-chips-list";
 import SelectableChips from "react-native-chip/SelectableChips";
+import RemovableChips from "react-native-chip/RemovableChips";
+
 import Onboarding from "react-native-onboarding-swiper";
 import Swiper from "react-native-web-swiper";
+import Modal from "react-native-modal";
+import moment, { min } from "moment";
+
+import { MonthCalendar } from "./Calendar";
+import { generalStyles } from "./styles/GeneralStyling";
+
 // import Swiper from "react-native-swiper";
 
 let TEST_DATA = [
@@ -43,10 +58,22 @@ let TEST_DATA = [
 
 let TEST_DATA2 = [
   { title: "Light Exercise", id: 1 },
-  { title: "Light Exercise", id: 2 },
-  { title: "Light Exercise", id: 3 },
-  { title: "Light Exercise", id: 4 },
-  { title: "Light Exercise", id: 5 },
+  { title: "Moderate Exercise", id: 2 },
+  { title: "Intensive Exercise", id: 3 },
+  { title: "Morning", id: 4 },
+  { title: "Afternoon", id: 5 },
+  { title: "Home Workout", id: 6 },
+  { title: "Outdoor", id: 7 },
+  { title: "Gym", id: 8 },
+];
+
+let TEST_DATA3 = [
+  { title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 1 },
+  { title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 2 },
+  { title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 3 },
+  { title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 4 },
+  { title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 5 },
+  { title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 6 },
 ];
 
 export class PlanOnCalendar extends React.Component {
@@ -54,9 +81,31 @@ export class PlanOnCalendar extends React.Component {
     super(props);
     this.userEmail = this.props.route.params.userEmail;
     console.log("this.userEmail", this.userEmail);
-    this.state = {};
-  }
+    this.mainContentSwiperRef = React.createRef();
+    this.monthCalRef = React.createRef();
 
+    this.weeklyCalendarScrollViewRef = React.createRef();
+    this.state = {
+      panelHeight: 500,
+      isStrategyDetailModalVis: false,
+      isMonthCalendarModalVis: false,
+    };
+  }
+  componentDidMount() {
+    this.scrollToThisWeek();
+    // console.log("componentDidMount");
+  }
+  scrollToThisWeek = () => {
+    setTimeout(() => {
+      let currentRow = this.monthCalRef.current.getRowIndex();
+      this.weeklyCalendarScrollViewRef.current.scrollTo({
+        x: 0,
+        y: (currentRow - 1) * 144,
+        animated: true,
+      }),
+        1000;
+    });
+  };
   render() {
     let firstSlidePanelPage = (
       <View
@@ -480,7 +529,7 @@ export class PlanOnCalendar extends React.Component {
             },
           ]}
         >
-          <View
+          <TouchableOpacity
             style={{
               height: "100%",
               width: "80%",
@@ -492,6 +541,7 @@ export class PlanOnCalendar extends React.Component {
               paddingVertical: 10,
               justifyContent: "center",
             }}
+            onPress={() => this.setState({ isStrategyDetailModalVis: true })}
           >
             <View>
               <Text
@@ -521,6 +571,7 @@ export class PlanOnCalendar extends React.Component {
                           color: "black",
                           fontWeight: "bold",
                           color: "#1AB700",
+                          fontSize: 8,
                         }}
                       >
                         # {item.title}
@@ -530,7 +581,7 @@ export class PlanOnCalendar extends React.Component {
                 }}
               />
             </View>
-          </View>
+          </TouchableOpacity>
           <TouchableOpacity
             style={{
               height: "100%",
@@ -556,9 +607,415 @@ export class PlanOnCalendar extends React.Component {
         </View>
       </View>
     );
+    let planSetUpPage = (
+      <View
+        style={{
+          backgroundColor: "white",
+          width: "100%",
+          height: "100%",
+          justifyContent: "flex-start",
+          alignItems: "center",
+        }}
+      >
+        {/* Hearder */}
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 44,
+          }}
+        >
+          <PlanActivities height={28} width={150} />
+        </View>
+        {/* Body */}
+        <View
+          style={[
+            generalStyles.shadowStyle,
+            {
+              width: "98%",
+              height: "90%",
+              backgroundColor: "white",
+              marginTop: 24,
+              borderRadius: 20,
+              alignItems: "center",
+            },
+          ]}
+        >
+          {/* <TouchableOpacity
+            style={{
+              backgroundColor: "black",
+              borderRadius: 20,
+              width: "40%",
+              height: "5%",
+              justifyContent: "center",
+              alignContent: "center",
+            }}
+            onPress={() => this.weeklyCalendarScrollViewRef.current.scrollTo({ x: 0, y: (3-1)*144, animated: true })}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                color: "white",
+                fontWeight: "bold",
+                textAlign: "center",
+              }}
+            >
+              Month Calendar
+            </Text>
+          </TouchableOpacity> */}
+          <View
+            style={{
+              width: "100%",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: 15,
+              flexDirection: "row",
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text
+                style={{
+                  fontFamily: "RobotoBoldItalic",
+                  fontSize: 18,
+                  marginRight: 5,
+                }}
+              >
+                My Calendar
+              </Text>
+              <Popover
+                popoverStyle={{ borderRadius: 20 }}
+                from={
+                  <TouchableOpacity>
+                    <AntDesign name="infocirlce" size={18} color="black" />
+                  </TouchableOpacity>
+                }
+              >
+                <View
+                  style={{
+                    height: 30,
+                    width: 350,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 20,
+                    transform: [{ scale: 0.8 }],
+                  }}
+                >
+                  <Indicator height={22} width={330} />
+                </View>
+              </Popover>
+            </View>
+            <TouchableOpacity
+              style={{ backgroundColor: "black", borderRadius: 20, padding: 5 }}
+              onPress={() => this.scrollToThisWeek()}
+            >
+              <Text
+                style={{ color: "white", fontWeight: "bold", fontSize: 12 }}
+              >
+                Current Week
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <CalendarHeader height={15} width={333} />
+          <View
+            style={{
+              height: 145,
+              width: "100%",
+              padding: 4,
+              backgroundColor: "white",
+              borderRadius: 0,
+              borderColor: "#F0F0F0",
+              borderTopWidth: 1,
+              borderBottomWidth: 1,
+              marginBottom: 5,
+            }}
+          >
+            <ScrollView
+              style={{ width: "100%", height: "20%" }}
+              ref={this.weeklyCalendarScrollViewRef}
+            >
+              <MonthCalendar
+                ref={this.monthCalRef}
+                thisMonthEvents={[]}
+                monthCalCurrDate={new Date()}
+                weatherThisMonth={[]}
+                onPress={(item, monthNum, month) =>
+                  this.onPress(item, monthNum, month)
+                }
+              />
+            </ScrollView>
+          </View>
+          <View
+            style={{
+              width: "100%",
+              padding: 15,
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                flexDirection: "row",
+                justifyContent: "flex-start",
+                alignItems: "center",
+              }}
+            >
+              <AntDesign name="leftcircle" size={18} color="black" />
+
+              <Text
+                style={{
+                  color: "black",
+                  fontWeight: "bold",
+                  fontSize: 12,
+                  marginLeft: 5,
+                }}
+              >
+                Past Month
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flexDirection: "row",
+                justifyContent: "flex-end",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  color: "black",
+                  fontWeight: "bold",
+                  fontSize: 12,
+                  marginRight: 5,
+                }}
+              >
+                Next Month
+              </Text>
+              <AntDesign name="rightcircle" size={18} color="black" />
+            </TouchableOpacity>
+          </View>
+
+          <View
+            style={{
+              width: "100%",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              margin: 0,
+              padding: 15,
+            }}
+          >
+            <Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}>
+              Planned Activities
+            </Text>
+            <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 13 }}>
+              20 minutes remains
+            </Text>
+          </View>
+          <View style={{ width: "100%", height: 250, paddingHorizontal: 15 }}>
+            <FlatList
+              data={TEST_DATA3}
+              renderItem={({ item }) => {
+                return (
+                  <View
+                    style={[
+                      {
+                        width: "100%",
+                        height: 39,
+                        borderRadius: 20,
+                        borderColor: "#F0F0F0",
+                        borderWidth: 1,
+                        paddingHorizontal: 6,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginTop: 5,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "RobotoBoldBold",
+                        fontSize: 14,
+                        paddingLeft: 8,
+                      }}
+                    >
+                      {item.title}
+                    </Text>
+                    <Text style={{ fontFamily: "RobotoRegular", fontSize: 14 }}>
+                      {item.date}
+                    </Text>
+                    <Text style={{ fontFamily: "RobotoRegular", fontSize: 14 }}>
+                      {item.duration}
+                    </Text>
+                    <Ionicons name="md-close-circle" size={24} color="black" />
+                  </View>
+                );
+              }}
+            />
+          </View>
+        </View>
+      </View>
+    );
+    let summaryPage = (
+      <View
+        style={{
+          backgroundColor: "white",
+          width: "100%",
+          height: "100%",
+          justifyContent: "flex-start",
+          alignItems: "center",
+        }}
+      >
+        {/* Hearder */}
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 44,
+          }}
+        >
+          <SummarizePlanningStrategy height={28} width={300} />
+        </View>
+        {/* Body */}
+        <View
+          style={[
+            generalStyles.shadowStyle,
+            {
+              width: "98%",
+              height: "90%",
+              backgroundColor: "white",
+              marginTop: 24,
+              borderRadius: 20,
+            },
+          ]}
+        >
+          <View
+            style={{
+              width: "100%",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              padding: 15,
+            }}
+          >
+            <Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}>
+              Key Words of My Plans
+            </Text>
+            <Text
+              style={{
+                fontFamily: "RobotoBoldItalic",
+                fontSize: 14,
+                marginTop: 5,
+                color: "#676767",
+              }}
+            >
+              Add Keywords in the slide up panel
+            </Text>
+            {/* <FlatList
+            data={TEST_DATA2}
+            renderItem={({item}) => {
+              return(
+                <View style={{height:32, borderRadius:20, backgroundColor:"black", justifyContent:"center", alignSelf:"center", marginBottom:5,paddingHorizontal:10}}>
+                  <Text style={{fontFamily:"RobotoBoldBold", color:"white"}}>{item.title}</Text>
+                </View>
+              )
+            }}
+            /> */}
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                alignItems: "center",
+                marginTop: "5%",
+              }}
+            >
+              {TEST_DATA2.map((item) => {
+                return (
+                  <View
+                    style={{
+                      height: 32,
+                      borderRadius: 20,
+                      backgroundColor: "black",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      alignSelf: "center",
+                      marginBottom: 5,
+                      marginRight: 5,
+                      paddingHorizontal: 2,
+                      flexDirection: "row",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "RobotoBoldBold",
+                        color: "white",
+                        paddingHorizontal: 10,
+                      }}
+                    >
+                      {item.title}
+                    </Text>
+                    <Ionicons name="md-close-circle" size={24} color="white" />
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+    let finalConfirmationPage = (
+      <View
+        style={{
+          backgroundColor: "white",
+          width: "100%",
+          height: "100%",
+          justifyContent: "flex-start",
+          alignItems: "center",
+        }}
+      >
+        {/* Body */}
+        <View
+          style={[
+            generalStyles.shadowStyle,
+            {
+              width: "100%",
+              height: "100%",
+              backgroundColor: "white",
+              marginTop: 0,
+              borderRadius: 0,
+              justifyContent: "center",
+              alignItems: "center",
+            },
+          ]}
+        >
+          <Feather name="check-circle" size={32} color="black" />
+          <Text
+            style={{
+              fontFamily: "RobotoBoldItalic",
+              fontSize: 24,
+              marginTop: "5%",
+            }}
+          >
+            You are all set!
+          </Text>
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              marginTop: "5%",
+              width: "60%",
+              textAlign: "center",
+            }}
+          >
+            Click the{" "}
+            <Text style={{ fontFamily: "RobotoBoldItalic" }}>Start</Text> below
+            to start your first week of tracking
+          </Text>
+        </View>
+      </View>
+    );
     let slideUpPanel = (
       <SlidingUpPanel
-        draggableRange={{ top: 500, bottom: 160 }}
+        draggableRange={{ top: this.state.panelHeight, bottom: 160 }}
         showBackdrop={false}
         ref={(c) => (this._panel = c)}
       >
@@ -590,6 +1047,12 @@ export class PlanOnCalendar extends React.Component {
             <Swiper
               onIndexChanged={(index) => {
                 console.log("index changed", index);
+                this.mainContentSwiperRef.current.goTo(index);
+                if (index === 2) {
+                  this.setState({ panelHeight: 200 });
+                } else {
+                  this.setState({ panelHeight: 500 });
+                }
               }}
             >
               {firstSlidePanelPage}
@@ -603,6 +1066,7 @@ export class PlanOnCalendar extends React.Component {
         </View>
       </SlidingUpPanel>
     );
+
     return (
       // <KeyboardAvoidingView
       //   behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -617,30 +1081,151 @@ export class PlanOnCalendar extends React.Component {
           alignItems: "center",
         }}
       >
-        {/* Hearder */}
-        <View
+        {/* Plan Strategy Detail Modal */}
+        <Modal
+          propagateSwipe={true}
+          isVisible={this.state.isStrategyDetailModalVis}
           style={{
-            justifyContent: "center",
+            justifyContent: "flex-start",
             alignItems: "center",
-            marginTop: 44,
+            marginTop: "50%",
           }}
+          hasBackdrop={true}
+          backdropOpacity={0}
+          onBackdropPress={() =>
+            this.setState({ isStrategyDetailModalVis: false })
+          }
+          onSwipeComplete={() =>
+            this.setState({ isStrategyDetailModalVis: false })
+          }
+          swipeDirection="down"
         >
-          <PlanActivities height={28} width={150} />
-        </View>
-        {/* Body */}
-        <View
-          style={[
-            generalStyles.shadowStyle,
-            {
-              width: "95%",
-              height: "90%",
+          <View
+            style={[
+              generalStyles.shadowStyle,
+              {
+                width: "98%",
+                height: "50%",
+                borderRadius: 20,
+                backgroundColor: "white",
+              },
+            ]}
+          >
+            <Text
+              style={{
+                fontSize: 20,
+                fontFamily: "RobotoBoldItalic",
+                marginTop: "10%",
+                marginLeft: "10%",
+              }}
+            >
+              Morning Exercise Plan
+            </Text>
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: "RobotoRegular",
+                marginTop: "2%",
+                marginLeft: "10%",
+              }}
+            >
+              Start from
+            </Text>
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: "RobotoBoldBold",
+                marginTop: 0,
+                marginLeft: "10%",
+              }}
+            >
+              {moment(new Date()).format("MMM Do YY")}
+            </Text>
+            <View
+              style={{
+                height: 5,
+                width: "80%",
+                backgroundColor: "black",
+                marginHorizontal: "10%",
+                marginTop: "2%",
+              }}
+            ></View>
+            <ScrollView style={{ marginHorizontal: "10%", marginTop: "2%" }}>
+              <SelectableChips
+                initialChips={TEST_DATA}
+                chipStyle={{
+                  backgroundColor: "black",
+                  borderColor: "black",
+                  alignItems: "center",
+                  paddingHorizontal: 15,
+                  height: 26,
+                  marginTop: 5,
+                }}
+                valueStyle={{
+                  fontSize: 11,
+                  fontFamily: "RobotoBoldBlack",
+                  color: "white",
+                }}
+                chipStyleSelected={{
+                  backgroundColor: "black",
+                  borderColor: "black",
+                }}
+                onChangeChips={(chips) => console.log(chips)}
+                alertRequired={false}
+              />
+            </ScrollView>
+          </View>
+        </Modal>
+        {/* Monthly Calendar View */}
+        <Modal
+          propagateSwipe={true}
+          style={[generalStyles.shadowStyle, { alignItems: "center" }]}
+          isVisible={this.state.isMonthCalendarModalVis}
+          hasBackdrop={true}
+          backdropOpacity={0}
+          onBackdropPress={() =>
+            this.setState({ isMonthCalendarModalVis: false })
+          }
+          onSwipeComplete={() =>
+            this.setState({ isMonthCalendarModalVis: false })
+          }
+          swipeDirection="down"
+        >
+          <ScrollView
+            style={{
+              padding: "2%",
+              width: "100%",
+              height: "20%",
               backgroundColor: "white",
               marginTop: 24,
               borderRadius: 20,
-            },
-          ]}
-        ></View>
-        {/* SlideUpPanel */}
+            }}
+          >
+            <MonthCalendar
+              thisMonthEvents={[]}
+              monthCalCurrDate={new Date()}
+              weatherThisMonth={[]}
+              onPress={(item, monthNum, month) =>
+                this.onPress(item, monthNum, month)
+              }
+            />
+          </ScrollView>
+        </Modal>
+        {/* Body */}
+        <View style={{ height: "100%", width: "100%" }}>
+          <Swiper
+            gesturesEnabled={() => false}
+            ref={this.mainContentSwiperRef}
+            onIndexChanged={(index) => {
+              console.log("index changed", index);
+            }}
+          >
+            {planSetUpPage}
+            {summaryPage}
+            {finalConfirmationPage}
+          </Swiper>
+        </View>
+        {/* Slide Up Panel */}
         {slideUpPanel}
       </View>
     );
