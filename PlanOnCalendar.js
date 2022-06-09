@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState } from "react";
 import {
   TextInput,
   View,
@@ -11,9 +11,11 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   FlatList,
+  Alert,
 } from "react-native";
 import * as Font from "expo-font";
 
+//Load svg files
 import PlanActivities from "./assets/svg/planActivities.svg";
 import SlidingUpPanelTxt from "./assets/svg/slideUpPanelTxt.svg";
 import SlidingUpPanelTxt2 from "./assets/svg/slideUpPanelTxt2.svg";
@@ -22,25 +24,33 @@ import SummarizePlanningStrategy from "./assets/svg/summarizePlanningStrategy.sv
 import CalendarHeader from "./assets/svg/calendarHeader.svg";
 import Indicator from "./assets/svg/indicator.svg";
 
+//Load icon source
 import { Feather } from "@expo/vector-icons";
-
-import SlidingUpPanel from "rn-sliding-up-panel";
-import ModalSelector from "react-native-modal-selector";
 import { Ionicons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
+
+//Load interactive component libraries
+import SlidingUpPanel from "rn-sliding-up-panel";
+import ModalSelector from "react-native-modal-selector";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Popover from "react-native-popover-view";
+import Swiper from "react-native-web-swiper";
+import Modal from "react-native-modal";
+import FlashMessage from "react-native-flash-message";
+import { showMessage, hideMessage } from "react-native-flash-message";
 
+//Load layout component libraries
 import ChipsList from "react-native-expandable-chips-list";
 import SelectableChips from "react-native-chip/SelectableChips";
 import RemovableChips from "react-native-chip/RemovableChips";
-
 import Onboarding from "react-native-onboarding-swiper";
-import Swiper from "react-native-web-swiper";
-import Modal from "react-native-modal";
+
+//Load functional libraries
 import moment, { min } from "moment";
 
+//Load from other local components
 import { MonthCalendar } from "./Calendar";
+import { getDataModel } from "./DataModel";
 import { generalStyles } from "./styles/GeneralStyling";
 
 // import Swiper from "react-native-swiper";
@@ -79,22 +89,78 @@ let TEST_DATA3 = [
 export class PlanOnCalendar extends React.Component {
   constructor(props) {
     super(props);
+    //Load users' basic info from BeforeLoginScreen.js
     this.userEmail = this.props.route.params.userEmail;
-    console.log("this.userEmail", this.userEmail);
+    this.userKey = this.props.route.params.userInfo.key;
+    this.userPlans = this.props.route.params.userInfo.userPlans;
+    //Get data model
+    this.dataModel = getDataModel();
+
     this.mainContentSwiperRef = React.createRef();
     this.monthCalRef = React.createRef();
+    this.activityData = [];
+    this.index;
+
+    //Get event lists
+    this.eventsLastMonth = this.props.route.params.eventsLastMonth;
+    this.eventsThisMonth = this.props.route.params.eventsThisMonth;
+    this.eventsNextMonth = this.props.route.params.eventsNextMonth;
+    this.fullEventList = this.props.route.params.fullEventList;
+
+    this.combinedEventListThis = this.eventsThisMonth;
+    this.combinedEventListLast = this.eventsLastMonth;
+    this.combinedEventListNext = this.eventsNextMonth;
+    this.combineEventListFull = this.fullEventList;
+
+    //Process event lists and user defined activities
+    this.processUserEvents();
+    this.processUserDefinedActivities();
+
+    this.lastMonthWeather = this.props.route.params.lastMonthWeather;
+    this.thisMonthWeather = this.props.route.params.thisMonthWeather;
+    this.nextMonthWeather = this.props.route.params.nextMonthWeather;
 
     this.weeklyCalendarScrollViewRef = React.createRef();
     this.state = {
+      date: new Date(),
+
+      title: <PlanActivities height={28} width={150} />,
+      displayTitle: "flex",
+
       panelHeight: 500,
       isStrategyDetailModalVis: false,
       isMonthCalendarModalVis: false,
+      //Calendar event lists
+      eventsLastMonth: this.combinedEventListLast,
+      eventsThisMonth: this.combinedEventListThis,
+      eventsNextMonth: this.combinedEventListNext,
+      fullEventList: this.combineEventListFull,
+      //Calendar Month states
+      currentMonthEvents: this.combinedEventListThis,
+      currentWeatherLists: this.thisMonthWeather,
+      currentMonthDate: new Date(),
+      currentMonth: "THIS_MONTH",
+      pastMonthBtnDisabled: false,
+      nextMonthBtnDisabled: false,
+      //display the calendar view
+      displayCalView: "flex",
+      //Month name on calendar
+      currentMonthName: moment(new Date()).format("MMMM"),
+      //Data for the activity types popup window
+      activityData: this.activityData,
+      //check if the activity type is selected when the user hit the plan btn
+      isActivityTypeSelected: false,
+      //Selected activity
+      selectedActivity: "",
+      //Add new activity input field
     };
+    console.log("this.state.activityData", this.state.activityData);
   }
   componentDidMount() {
     this.scrollToThisWeek();
     // console.log("componentDidMount");
   }
+  //Click the "Current Week" and scroll to the current week
   scrollToThisWeek = () => {
     setTimeout(() => {
       let currentRow = this.monthCalRef.current.getRowIndex();
@@ -105,6 +171,200 @@ export class PlanOnCalendar extends React.Component {
       }),
         1000;
     });
+  };
+  processUserEvents = () => {
+    for (let event of this.userPlans) {
+      if (event.title && !event.isDeleted) {
+        if (
+          !this.combineEventListFull.includes(event) &&
+          !this.combineEventListFull.some(
+            (e) => e.timeStamp === event.timeStamp
+          )
+        ) {
+          this.combineEventListFull.push(event);
+        }
+
+        let monthNum = parseInt(event.end.slice(5, 7));
+        let currMonth = new Date();
+        if (monthNum === currMonth.getMonth() + 1) {
+          if (
+            !this.combinedEventListThis.includes(event) &&
+            !this.combinedEventListThis.some(
+              (e) => e.timeStamp === event.timeStamp
+            )
+          ) {
+            this.combinedEventListThis.push(event);
+          }
+        } else if (monthNum === currMonth.getMonth()) {
+          if (
+            !this.combinedEventListLast.includes(event) &&
+            !this.combinedEventListLast.some(
+              (e) => e.timeStamp === event.timeStamp
+            )
+          ) {
+            this.combinedEventListLast.push(event);
+          }
+        } else if (monthNum === currMonth.getMonth() + 2) {
+          if (
+            !this.combinedEventListNext.includes(event) &&
+            !this.combinedEventListNext.some(
+              (e) => e.timeStamp === event.timeStamp
+            )
+          ) {
+            this.combinedEventListNext.push(event);
+          }
+        }
+        //let plannedEvent = Object.assign({}, event);
+      }
+    }
+  };
+  //Process user defined activities
+  processUserDefinedActivities = () => {
+    this.activityData = [
+      { key: 1, section: true, label: "Physical Activities" },
+    ];
+    let activityList = this.props.route.params.userActivityList;
+    //console.log("activityList", activityList);
+    this.index = 1;
+    for (let activity of activityList) {
+      this.index++;
+      let activityObj = {
+        key: this.index,
+        label: activity,
+      };
+      this.activityData.push(activityObj);
+    }
+  };
+
+  pastMonthBtnPressed = async () => {
+    if (this.state.currentMonth === "THIS_MONTH") {
+      // console.log("past month pressed");
+      await this.setState({ currentMonth: "PAST_MONTH" });
+      await this.setState({
+        currentMonthEvents: this.combinedEventListLast,
+      });
+      await this.setState({
+        currentWeatherLists: this.lastMonthWeather,
+      });
+      // await this.setState({ pastMonthBtnDisabled: true });
+      await this.setState({
+        currentMonthDate: new Date(
+          this.state.date.getFullYear(),
+          this.state.date.getMonth() - 1,
+          15
+        ),
+      });
+      await this.setState({ pastMonthBtnDisabled: true });
+      await this.setState({ nextMonthBtnDisabled: false });
+      await this.setState({
+        currentMonthName: moment().subtract(1, "month").format("MMMM"),
+      });
+      this.monthCalRef.current.processEvents();
+    } else if (this.state.currentMonth === "NEXT_MONTH") {
+      this.resetCalendarToCurrentMonth();
+    }
+  };
+  nextMonthBtnPressed = async () => {
+    if (this.state.currentMonth === "THIS_MONTH") {
+      // console.log("past month pressed");
+      await this.setState({ currentMonth: "NEXT_MONTH" });
+      await this.setState({
+        currentMonthEvents: this.combinedEventListNext,
+      });
+      await this.setState({
+        currentWeatherLists: this.nextMonthWeather,
+      });
+      // await this.setState({ pastMonthBtnDisabled: true });
+      await this.setState({
+        currentMonthDate: new Date(
+          this.state.date.getFullYear(),
+          this.state.date.getMonth() + 1,
+          15
+        ),
+      });
+      await this.setState({ nextMonthBtnDisabled: true });
+      await this.setState({ pastMonthBtnDisabled: false });
+      await this.setState({
+        currentMonthName: moment().add(1, "month").format("MMMM"),
+      });
+
+      this.monthCalRef.current.processEvents();
+    } else if (this.state.currentMonth === "PAST_MONTH") {
+      this.resetCalendarToCurrentMonth();
+    }
+  };
+  addNewActivityBtnPressed = async () => {
+    let activityList = this.state.activityData;
+    if (this.state.userDefinedActivityText) {
+    }
+    if (
+      this.state.userDefinedActivityText === "" ||
+      typeof this.state.userDefinedActivityText === "undefined"
+    ) {
+      showMessage({
+        message: "Invalid Name",
+        description: "Activity name can't be empty",
+        type: "warning",
+        icon: "warning",
+      });
+      return;
+    }
+    this.index++;
+    let newActivity = {
+      key: this.index,
+      label: this.state.userDefinedActivityText,
+    };
+    for (let activity of activityList) {
+      let activityToLowerCase = activity.label.toLowerCase();
+      let newActivityToLowerCase =
+        this.state.userDefinedActivityText.toLowerCase();
+      if (activityToLowerCase === newActivityToLowerCase) {
+        showMessage({
+          message: "Activity already existed",
+          description: "Please add another activity instead",
+          type: "warning",
+          icon: "warning",
+        });
+        this.setState({ userDefinedActivityText: "" });
+        this.textInput.clear();
+        return;
+      }
+    }
+    activityList.push(newActivity);
+
+    await this.dataModel.updateUserActivities(
+      this.userKey,
+      this.state.userDefinedActivityText
+    );
+
+    showMessage({
+      message: "Activity Added",
+      description:
+        "The new activity " +
+        this.state.userDefinedActivityText +
+        " has been added to the list",
+      type: "success",
+      icon: "success",
+    });
+    await this.setState({ userDefinedActivityText: "" });
+    this.textInput.clear();
+  };
+  resetCalendarToCurrentMonth = async () => {
+    await this.setState({ currentMonth: "THIS_MONTH" });
+    await this.setState({
+      currentMonthEvents: this.combinedEventListThis,
+    });
+    await this.setState({
+      currentWeatherLists: this.thisMonthWeather,
+    });
+    await this.setState({
+      currentMonthDate: new Date(),
+    });
+    await this.setState({ nextMonthBtnDisabled: false });
+    await this.setState({ pastMonthBtnDisabled: false });
+    await this.setState({ currentMonthName: moment().format("MMMM") });
+
+    this.monthCalRef.current.processEvents();
   };
   render() {
     let firstSlidePanelPage = (
@@ -158,13 +418,20 @@ export class PlanOnCalendar extends React.Component {
               <ModalSelector
                 style={{ borderWidth: 0, borderRadius: 20 }}
                 // touchableStyle={{ color: "white" }}
-                optionContainerStyle={{ borderWidth: 0 }}
+                optionContainerStyle={{
+                  borderWidth: 0,
+                  backgroundColor: "white",
+                  borderColor: "grey",
+                  borderWidth: 2,
+                  borderRadius: 15,
+                }}
                 selectStyle={{ borderWidth: 0 }}
                 selectTextStyle={{
                   textAlign: "center",
                   color: "white",
                   fontWeight: "bold",
                   borderRadius: 20,
+                  fontSize: 12,
                 }}
                 initValueTextStyle={{
                   textAlign: "center",
@@ -172,7 +439,7 @@ export class PlanOnCalendar extends React.Component {
                   fontWeight: "bold",
                   backgroundColor: "black",
                   borderRadius: 20,
-                  fontSize: 14,
+                  fontSize: 12,
                 }}
                 backdropPressToClose={true}
                 overlayStyle={{
@@ -189,10 +456,11 @@ export class PlanOnCalendar extends React.Component {
                   borderRadius: 15,
                 }}
                 cancelTextStyle={{ fontWeight: "bold", color: "white" }}
-                // data={this.state.activityData}
+                data={this.state.activityData}
                 initValue={"Select Here"}
                 onChange={async (item) => {
-                  // this.setState({isActivityTypeSelected: true})
+                  this.setState({ isActivityTypeSelected: true });
+                  this.setState({ selectedActivity: item });
                   // await this.activityFilter(item);
                 }}
               />
@@ -233,6 +501,9 @@ export class PlanOnCalendar extends React.Component {
                   textAlign: "center",
                   fontFamily: "RobotoBoldItalic",
                 }}
+                ref={(input) => {
+                  this.textInput = input;
+                }}
                 placeholder="new activity"
                 value={this.state.userDefinedActivityText}
                 onChangeText={(text) =>
@@ -249,7 +520,7 @@ export class PlanOnCalendar extends React.Component {
               >
                 <TouchableOpacity
                   style={{ alignItems: "center", justifyContent: "center" }}
-                  onPress={async () => {}}
+                  onPress={this.addNewActivityBtnPressed}
                 >
                   <Ionicons
                     name="ios-add-circle"
@@ -475,9 +746,9 @@ export class PlanOnCalendar extends React.Component {
             }}
             placeholder="Add Keywords"
             value={this.state.userDefinedActivityText}
-            onChangeText={(text) =>
-              this.setState({ userDefinedActivityText: text })
-            }
+            onChangeText={(text) => {
+              this.setState({ userDefinedActivityText: text });
+            }}
           />
           <View
             style={{ margin: 1, width: 25, position: "absolute", right: 1 }}
@@ -610,190 +881,28 @@ export class PlanOnCalendar extends React.Component {
     let planSetUpPage = (
       <View
         style={{
-          backgroundColor: "white",
           width: "100%",
           height: "100%",
           justifyContent: "flex-start",
           alignItems: "center",
         }}
       >
-        {/* Hearder */}
-        <View
-          style={{
-            justifyContent: "center",
-            alignItems: "center",
-            marginTop: 44,
-          }}
-        >
-          <PlanActivities height={28} width={150} />
-        </View>
         {/* Body */}
         <View
           style={[
-            generalStyles.shadowStyle,
+            // generalStyles.shadowStyle,
             {
               width: "98%",
-              height: "90%",
+              height: "100%",
               backgroundColor: "white",
-              marginTop: 24,
+              marginTop: 4,
               borderRadius: 20,
+              borderColor:"grey",
+              borderRadius:2,
               alignItems: "center",
             },
           ]}
         >
-          {/* <TouchableOpacity
-            style={{
-              backgroundColor: "black",
-              borderRadius: 20,
-              width: "40%",
-              height: "5%",
-              justifyContent: "center",
-              alignContent: "center",
-            }}
-            onPress={() => this.weeklyCalendarScrollViewRef.current.scrollTo({ x: 0, y: (3-1)*144, animated: true })}
-          >
-            <Text
-              style={{
-                fontSize: 12,
-                color: "white",
-                fontWeight: "bold",
-                textAlign: "center",
-              }}
-            >
-              Month Calendar
-            </Text>
-          </TouchableOpacity> */}
-          <View
-            style={{
-              width: "100%",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: 15,
-              flexDirection: "row",
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text
-                style={{
-                  fontFamily: "RobotoBoldItalic",
-                  fontSize: 18,
-                  marginRight: 5,
-                }}
-              >
-                My Calendar
-              </Text>
-              <Popover
-                popoverStyle={{ borderRadius: 20 }}
-                from={
-                  <TouchableOpacity>
-                    <AntDesign name="infocirlce" size={18} color="black" />
-                  </TouchableOpacity>
-                }
-              >
-                <View
-                  style={{
-                    height: 30,
-                    width: 350,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 20,
-                    transform: [{ scale: 0.8 }],
-                  }}
-                >
-                  <Indicator height={22} width={330} />
-                </View>
-              </Popover>
-            </View>
-            <TouchableOpacity
-              style={{ backgroundColor: "black", borderRadius: 20, padding: 5 }}
-              onPress={() => this.scrollToThisWeek()}
-            >
-              <Text
-                style={{ color: "white", fontWeight: "bold", fontSize: 12 }}
-              >
-                Current Week
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <CalendarHeader height={15} width={333} />
-          <View
-            style={{
-              height: 145,
-              width: "100%",
-              padding: 4,
-              backgroundColor: "white",
-              borderRadius: 0,
-              borderColor: "#F0F0F0",
-              borderTopWidth: 1,
-              borderBottomWidth: 1,
-              marginBottom: 5,
-            }}
-          >
-            <ScrollView
-              style={{ width: "100%", height: "20%" }}
-              ref={this.weeklyCalendarScrollViewRef}
-            >
-              <MonthCalendar
-                ref={this.monthCalRef}
-                thisMonthEvents={[]}
-                monthCalCurrDate={new Date()}
-                weatherThisMonth={[]}
-                onPress={(item, monthNum, month) =>
-                  this.onPress(item, monthNum, month)
-                }
-              />
-            </ScrollView>
-          </View>
-          <View
-            style={{
-              width: "100%",
-              padding: 15,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                justifyContent: "flex-start",
-                alignItems: "center",
-              }}
-            >
-              <AntDesign name="leftcircle" size={18} color="black" />
-
-              <Text
-                style={{
-                  color: "black",
-                  fontWeight: "bold",
-                  fontSize: 12,
-                  marginLeft: 5,
-                }}
-              >
-                Past Month
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                justifyContent: "flex-end",
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{
-                  color: "black",
-                  fontWeight: "bold",
-                  fontSize: 12,
-                  marginRight: 5,
-                }}
-              >
-                Next Month
-              </Text>
-              <AntDesign name="rightcircle" size={18} color="black" />
-            </TouchableOpacity>
-          </View>
-
           <View
             style={{
               width: "100%",
@@ -808,10 +917,10 @@ export class PlanOnCalendar extends React.Component {
               Planned Activities
             </Text>
             <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 13 }}>
-              20 minutes remains
+              20/150 minutes remains
             </Text>
           </View>
-          <View style={{ width: "100%", height: 250, paddingHorizontal: 15 }}>
+          <View style={{ width: "100%", height: 280, paddingHorizontal: 15 }}>
             <FlatList
               data={TEST_DATA3}
               renderItem={({ item }) => {
@@ -866,25 +975,15 @@ export class PlanOnCalendar extends React.Component {
           alignItems: "center",
         }}
       >
-        {/* Hearder */}
-        <View
-          style={{
-            justifyContent: "center",
-            alignItems: "center",
-            marginTop: 44,
-          }}
-        >
-          <SummarizePlanningStrategy height={28} width={300} />
-        </View>
         {/* Body */}
         <View
           style={[
-            generalStyles.shadowStyle,
+            // generalStyles.shadowStyle,
             {
               width: "98%",
               height: "90%",
               backgroundColor: "white",
-              marginTop: 24,
+              marginTop: 4,
               borderRadius: 20,
             },
           ]}
@@ -1050,8 +1149,23 @@ export class PlanOnCalendar extends React.Component {
                 this.mainContentSwiperRef.current.goTo(index);
                 if (index === 2) {
                   this.setState({ panelHeight: 200 });
+                  this.setState({ displayCalView: "none" });
+                  this.setState({ displayTitle: "none" });
                 } else {
                   this.setState({ panelHeight: 500 });
+                  this.setState({ displayCalView: "flex" });
+                  this.setState({ displayTitle: "flex" });
+                  if (index === 1) {
+                    this.setState({
+                      title: (
+                        <SummarizePlanningStrategy height={28} width={300} />
+                      ),
+                    });
+                  } else if (index === 0) {
+                    this.setState({
+                      title: <PlanActivities height={28} width={150} />,
+                    });
+                  }
                 }
               }}
             >
@@ -1081,6 +1195,56 @@ export class PlanOnCalendar extends React.Component {
           alignItems: "center",
         }}
       >
+        <FlashMessage position="top" />
+
+        {/* title */}
+
+        <View
+          style={{
+            position: "absolute",
+            right: 15,
+            top: "5%",
+            height: 20,
+            width: 20,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Popover
+            popoverStyle={{ borderRadius: 20 }}
+            from={
+              <TouchableOpacity style={{ marginLeft: "5%" }}>
+                <AntDesign name="infocirlce" size={18} color="black" />
+              </TouchableOpacity>
+            }
+          >
+            <View
+              style={{
+                height: 30,
+                width: 350,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 20,
+                transform: [{ scale: 0.8 }],
+              }}
+            >
+              <Indicator height={22} width={330} />
+            </View>
+          </Popover>
+        </View>
+        <View
+          style={{
+            height: 28,
+            width: "50%",
+            marginTop: "10%",
+            alignItems: "center",
+            justifyContent: "center",
+            display: this.state.displayTitle,
+            flexDirection: "row",
+          }}
+        >
+          {this.state.title}
+        </View>
         {/* Plan Strategy Detail Modal */}
         <Modal
           propagateSwipe={true}
@@ -1176,50 +1340,151 @@ export class PlanOnCalendar extends React.Component {
             </ScrollView>
           </View>
         </Modal>
-        {/* Monthly Calendar View */}
-        <Modal
-          propagateSwipe={true}
-          style={[generalStyles.shadowStyle, { alignItems: "center" }]}
-          isVisible={this.state.isMonthCalendarModalVis}
-          hasBackdrop={true}
-          backdropOpacity={0}
-          onBackdropPress={() =>
-            this.setState({ isMonthCalendarModalVis: false })
-          }
-          onSwipeComplete={() =>
-            this.setState({ isMonthCalendarModalVis: false })
-          }
-          swipeDirection="down"
+        {/* Calendar View & Buttons */}
+        <View
+          style={{
+            width: "100%",
+            alignItems: "center",
+            display: this.state.displayCalView,
+            marginTop: 10,
+            backgroundColor: "white",
+          }}
         >
-          <ScrollView
+          <CalendarHeader height={15} width={333} />
+          <View
             style={{
-              padding: "2%",
+              height: 145,
               width: "100%",
-              height: "20%",
+              padding: 4,
               backgroundColor: "white",
-              marginTop: 24,
-              borderRadius: 20,
+              borderRadius: 0,
+              borderColor: "#F0F0F0",
+              borderTopWidth: 1,
+              borderBottomWidth: 1,
+              marginBottom: 5,
             }}
           >
-            <MonthCalendar
-              thisMonthEvents={[]}
-              monthCalCurrDate={new Date()}
-              weatherThisMonth={[]}
-              onPress={(item, monthNum, month) =>
-                this.onPress(item, monthNum, month)
-              }
-            />
-          </ScrollView>
-        </Modal>
-        {/* Body */}
-        <View style={{ height: "100%", width: "100%" }}>
-          <Swiper
-            gesturesEnabled={() => false}
-            ref={this.mainContentSwiperRef}
-            onIndexChanged={(index) => {
-              console.log("index changed", index);
+            <ScrollView
+              style={{ width: "100%", height: "20%" }}
+              ref={this.weeklyCalendarScrollViewRef}
+            >
+              <MonthCalendar
+                ref={this.monthCalRef}
+                thisMonthEvents={this.state.currentMonthEvents}
+                monthCalCurrDate={this.state.currentMonthDate}
+                weatherThisMonth={this.state.currentWeatherLists}
+                onPress={(item, monthNum, month) =>
+                  this.onPress(item, monthNum, month)
+                }
+              />
+            </ScrollView>
+            <View
+              style={{
+                position: "absolute",
+                right: 5,
+                bottom: "5%",
+                height: 20,
+                width: 20,
+                justifyContent: "center",
+                alignItems: "center",
+                // backgroundColor: "black",
+                width: 60,
+                height: 20,
+                borderRadius: 5,
+                flexDirection: "row",
+                opacity: 0.5,
+              }}
+            >
+              <Text
+                style={{
+                  color: "black",
+                  fontFamily: "RobotoBoldBlack",
+                  fontSize: 18,
+                }}
+              >
+                {this.state.currentMonthName}
+              </Text>
+              <View
+                style={{ width: 2, height: "100%", backgroundColor: "black" }}
+              ></View>
+            </View>
+          </View>
+
+          <View
+            style={{
+              width: "100%",
+              padding: 15,
+              flexDirection: "row",
+              justifyContent: "space-between",
             }}
           >
+            <TouchableOpacity
+              style={{
+                flexDirection: "row",
+                justifyContent: "flex-start",
+                alignItems: "center",
+              }}
+              disabled={this.state.pastMonthBtnDisabled}
+              onPress={this.pastMonthBtnPressed}
+            >
+              <AntDesign name="leftcircle" size={18} color="black" />
+
+              <Text
+                style={{
+                  color: "black",
+                  fontWeight: "bold",
+                  fontSize: 12,
+                  marginLeft: 5,
+                }}
+              >
+                Past Month
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                borderColor: "black",
+                paddingHorizontal: 15,
+                borderWidth: 2,
+                borderRadius: 20,
+                padding: 5,
+              }}
+              onPress={() => {
+                this.scrollToThisWeek();
+                this.resetCalendarToCurrentMonth();
+              }}
+            >
+              <Text
+                style={{ color: "black", fontWeight: "bold", fontSize: 12 }}
+              >
+                Current Week
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flexDirection: "row",
+                justifyContent: "flex-end",
+                alignItems: "center",
+              }}
+              disabled={this.state.nextMonthBtnDisabled}
+              onPress={this.nextMonthBtnPressed}
+            >
+              <Text
+                style={{
+                  color: "black",
+                  fontWeight: "bold",
+                  fontSize: 12,
+                  marginRight: 5,
+                }}
+              >
+                Next Month
+              </Text>
+              <AntDesign name="rightcircle" size={18} color="black" />
+            </TouchableOpacity>
+          </View>
+        </View>
+        {/* Body info */}
+        <View style={{ height: "100%", width: "100%", backgroundColor:"white" }}>
+          <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
             {planSetUpPage}
             {summaryPage}
             {finalConfirmationPage}

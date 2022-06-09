@@ -3,14 +3,16 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Checkbox, Colors, Button } from "react-native-ui-lib";
 import { getDataModel } from "./DataModel";
 import { googleLoginConfig } from "./secret";
+import { WEATHER_API_KEY } from "./secret";
 import * as Google from "expo-auth-session/providers/google";
 import * as SecureStore from "expo-secure-store";
 import * as Location from "expo-location";
+import moment, { min } from "moment";
 
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-export function Login({navigation}) {
+export function Login({ navigation }) {
   const [request, response, promptAsync] =
     Google.useAuthRequest(googleLoginConfig);
   let auth;
@@ -36,25 +38,28 @@ export function Login({navigation}) {
       console.log("userEmail", userEmail);
       if (Platform.OS !== "web") {
         // Securely store the auth on your device
-        SecureStore.setItemAsync("USER_EMAIL", userEmail);
-        SecureStore.setItemAsync("ACCESS_TOKEN", accessToken);
-        navigation.navigate("OnboardingScreen", {userEmail: userEmail});
+        let emailAddress = await SecureStore.getItemAsync("USER_EMAIL");
+        if (emailAddress) {
+          SecureStore.setItemAsync("ACCESS_TOKEN", accessToken);
+          navigation.navigate("BeforeLoginScreen", {
+            userEmail: userEmail,
+          });
+        } else {
+          await dataModel.createNewUser(userEmail);
+          let key = dataModel.getUserKey();
+          console.log("user key", key);
+          SecureStore.setItemAsync("USER_EMAIL", userEmail);
+          SecureStore.setItemAsync("ACCESS_TOKEN", accessToken);
+          SecureStore.setItemAsync("USER_KEY", key);
+
+          navigation.navigate("OnboardingScreen", {
+            userEmail: userEmail,
+            userKey: key,
+          });
+        }
       }
     }
   }, [response]);
-
-  const fetchWeatherInfo = () => {
-    console.log("test function");
-  }
-  const getLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      console.log("Permission Denied");
-      return;
-    }
-    let location = await Location.getCurrentPositionAsync({});
-    return location;
-  };
 
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>

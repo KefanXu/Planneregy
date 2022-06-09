@@ -27,7 +27,7 @@ export class OnboardingScreen extends React.Component {
       <View style={{ height: "100%", width: "100%" }}>
         <Onboarding
           onDone={() => {
-            this.props.navigation.navigate("PlanOnCalendar", {
+            this.props.navigation.navigate("BeforeLoginScreen", {
               // userEmail: this.state.userEmail,
             });
           }}

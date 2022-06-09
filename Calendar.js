@@ -25,7 +25,7 @@ const HIGHLIGHT_COLOR = "white";
 
 export class MonthCalendar extends React.Component {
   constructor(props) {
-    console.log("change detected");
+    // console.log("change detected");
     super(props);
     this.months = [
       "January",
@@ -89,7 +89,9 @@ export class MonthCalendar extends React.Component {
   }
   processEvents = () => {
     //console.log("ProcessEvents", this.state.thisMonthEvents);
-    console.log("ProcessEvents");
+    // console.log("ProcessEvents");
+    // console.log("monthCalCurrDate", this.state.activeDate);
+    // console.log("this.props.thisMonthEvents",this.props.thisMonthEvents);
     let eventListDates = [];
     for (let event of this.props.thisMonthEvents) {
       let dateNum = String(event.start).slice(8, 10);
@@ -383,15 +385,13 @@ export class MonthCalendar extends React.Component {
                 >
                   <Text
                     style={{
-                      flex: 1,
                       textAlign: "center",
                       alignSelf: "center",
-                      height: "100%",
                       justifyContent: "center",
                       alignContent: "center",
                       fontSize: 11.5,
 
-                      marginTop: "9%",
+                      // marginTop: "9%",
 
                       //backgroundColor: rowIndex == 0 ? "#ddd" : "",
                       // Highlight Sundays
@@ -403,7 +403,7 @@ export class MonthCalendar extends React.Component {
                           : "300",
                     }}
                   >
-                    {item != -1 ? item + iconEmoji : null}
+                    {item != -1 ? item + " " + iconEmoji : null}
                   </Text>
                 </View>
 
@@ -590,7 +590,6 @@ export class MonthCalendar extends React.Component {
                             alignItems: "center",
                             justifyContent: "center",
                             borderRadius: 5,
-                            flex: 1,
                           }}
                         >
                           <Text style={{ textAlign: "center", fontSize: 5 }}>
@@ -623,7 +622,7 @@ export class MonthCalendar extends React.Component {
                     flex: 1,
                     height: "100%",
                     alignItems: "flex-end",
-                    justifyContent: "flex-end",
+                    justifyContent: "flex-start",
                   }}
                 >
                   {flatEventListAfternoon.map((item) => {
@@ -763,12 +762,13 @@ export class MonthCalendar extends React.Component {
                         <View
                           style={{
                             width: "100%",
+                            // height:5,
                             backgroundColor: "grey",
                             borderRadius: 5,
                             alignItems: "center",
                             justifyContent: "center",
                             height: 10,
-                            flex: 1,
+                            // flex: 1,
                           }}
                         >
                           <Text style={{ textAlign: "center", fontSize: 5 }}>
