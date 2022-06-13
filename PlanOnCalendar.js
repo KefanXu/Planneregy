@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   FlatList,
+  Image,
   Alert,
 } from "react-native";
 import * as Font from "expo-font";
@@ -28,6 +29,7 @@ import Indicator from "./assets/svg/indicator.svg";
 import { Feather } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 
 //Load interactive component libraries
 import SlidingUpPanel from "rn-sliding-up-panel";
@@ -98,6 +100,7 @@ export class PlanOnCalendar extends React.Component {
 
     this.mainContentSwiperRef = React.createRef();
     this.monthCalRef = React.createRef();
+    this.panelSwiperRef = React.createRef();
     this.activityData = [];
     this.index;
 
@@ -152,9 +155,53 @@ export class PlanOnCalendar extends React.Component {
       isActivityTypeSelected: false,
       //Selected activity
       selectedActivity: "",
-      //Add new activity input field
+      //Check if user selected the date
+      isDateSelected: false,
+      //Selected Date
+      selectedDate: "",
+      //Check if user selected the start time
+      isStartTimeSelected: false,
+      //Check if user selected the start time
+      isEndTimeSelected: false,
+      //The date on "From"
+      startTime: new Date(),
+      //The date on "To"
+      endTime: new Date(),
+      //Check if user selected start time is valid
+      isStartTimeValid: false,
+      //Check if user selected end time is valid
+      isEndTimeValid: false,
+      //All the plans under this set up
+      plansBuddle: [],
+      //Visibility of content swiper under calendar view
+      mainContentSwiperDisplay: "flex",
+      //Visibility of the confirmation page
+      conformationPageDisplay: "none",
+      //Accumulate planning minutes,
+      accumulatedMinutes: 0,
+      //Keywords added from examples
+      keywordsListFromExample: [],
+      //Keywords added from user inout
+      keywordsListFromInput: [],
+      //User defined keywords:
+      keywordsBuddle: [],
+      //User defined plan strategy name
+      planStrategyName: "",
+      //Confirm page icon:
+      confirmPageIcon: (
+        <FontAwesome5 name="angle-double-right" size={32} color="black" />
+      ),
+      //Confirm page title
+      confirmPageTitle: "You are almost there",
+      //Confirm Page confirm btn display
+      confirmBtnDisplay: "flex",
+      //Confirm page confirm txt display
+      confirmTxtDisplay: "none",
+      //Panel display
+      swipeAblePanelDisplay: "flex",
+      thirdSlidePanelPageUpdatedDisplay: "none",
     };
-    console.log("this.state.activityData", this.state.activityData);
+    // console.log("this.state.activityData", this.state.activityData);
   }
   componentDidMount() {
     this.scrollToThisWeek();
@@ -235,7 +282,7 @@ export class PlanOnCalendar extends React.Component {
       this.activityData.push(activityObj);
     }
   };
-
+  //Change calendar when past month btn pressed
   pastMonthBtnPressed = async () => {
     if (this.state.currentMonth === "THIS_MONTH") {
       // console.log("past month pressed");
@@ -264,6 +311,7 @@ export class PlanOnCalendar extends React.Component {
       this.resetCalendarToCurrentMonth();
     }
   };
+  //Change calendar when next month btn pressed
   nextMonthBtnPressed = async () => {
     if (this.state.currentMonth === "THIS_MONTH") {
       // console.log("past month pressed");
@@ -293,6 +341,7 @@ export class PlanOnCalendar extends React.Component {
       this.resetCalendarToCurrentMonth();
     }
   };
+  //Add new activity to user's activity list
   addNewActivityBtnPressed = async () => {
     let activityList = this.state.activityData;
     if (this.state.userDefinedActivityText) {
@@ -349,6 +398,7 @@ export class PlanOnCalendar extends React.Component {
     await this.setState({ userDefinedActivityText: "" });
     this.textInput.clear();
   };
+  //reset calendar to current month
   resetCalendarToCurrentMonth = async () => {
     await this.setState({ currentMonth: "THIS_MONTH" });
     await this.setState({
@@ -366,6 +416,487 @@ export class PlanOnCalendar extends React.Component {
 
     this.monthCalRef.current.processEvents();
   };
+  //Validate the date user selected
+  pickTheDate = async (date) => {
+    let selectedDay = new Date(moment(date).format("YYYY-MM-DD"));
+    // console.log("selectedDay", selectedDay);
+    let today = new Date(moment(new Date()).format("YYYY-MM-DD"));
+
+    let endDay = new Date(moment(today).add(7, "days"));
+    // console.log("today", "endDay", today, endDay);
+    if (selectedDay > today && selectedDay <= endDay) {
+      await this.setState({ selectedDate: selectedDay });
+      console.log("selectedDate", this.state.selectedDate);
+      await this.setState({ isDateSelected: true });
+      showMessage({
+        message: "Date Selected",
+        description:
+          "The activity will be planned on " +
+          moment(date).format("YYYY-MM-DD"),
+        type: "success",
+        icon: "success",
+      });
+    } else {
+      showMessage({
+        message: "Invalid Date",
+        description: "Please select a date in the next 7 days",
+        type: "warning",
+        icon: "warning",
+      });
+    }
+  };
+  //Validate the start time user selected
+  pickStartTime = async (date) => {
+    this.setState({ isStartTimeSelected: true });
+    // await this.dateTimeFilter(date);
+    console.log("date", date);
+    if (date < this.state.endTime) {
+      await this.setState({ startTime: date });
+      await this.setState({ isStartTimeValid: true });
+      await this.setState({ isEndTimeValid: true });
+      showMessage({
+        message: "Start Time Confirmed",
+        description:
+          "The activity will start from " +
+          moment(this.state.startTime).format("HH:mm"),
+        type: "success",
+        icon: "success",
+      });
+    } else {
+      await this.setState({ startTime: date });
+      await this.setState({ isStartTimeValid: false });
+      showMessage({
+        message: "Invalid Time",
+        description: "The start time must come before the end time",
+        type: "warning",
+        icon: "warning",
+      });
+    }
+    // await this.setState({ endTime: date });
+    console.log("this.state.endTime", this.state.endTime);
+  };
+  //Validate the end time user selected
+  pickEndTime = async (date) => {
+    // this.setState({ isTimeSelected: true });
+    // await this.dateTimeFilter(date);
+    // await this.setState({startTime:date});
+    // console.log("end time", date);
+    this.setState({ isEndTimeSelected: true });
+    if (date > this.state.startTime) {
+      await this.setState({ endTime: date });
+      await this.setState({ isStartTimeValid: true });
+      await this.setState({ isEndTimeValid: true });
+      showMessage({
+        message: "End Time Confirmed",
+        description:
+          "The activity will end at " +
+          moment(this.state.endTime).format("HH:mm"),
+        type: "success",
+        icon: "success",
+      });
+    } else {
+      await this.setState({ endTime: date });
+      await this.setState({ isEndTimeValid: false });
+      showMessage({
+        message: "Invalid Time",
+        description: "The end time must come after the start time",
+        type: "warning",
+        icon: "warning",
+      });
+    }
+    // console.log("this.state.startTime",this.state.startTime);
+  };
+  //Plan the activity and show it on the calendar and the list view, update the new activity on Firebase
+  onPlanBtnPressed = async () => {
+    if (!(this.state.isStartTimeSelected && this.state.isEndTimeSelected)) {
+      showMessage({
+        message: "Please specify the time",
+        description: "You didn't pick the start or the end time",
+        type: "warning",
+        icon: "warning",
+      });
+      return;
+    }
+    if (!this.state.isDateSelected) {
+      showMessage({
+        message: "Please specify the date",
+        description: "The date field is empty",
+        type: "warning",
+        icon: "warning",
+      });
+      return;
+    }
+    if (!this.state.isActivityTypeSelected) {
+      showMessage({
+        message: "Please specify the activity first",
+        description: "The activity type field is empty",
+        type: "warning",
+        icon: "warning",
+      });
+      return;
+    }
+    if (!(this.state.isEndTimeValid && this.state.isStartTimeValid)) {
+      showMessage({
+        message: "Time range is not valid",
+        description: "Please reset the time range",
+        type: "warning",
+        icon: "warning",
+      });
+      return;
+    }
+    let selectedDate = this.state.selectedDate;
+    // console.log("selectedDate on pressed",selectedDate);
+    let isPlanDuplicated = false;
+    for (let event of this.userPlans) {
+      if (event.title && event.isDeleted === false) {
+        let eventDate = new Date(event.start);
+        if (
+          eventDate.getMonth() === selectedDate.getMonth() &&
+          eventDate.getDate() === selectedDate.getDate() + 1
+        ) {
+          console.log(
+            "eventDate.getDate(), selectedDate.getDate()",
+            eventDate.getDate(),
+            selectedDate.getDate()
+          );
+          console.log("isPlanDuplicated: event.title", event);
+          isPlanDuplicated = true;
+        }
+      }
+    }
+    if (isPlanDuplicated) {
+      showMessage({
+        message: "Please pick another day",
+        description: "Can't plan two activities on the same day",
+        type: "warning",
+        icon: "warning",
+      });
+      return;
+    }
+    let startTimeMinutes = moment(this.state.startTime).format("HH:mm:ss");
+    let endTimeMinutes = moment(this.state.endTime).format("HH:mm:ss");
+    console.log("selectedDate on pressed", selectedDate);
+    let formattedDate = moment(selectedDate)
+      .add(1, "days")
+      .format()
+      .slice(0, 11);
+    console.log("formattedDate on pressed", formattedDate);
+    let formattedStartTime = formattedDate + startTimeMinutes;
+    let formattedEndTime = formattedDate + endTimeMinutes;
+    let activityName = this.state.selectedActivity;
+
+    let newEvent = {
+      start: formattedStartTime,
+      end: formattedEndTime,
+      id: formattedStartTime + formattedEndTime,
+      isPlanned: "planned",
+      isReported: false,
+      isCompleted: false,
+      isDeleted: false,
+      color: "white",
+      title: activityName,
+    };
+
+    let timeStamp = moment(new Date()).format();
+    newEvent.timeStamp = timeStamp;
+
+    let weatherList = [];
+    // console.log("moment.getMonth(selectedDate)",moment(selectedDate).month());
+    // console.log("moment.getMonth(new Date())",moment(new Date()).month());
+    if (moment(selectedDate).month() === moment(new Date()).month()) {
+      weatherList = this.thisMonthWeather;
+    } else {
+      weatherList = this.nextMonthWeather;
+    }
+    // console.log("Date num", moment(selectedDate).date());
+    for (let weather of weatherList) {
+      // console.log("weather",weather);
+      if (weather.date === moment(selectedDate).date()) {
+        newEvent.weather = weather.text;
+        newEvent.temp = weather.temp;
+      }
+    }
+    console.log("new event", newEvent);
+    if (moment(selectedDate).month() === moment(new Date()).month()) {
+      this.combinedEventListThis.push(newEvent);
+      this.resetCalendarToCurrentMonth();
+    } else {
+      this.combinedEventListNext.push(newEvent);
+      this.nextMonthBtnPressed();
+    }
+
+    let duration = moment.duration(
+      moment(formattedEndTime).diff(moment(formattedStartTime))
+    );
+    let durationMinutes = parseInt(duration.asMinutes()) % 60;
+
+    newEvent.duration = durationMinutes;
+
+    let updatedPlanBundle = this.state.plansBuddle;
+    updatedPlanBundle.push(newEvent);
+
+    let currentMinutes = this.state.accumulatedMinutes;
+    let updatedMinutes = currentMinutes + durationMinutes;
+    this.setState({ accumulatedMinutes: updatedMinutes });
+
+    await this.setState({ plansBuddle: updatedPlanBundle });
+    console.log(this.state.plansBuddle);
+
+    showMessage({
+      message: "Activity Planned!",
+      description: activityName + " planned on " + formattedDate.slice(0, 10),
+      type: "success",
+      icon: "success",
+    });
+
+    newEvent.activityReminderKey = await this.dataModel.scheduleNotification(
+      newEvent
+    );
+
+    newEvent.reportReminderKey =
+      await this.dataModel.scheduleReportNotification(newEvent);
+
+    await this.dataModel.createNewPlan(this.userKey, newEvent);
+    await this.dataModel.loadUserPlans(this.userKey);
+    this.userPlans = this.dataModel.getUserPlans();
+    // console.log("date",date);
+  };
+  //Delete the selected activity and update it on Firebase
+  deleteActivity = async (selectedActivity) => {
+    // console.log("this.state.plansBuddle on delete",this.state.plansBuddle);
+    let deleteIndexInPlansBuddle;
+    for (let event of this.state.plansBuddle) {
+      if (event.timeStamp === selectedActivity.timeStamp) {
+        deleteIndexInPlansBuddle = this.state.plansBuddle.indexOf(event);
+      }
+    }
+    // console.log("deleteIndexInPlansBuddle",deleteIndexInPlansBuddle);
+    // let currentPlansBuddle = this.state.plansBuddle;
+    let updatedPlansBuddle = this.state.plansBuddle;
+    updatedPlansBuddle.splice(deleteIndexInPlansBuddle, 1);
+    // updatedPlansBuddle.splice(deleteIndexInPlansBuddle,1);
+    // console.log("updatedPlansBuddle",updatedPlansBuddle);
+    await this.setState({ plansBuddle: updatedPlansBuddle });
+    // console.log("this.state.plansBuddle",this.state.plansBuddle);
+
+    let currentMinutes = this.state.accumulatedMinutes;
+    let updatedMinutes = currentMinutes - selectedActivity.duration;
+    this.setState({ accumulatedMinutes: updatedMinutes });
+
+    selectedActivity.isDeleted = true;
+
+    for (let event of this.userPlans) {
+      if (event.timeStamp === selectedActivity.timeStamp) {
+        selectedActivity.key = event.key;
+        event.isDeleted = true;
+      }
+    }
+    // console.log("this.userPlans after delete 1",this.userPlans);
+    await this.dataModel.updatePlan(this.userKey, selectedActivity);
+    await this.dataModel.deleteReminders(selectedActivity);
+    let monthNum = parseInt(selectedActivity.start.slice(5, 7));
+
+    if (monthNum === this.state.date.getMonth() + 1) {
+      let deleteIndex;
+      //let deleteItem;
+      for (let event of this.combinedEventListThis) {
+        if (event.timeStamp === selectedActivity.timeStamp) {
+          deleteIndex = this.combinedEventListThis.indexOf(event);
+        }
+      }
+      this.combinedEventListThis.splice(deleteIndex, 1);
+      await this.setState({ eventsThisMonth: this.combinedEventListThis });
+    } else if (monthNum === this.state.date.getMonth() + 2) {
+      let deleteIndex;
+      for (let event of this.combinedEventListNext) {
+        if (event.timeStamp === selectedActivity.timeStamp) {
+          deleteIndex = this.combinedEventListNext.indexOf(event);
+        }
+      }
+      this.combinedEventListNext.splice(deleteIndex, 1);
+      await this.setState({ eventsNextMonth: this.combinedEventListNext });
+    }
+
+    if (moment(selectedActivity.start).month() === moment(new Date()).month()) {
+      this.resetCalendarToCurrentMonth();
+    } else {
+      this.nextMonthBtnPressed();
+    }
+    await this.dataModel.loadUserPlans(this.userKey);
+    this.userPlans = this.dataModel.getUserPlans();
+    showMessage({
+      message: "Activity Deleted!",
+      description: selectedActivity.title + " has been deleted",
+      type: "success",
+      icon: "success",
+    });
+    // console.log("this.userPlans after delete 2",this.userPlans);
+  };
+  //Add user defined keywords to the list
+  addKeywords = () => {
+    let newKeywordsRow = this.state.userDefinedKeywords;
+    if (newKeywordsRow) {
+      if (newKeywordsRow === "") {
+        showMessage({
+          message: "Invalid Name",
+          description: "keywords name can't be empty",
+          type: "warning",
+          icon: "warning",
+        });
+        return;
+      }
+      let newKeywords = { title: newKeywordsRow, type: "USER_DEFINED" };
+      this.KeyWordTextInput.clear();
+      this.setState({ userDefinedKeywords: "" });
+      let updatedKeywordsListFromInput = this.state.keywordsListFromInput;
+      for (let keywords of updatedKeywordsListFromInput) {
+        if (keywords.title.toLowerCase() === newKeywords.title.toLowerCase()) {
+          showMessage({
+            message: "Invalid Name",
+            description: "keywords already exists",
+            type: "warning",
+            icon: "warning",
+          });
+          return;
+        }
+      }
+      updatedKeywordsListFromInput.push(newKeywords);
+      this.setState({ keywordsListFromInput: updatedKeywordsListFromInput });
+
+      let updatedKeywordsBuddle = [];
+      for (let keywords of this.state.keywordsListFromExample) {
+        updatedKeywordsBuddle.push(keywords);
+      }
+      for (let keywords of updatedKeywordsListFromInput) {
+        updatedKeywordsBuddle.push(keywords);
+      }
+      this.setState({ keywordsBuddle: updatedKeywordsBuddle });
+      showMessage({
+        message: "Added keywords",
+        description: newKeywords.title + " added to keywords",
+        type: "success",
+        icon: "success",
+      });
+    } else {
+      showMessage({
+        message: "Invalid Name",
+        description: "keywords name can't be empty",
+        type: "warning",
+        icon: "warning",
+      });
+      return;
+    }
+  };
+  //Delete user defined keywords
+  deleteKeywords = (item) => {
+    let deleteIndex;
+    for (let keywords of this.state.keywordsListFromInput) {
+      if (keywords.title === item.title) {
+        deleteIndex = this.state.keywordsListFromInput.indexOf(keywords);
+      }
+    }
+    let updatedKeywordsListFromInput = this.state.keywordsListFromInput;
+    updatedKeywordsListFromInput.splice(deleteIndex, 1);
+    this.setState({
+      keywordsListFromInput: updatedKeywordsListFromInput,
+    });
+
+    let updatedKeywordsBuddle = [];
+    for (let keywords of this.state.keywordsListFromInput) {
+      updatedKeywordsBuddle.push(keywords);
+    }
+    for (let keywords of this.state.keywordsListFromExample) {
+      updatedKeywordsBuddle.push(keywords);
+    }
+    this.setState({
+      keywordsBuddle: updatedKeywordsBuddle,
+    });
+  };
+  //Modify keywords selected from examples
+  onChangeChips = (chips) => {
+    let updatedKeywordsListFromExample = [];
+    let updatedKeywordsBuddle = [];
+    for (let keywords of this.state.keywordsListFromInput) {
+      updatedKeywordsBuddle.push(keywords);
+    }
+    for (let keywords of chips) {
+      let keywordsObj = { title: keywords, type: "EXAMPLE" };
+      updatedKeywordsBuddle.push(keywordsObj);
+      updatedKeywordsListFromExample.push(keywordsObj);
+    }
+    this.setState({ keywordsBuddle: updatedKeywordsBuddle });
+    this.setState({
+      keywordsListFromExample: updatedKeywordsListFromExample,
+    });
+  };
+  //Fired when user presses the back btn on the last page
+  onBackBtnPressed = () => {
+    // this.setState({
+    //   confirmPageIcon: (
+    //     <FontAwesome5
+    //       name="angle-double-right"
+    //       size={32}
+    //       color="black"
+    //     />
+    //   ),
+    // });
+    // this.setState({ confirmPageTitle: "You are almost there!" });
+    // this.setState({ confirmBtnDisplay: "flex" });
+    // this.setState({ confirmTxtDisplay: "none" });
+    // this.setState({ swipeAblePanelDisplay: "flex" });
+    // this.setState({ thirdSlidePanelPageUpdatedDisplay: "none" });
+
+    this.setState({ mainContentSwiperDisplay: "flex" });
+    this.setState({ conformationPageDisplay: "none" });
+    this.mainContentSwiperRef.current.goToPage(1, true);
+    this.setState({ panelHeight: 500 });
+    this._panel.hide();
+    this.setState({ displayCalView: "flex" });
+    this.setState({ displayTitle: "flex" });
+    this.setState({
+      title: <SummarizePlanningStrategy height={28} width={300} />,
+    });
+    this.panelSwiperRef.current.goTo(1);
+  };
+  //Fired when user presses the confirm btn on the last page
+  onConfirmBtnPressed = async () => {
+    if (this.state.planStrategyName === "") {
+      showMessage({
+        message: "Invalid Name",
+        description: "plan strategy name can't be empty",
+        type: "warning",
+        icon: "warning",
+      });
+      return;
+    }
+
+    this.setState({
+      confirmPageIcon: <Feather name="check-circle" size={32} color="black" />,
+    });
+    this.setState({ confirmPageTitle: "You are all set!" });
+    this.setState({ confirmBtnDisplay: "none" });
+    this.setState({ confirmTxtDisplay: "flex" });
+    this.setState({ swipeAblePanelDisplay: "none" });
+    this.setState({ thirdSlidePanelPageUpdatedDisplay: "flex" });
+
+    let duration =
+      moment(new Date()).format("MMM Do YY") +
+      " " +
+      moment(new Date()).add(7, "days").format("MMM Do YY");
+
+    let newStrategy = {
+      title: this.state.planStrategyName,
+      duration: duration,
+      keywords: this.state.keywordsBuddle,
+      plans: this.state.plansBuddle,
+    };
+
+    await this.dataModel.addToUserDefinedPlanStrategyList(
+      this.userKey,
+      newStrategy
+    );
+  };
+
   render() {
     let firstSlidePanelPage = (
       <View
@@ -449,8 +980,14 @@ export class PlanOnCalendar extends React.Component {
                   backgroundColor: "rgba(0,0,0,0)",
                   borderRadius: 20,
                 }}
-                optionTextStyle={{ fontWeight: "bold" }}
-                sectionTextStyle={{ fontWeight: "bold" }}
+                optionTextStyle={{
+                  fontWeight: "bold",
+                  fontFamily: "RobotoBoldBlack",
+                }}
+                sectionTextStyle={{
+                  fontWeight: "bold",
+                  fontFamily: "RobotoBoldItalic",
+                }}
                 cancelStyle={{
                   backgroundColor: "black",
                   borderRadius: 15,
@@ -460,7 +997,7 @@ export class PlanOnCalendar extends React.Component {
                 initValue={"Select Here"}
                 onChange={async (item) => {
                   this.setState({ isActivityTypeSelected: true });
-                  this.setState({ selectedActivity: item });
+                  this.setState({ selectedActivity: item.label });
                   // await this.activityFilter(item);
                 }}
               />
@@ -549,8 +1086,8 @@ export class PlanOnCalendar extends React.Component {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            paddingHorizontal: "5%",
-            paddingVertical: "2%",
+            // paddingHorizontal: "5%",
+
             height: "20%",
             width: "90%",
             borderColor: "#DADADA",
@@ -566,10 +1103,11 @@ export class PlanOnCalendar extends React.Component {
               height: "100%",
               alignItems: "center",
               justifyContent: "space-between",
-              paddingVertical: 5,
               borderColor: "#F0F0F0",
-              borderRightColor: "#DADADA",
-              borderWidth: 2,
+              backgroundColor: "#DADADA",
+              paddingVertical: "4%",
+              borderBottomLeftRadius: 15,
+              borderTopLeftRadius: 15,
             }}
           >
             <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
@@ -581,7 +1119,7 @@ export class PlanOnCalendar extends React.Component {
                 alignItems: "center",
                 height: 40,
                 width: "100%",
-                backgroundColor: "#F0F0F0",
+                backgroundColor: "#DADADA",
                 borderRadius: 5,
               }}
             >
@@ -591,8 +1129,7 @@ export class PlanOnCalendar extends React.Component {
                 is24Hour={true}
                 display="default"
                 onChange={async (e, date) => {
-                  this.setState({ isTimeSelected: true });
-                  await this.dateTimeFilter(date);
+                  this.pickTheDate(date);
                 }}
                 style={{
                   width: 80,
@@ -608,7 +1145,7 @@ export class PlanOnCalendar extends React.Component {
               height: "100%",
               alignItems: "center",
               justifyContent: "space-between",
-              paddingVertical: 5,
+              paddingVertical: "4%",
             }}
           >
             <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
@@ -626,14 +1163,11 @@ export class PlanOnCalendar extends React.Component {
               }}
             >
               <DateTimePicker
-                value={new Date()}
+                value={this.state.startTime}
                 mode="time"
                 is24Hour={true}
                 display="default"
-                onChange={async (e, date) => {
-                  this.setState({ isTimeSelected: true });
-                  await this.dateTimeFilter(date);
-                }}
+                onChange={async (e, date) => this.pickStartTime(date)}
                 style={{
                   width: 90,
                   height: 40,
@@ -648,7 +1182,7 @@ export class PlanOnCalendar extends React.Component {
               height: "100%",
               alignItems: "center",
               justifyContent: "space-between",
-              paddingVertical: 5,
+              paddingVertical: "4%",
             }}
           >
             <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
@@ -666,14 +1200,11 @@ export class PlanOnCalendar extends React.Component {
               }}
             >
               <DateTimePicker
-                value={new Date()}
+                value={this.state.endTime}
                 mode="time"
                 is24Hour={true}
                 display="default"
-                onChange={async (e, date) => {
-                  this.setState({ isTimeSelected: true });
-                  await this.dateTimeFilter(date);
-                }}
+                onChange={async (e, date) => this.pickEndTime(date)}
                 style={{
                   width: 90,
                   height: 40,
@@ -683,7 +1214,7 @@ export class PlanOnCalendar extends React.Component {
             </View>
           </View>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => this.onPlanBtnPressed()}>
           <AddActivityBtn height={32} width={202} marginTop={"5%"} />
         </TouchableOpacity>
       </View>
@@ -717,7 +1248,7 @@ export class PlanOnCalendar extends React.Component {
               backgroundColor: "#1AB700",
               borderColor: "#1AB700",
             }}
-            onChangeChips={(chips) => console.log(chips)}
+            onChangeChips={(chips) => this.onChangeChips(chips)}
             alertRequired={false}
           />
         </View>
@@ -745,9 +1276,12 @@ export class PlanOnCalendar extends React.Component {
               fontFamily: "RobotoBoldItalic",
             }}
             placeholder="Add Keywords"
-            value={this.state.userDefinedActivityText}
+            ref={(input) => {
+              this.KeyWordTextInput = input;
+            }}
+            value={this.state.userDefinedKeywords}
             onChangeText={(text) => {
-              this.setState({ userDefinedActivityText: text });
+              this.setState({ userDefinedKeywords: text });
             }}
           />
           <View
@@ -759,7 +1293,7 @@ export class PlanOnCalendar extends React.Component {
                 justifyContent: "flex-end",
                 flex: 1,
               }}
-              onPress={async () => {}}
+              onPress={() => this.addKeywords()}
             >
               <Ionicons name="ios-add-circle" size={25} color={"black"} />
             </TouchableOpacity>
@@ -775,106 +1309,211 @@ export class PlanOnCalendar extends React.Component {
           height: "100%",
         }}
       >
-        <Text
+        <View
           style={{
-            fontFamily: "RobotoBoldItalic",
-            fontSize: 18,
-            marginTop: "5%",
+            alignItems: "center",
+            justifyContent: "flex-start",
             width: "80%",
-            textAlign: "center",
           }}
         >
-          Congrats! Here is your first planning strategy
-        </Text>
-        <View
-          style={[
-            generalStyles.shadowStyle,
-            {
-              height: 81,
-              width: 335,
-              borderColor: "black",
-              borderWidth: 2,
-              borderRadius: 20,
+          <View
+            style={{
               marginTop: "5%",
-              flexDirection: "row",
-            },
-          ]}
-        >
-          <TouchableOpacity
-            style={{
-              height: "100%",
               width: "80%",
-              borderTopLeftRadius: 20,
-              borderBottomLeftRadius: 20,
-              borderRightColor: "black",
-              borderRightWidth: 2,
-              paddingLeft: 20,
-              paddingVertical: 10,
-              justifyContent: "center",
-            }}
-            onPress={() => this.setState({ isStrategyDetailModalVis: true })}
-          >
-            <View>
-              <Text
-                style={{
-                  fontFamily: "RobotoBoldBlack",
-                  fontSize: 18,
-                  marginBottom: 5,
-                }}
-              >
-                Morning Exercise Plan
-              </Text>
-              <FlatList
-                horizontal={true}
-                data={TEST_DATA2}
-                renderItem={({ item }) => {
-                  return (
-                    <View
-                      style={{
-                        borderRadius: 20,
-                        backgroundColor: "#E7E7E7",
-                        marginRight: 2,
-                        padding: 5,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "black",
-                          fontWeight: "bold",
-                          color: "#1AB700",
-                          fontSize: 8,
-                        }}
-                      >
-                        # {item.title}
-                      </Text>
-                    </View>
-                  );
-                }}
-              />
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{
-              height: "100%",
-              width: "20%",
-              borderBottomRightRadius: 15,
-              borderTopRightRadius: 15,
-              backgroundColor: "black",
-              justifyContent: "center",
-              alignSelf: "center",
             }}
           >
             <Text
               style={{
                 fontFamily: "RobotoBoldItalic",
                 fontSize: 18,
-                color: "white",
                 textAlign: "center",
               }}
             >
-              Start
+              Your planning strategy will appear here:
             </Text>
-          </TouchableOpacity>
+          </View>
+          <View
+            style={[
+              // generalStyles.shadowStyle,
+              {
+                height: 81,
+                width: 335,
+                borderColor: "black",
+                // borderWidth: 2,
+                borderRadius: 20,
+                marginTop: "5%",
+                flexDirection: "row",
+                backgroundColor: "white",
+              },
+            ]}
+          >
+            <View
+              style={{
+                height: "100%",
+                width: "100%",
+                // borderTopLeftRadius: 20,
+                // borderBottomLeftRadius: 20,
+                // borderRightColor: "black",
+                // borderRightWidth: 2,
+                // paddingLeft: 20,
+                paddingVertical: 10,
+                justifyContent: "center",
+                backgroundColor: "white",
+              }}
+            >
+              <Image
+                source={require("./assets/loader.gif")}
+                style={{ width: "100%", height: "100%" }}
+              />
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+    let thirdSlidePanelPageUpdated = (
+      <View
+        style={{
+          alignItems: "center",
+          justifyContent: "flex-start",
+          height: "100%",
+        }}
+      >
+        <View
+          style={{
+            alignItems: "center",
+            justifyContent: "flex-start",
+            width: "80%",
+          }}
+        >
+          <View
+            style={{
+              marginTop: "5%",
+              width: "80%",
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "RobotoBoldItalic",
+                fontSize: 18,
+                textAlign: "center",
+              }}
+            >
+              Your planning strategy will appear here:
+            </Text>
+          </View>
+          <View
+            style={[
+              // generalStyles.shadowStyle,
+              {
+                height: 81,
+                width: 335,
+                borderColor: "black",
+                borderWidth: 2,
+                borderRadius: 20,
+                marginTop: "5%",
+                flexDirection: "row",
+                backgroundColor: "white",
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={{
+                height: "100%",
+                width: "80%",
+                borderTopLeftRadius: 20,
+                borderBottomLeftRadius: 20,
+                borderRightColor: "black",
+                borderRightWidth: 2,
+                paddingLeft: 20,
+                paddingVertical: 10,
+                justifyContent: "center",
+                backgroundColor: "white",
+              }}
+              onPress={() => this.setState({ isStrategyDetailModalVis: true })}
+            >
+              <View>
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontFamily: "RobotoBoldBlack",
+                      fontSize: 18,
+                      marginBottom: 5,
+                      marginRight: 10,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {this.state.planStrategyName}
+                  </Text>
+                  <Ionicons
+                    name="md-information-circle"
+                    size={24}
+                    color="black"
+                  />
+                </View>
+
+                {/* <FlatList
+                  horizontal={true}
+                  data={TEST_DATA2}
+                  renderItem={({ item }) => {
+                    return (
+                      <View
+                        style={{
+                          borderRadius: 20,
+                          backgroundColor: "#E7E7E7",
+                          marginRight: 2,
+                          padding: 5,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "black",
+                            fontWeight: "bold",
+                            color: "#1AB700",
+                            fontSize: 8,
+                          }}
+                        >
+                          # {item.title}
+                        </Text>
+                      </View>
+                    );
+                  }}
+                /> */}
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontFamily: "RobotoBoldBold",
+                    marginTop: 0,
+                  }}
+                >
+                  {moment(new Date()).format("MMM Do YY")} -{" "}
+                  {moment(new Date()).add(7, "days").format("MMM Do YY")}
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                height: "100%",
+                width: "20%",
+                borderBottomRightRadius: 15,
+                borderTopRightRadius: 15,
+                backgroundColor: "black",
+                justifyContent: "center",
+                alignSelf: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "RobotoBoldItalic",
+                  fontSize: 18,
+                  color: "white",
+                  textAlign: "center",
+                }}
+              >
+                Start
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
@@ -897,8 +1536,8 @@ export class PlanOnCalendar extends React.Component {
               backgroundColor: "white",
               marginTop: 4,
               borderRadius: 20,
-              borderColor:"grey",
-              borderRadius:2,
+              borderColor: "grey",
+              borderRadius: 2,
               alignItems: "center",
             },
           ]}
@@ -917,13 +1556,24 @@ export class PlanOnCalendar extends React.Component {
               Planned Activities
             </Text>
             <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 13 }}>
-              20/150 minutes remains
+              {this.state.accumulatedMinutes}/150 minutes remains
             </Text>
           </View>
           <View style={{ width: "100%", height: 280, paddingHorizontal: 15 }}>
             <FlatList
-              data={TEST_DATA3}
+              data={this.state.plansBuddle}
               renderItem={({ item }) => {
+                // console.log("items in plansBuddle", item);
+                let timing =
+                  moment(item.start).format("ddd").toUpperCase() +
+                  " " +
+                  item.start.slice(11, 16) +
+                  " - " +
+                  item.end.slice(11, 16) +
+                  " | " +
+                  item.duration +
+                  " MIN";
+
                 return (
                   <View
                     style={[
@@ -951,12 +1601,18 @@ export class PlanOnCalendar extends React.Component {
                       {item.title}
                     </Text>
                     <Text style={{ fontFamily: "RobotoRegular", fontSize: 14 }}>
-                      {item.date}
+                      {timing}
                     </Text>
                     <Text style={{ fontFamily: "RobotoRegular", fontSize: 14 }}>
-                      {item.duration}
+                      {/* {item.duration} */}
                     </Text>
-                    <Ionicons name="md-close-circle" size={24} color="black" />
+                    <TouchableOpacity onPress={() => this.deleteActivity(item)}>
+                      <Ionicons
+                        name="md-close-circle"
+                        size={24}
+                        color="black"
+                      />
+                    </TouchableOpacity>
                   </View>
                 );
               }}
@@ -1027,11 +1683,11 @@ export class PlanOnCalendar extends React.Component {
                 marginTop: "5%",
               }}
             >
-              {TEST_DATA2.map((item) => {
+              {this.state.keywordsBuddle.map((item) => {
                 return (
                   <View
                     style={{
-                      height: 32,
+                      height: 25,
                       borderRadius: 20,
                       backgroundColor: "black",
                       justifyContent: "space-between",
@@ -1045,14 +1701,29 @@ export class PlanOnCalendar extends React.Component {
                   >
                     <Text
                       style={{
-                        fontFamily: "RobotoBoldBold",
+                        fontFamily: "RobotoBoldBlack",
                         color: "white",
-                        paddingHorizontal: 10,
+                        paddingHorizontal: 20,
+                        fontSize: 12,
                       }}
                     >
                       {item.title}
                     </Text>
-                    <Ionicons name="md-close-circle" size={24} color="white" />
+                    <View
+                      style={{
+                        display: item.type === "EXAMPLE" ? "none" : "flex",
+                      }}
+                    >
+                      <TouchableOpacity
+                        onPress={(item) => this.deleteKeywords(item)}
+                      >
+                        <Ionicons
+                          name="md-close-circle"
+                          size={20}
+                          color="white"
+                        />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 );
               })}
@@ -1086,7 +1757,7 @@ export class PlanOnCalendar extends React.Component {
             },
           ]}
         >
-          <Feather name="check-circle" size={32} color="black" />
+          {this.state.confirmPageIcon}
           <Text
             style={{
               fontFamily: "RobotoBoldItalic",
@@ -1094,21 +1765,217 @@ export class PlanOnCalendar extends React.Component {
               marginTop: "5%",
             }}
           >
-            You are all set!
+            {this.state.confirmPageTitle}
           </Text>
-          <Text
+          <View
             style={{
-              fontFamily: "RobotoRegular",
-              fontSize: 14,
-              marginTop: "5%",
-              width: "60%",
-              textAlign: "center",
+              flexDirection: "column",
+              alignItems: "center",
+              display: this.state.confirmBtnDisplay,
             }}
           >
-            Click the{" "}
-            <Text style={{ fontFamily: "RobotoBoldItalic" }}>Start</Text> below
-            to start your first week of tracking
-          </Text>
+            <Text
+              style={{
+                fontFamily: "RobotoRegular",
+                fontSize: 14,
+                marginTop: "5%",
+                width: "80%",
+                textAlign: "center",
+              }}
+            >
+              Give a name to your plans:
+            </Text>
+            <View
+              style={{
+                backgroundColor: "white",
+                height: 32,
+                width: 200,
+                borderRadius: 20,
+                borderWidth: 2,
+                marginTop: 20,
+                borderColor: "black",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <TextInput
+                style={{
+                  fontSize: 14,
+                  width: "100%",
+                  textAlign: "center",
+                  fontFamily: "RobotoBoldItalic",
+                }}
+                placeholder="e.g. Morning Exercise Plan"
+                ref={(input) => {
+                  this.planStrategyInputRef = input;
+                }}
+                value={this.state.planStrategyName}
+                onChangeText={(text) => {
+                  this.setState({ planStrategyName: text });
+                }}
+              />
+            </View>
+            {/* Confirm btns */}
+            <View
+              style={{
+                flexDirection: "row",
+                marginTop: 20,
+                width: 205,
+                justifyContent: "space-between",
+              }}
+            >
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "black",
+                  height: 30,
+                  width: 100,
+                  borderRadius: 20,
+                  borderWidth: 2,
+                  borderColor: "black",
+                  marginRight: 0,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                }}
+                onPress={async () => this.onBackBtnPressed()}
+              >
+                <View
+                  style={{
+                    margin: 0,
+                    width: 25,
+                    position: "absolute",
+                    left: 1,
+                  }}
+                >
+                  <View
+                    style={{
+                      alignItems: "flex-start",
+                      justifyContent: "flex-start",
+                      flex: 1,
+                    }}
+                  >
+                    <Ionicons
+                      name="chevron-back-circle-sharp"
+                      size={25}
+                      color={"white"}
+                    />
+                  </View>
+                </View>
+                <View
+                  style={{
+                    margin: 0,
+                    width: 73,
+                    position: "absolute",
+                    right: 1,
+                  }}
+                >
+                  <View
+                    style={{
+                      alignItems: "flex-end",
+                      justifyContent: "flex-end",
+                      flex: 1,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        width: "100%",
+                        textAlign: "center",
+                        fontFamily: "RobotoBoldItalic",
+                        color: "white",
+                      }}
+                    >
+                      Back
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "black",
+                  height: 30,
+                  width: 100,
+                  borderRadius: 20,
+                  borderWidth: 2,
+                  borderColor: "black",
+                  marginRight: 0,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                }}
+                // OnConfirm
+                onPress={() => this.onConfirmBtnPressed()}
+              >
+                <View
+                  style={{
+                    margin: 0,
+                    width: 73,
+                    position: "absolute",
+                    left: 1,
+                  }}
+                >
+                  <View
+                    style={{
+                      alignItems: "flex-start",
+                      justifyContent: "flex-start",
+                      flex: 1,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        width: "100%",
+                        textAlign: "center",
+                        fontFamily: "RobotoBoldItalic",
+                        color: "white",
+                      }}
+                    >
+                      Confirm
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={{
+                    margin: 0,
+                    width: 25,
+                    position: "absolute",
+                    right: 1,
+                  }}
+                >
+                  <View
+                    style={{
+                      alignItems: "flex-end",
+                      justifyContent: "flex-end",
+                      flex: 1,
+                    }}
+                  >
+                    <Ionicons
+                      name="ios-checkmark-circle"
+                      size={25}
+                      color={"white"}
+                    />
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={{ width: "60%", display: this.state.confirmTxtDisplay }}>
+            <Text
+              style={{
+                fontFamily: "RobotoRegular",
+                fontSize: 14,
+                marginTop: "5%",
+
+                textAlign: "center",
+              }}
+            >
+              Click the{" "}
+              <Text style={{ fontFamily: "RobotoBoldItalic" }}>Start</Text>{" "}
+              below to start your first week of tracking
+            </Text>
+          </View>
         </View>
       </View>
     );
@@ -1141,18 +2008,44 @@ export class PlanOnCalendar extends React.Component {
               marginTop: 10,
             }}
           ></View>
+          <View
+            style={{
+              height: 470,
+              width: "100%",
+              display: this.state.thirdSlidePanelPageUpdatedDisplay,
+            }}
+          >
+            {thirdSlidePanelPageUpdated}
+          </View>
+
           {/* Swipable Body Content */}
-          <View style={{ height: 470, width: "100%" }}>
+          <View
+            style={{
+              height: 470,
+              width: "100%",
+              display: this.state.swipeAblePanelDisplay,
+            }}
+          >
+            {/* Swiper Control */}
             <Swiper
+              ref={this.panelSwiperRef}
               onIndexChanged={(index) => {
-                console.log("index changed", index);
-                this.mainContentSwiperRef.current.goTo(index);
+                // console.log("index changed", index);
+
                 if (index === 2) {
+                  // this.setState({ panelDisplay: "none" });
                   this.setState({ panelHeight: 200 });
                   this.setState({ displayCalView: "none" });
                   this.setState({ displayTitle: "none" });
+                  this.setState({ mainContentSwiperDisplay: "none" });
+                  this.setState({ conformationPageDisplay: "flex" });
+                  this._panel.show();
                 } else {
+                  this.setState({ mainContentSwiperDisplay: "flex" });
+                  this.setState({ conformationPageDisplay: "none" });
+                  this.mainContentSwiperRef.current.goToPage(index, true);
                   this.setState({ panelHeight: 500 });
+                  this._panel.hide();
                   this.setState({ displayCalView: "flex" });
                   this.setState({ displayTitle: "flex" });
                   if (index === 1) {
@@ -1283,17 +2176,7 @@ export class PlanOnCalendar extends React.Component {
                 marginLeft: "10%",
               }}
             >
-              Morning Exercise Plan
-            </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                fontFamily: "RobotoRegular",
-                marginTop: "2%",
-                marginLeft: "10%",
-              }}
-            >
-              Start from
+              {this.state.planStrategyName}
             </Text>
             <Text
               style={{
@@ -1303,7 +2186,8 @@ export class PlanOnCalendar extends React.Component {
                 marginLeft: "10%",
               }}
             >
-              {moment(new Date()).format("MMM Do YY")}
+              {moment(new Date()).format("MMM Do YY")} -{" "}
+              {moment(new Date()).add(7, "days").format("MMM Do YY")}
             </Text>
             <View
               style={{
@@ -1315,28 +2199,44 @@ export class PlanOnCalendar extends React.Component {
               }}
             ></View>
             <ScrollView style={{ marginHorizontal: "10%", marginTop: "2%" }}>
-              <SelectableChips
-                initialChips={TEST_DATA}
-                chipStyle={{
-                  backgroundColor: "black",
-                  borderColor: "black",
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
                   alignItems: "center",
-                  paddingHorizontal: 15,
-                  height: 26,
-                  marginTop: 5,
+                  marginTop: "5%",
                 }}
-                valueStyle={{
-                  fontSize: 11,
-                  fontFamily: "RobotoBoldBlack",
-                  color: "white",
-                }}
-                chipStyleSelected={{
-                  backgroundColor: "black",
-                  borderColor: "black",
-                }}
-                onChangeChips={(chips) => console.log(chips)}
-                alertRequired={false}
-              />
+              >
+                {this.state.keywordsBuddle.map((item) => {
+                  return (
+                    <View
+                      style={{
+                        height: 25,
+                        borderRadius: 20,
+                        backgroundColor: "black",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        alignSelf: "center",
+                        marginBottom: 5,
+                        marginRight: 5,
+                        paddingHorizontal: 2,
+                        flexDirection: "row",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: "RobotoBoldBlack",
+                          color: "white",
+                          paddingHorizontal: 20,
+                          fontSize: 12,
+                        }}
+                      >
+                        {item.title}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
             </ScrollView>
           </View>
         </Modal>
@@ -1348,6 +2248,7 @@ export class PlanOnCalendar extends React.Component {
             display: this.state.displayCalView,
             marginTop: 10,
             backgroundColor: "white",
+            marginBottom: 10,
           }}
         >
           <CalendarHeader height={15} width={333} />
@@ -1483,12 +2384,49 @@ export class PlanOnCalendar extends React.Component {
           </View>
         </View>
         {/* Body info */}
-        <View style={{ height: "100%", width: "100%", backgroundColor:"white" }}>
-          <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
+        <View
+          style={{
+            height: "100%",
+            width: "100%",
+            backgroundColor: "white",
+            display: this.state.conformationPageDisplay,
+          }}
+        >
+          {finalConfirmationPage}
+        </View>
+        <View
+          style={{
+            height: "100%",
+            width: "100%",
+            backgroundColor: "white",
+            display: this.state.mainContentSwiperDisplay,
+          }}
+        >
+          {/* <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
             {planSetUpPage}
             {summaryPage}
             {finalConfirmationPage}
-          </Swiper>
+          </Swiper> */}
+          <Onboarding
+            bottomBarHighlight={false}
+            ref={this.mainContentSwiperRef}
+            showSkip={false}
+            showNext={false}
+            pages={[
+              {
+                title: "",
+                subtitle: "",
+                backgroundColor: "white",
+                image: planSetUpPage,
+              },
+              {
+                title: "",
+                subtitle: "",
+                backgroundColor: "white",
+                image: summaryPage,
+              },
+            ]}
+          />
         </View>
         {/* Slide Up Panel */}
         {slideUpPanel}

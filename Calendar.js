@@ -476,7 +476,7 @@ export class MonthCalendar extends React.Component {
                                 justifyContent: "center",
                                 backgroundColor: GREEN,
                                 borderRadius: 5,
-                                flex: 1,
+                                // flex: 1,
                               }}
                             >
                               <Text
@@ -501,7 +501,7 @@ export class MonthCalendar extends React.Component {
                                   width: "100%",
                                   backgroundColor: YELLOW,
                                   borderRadius: 5,
-                                  flex: 1,
+                                  // flex: 1,
                                   height: 15,
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -529,7 +529,7 @@ export class MonthCalendar extends React.Component {
                                   width: "100%",
                                   backgroundColor: RED,
                                   borderRadius: 5,
-                                  flex: 1,
+                                  // flex: 1,
                                   height: 15,
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -564,7 +564,7 @@ export class MonthCalendar extends React.Component {
                               borderWidth: 1,
                               borderColor: "black",
                               borderRadius: 5,
-                              flex: 1,
+                              // flex: 1,
                             }}
                           >
                             <Text
@@ -650,7 +650,7 @@ export class MonthCalendar extends React.Component {
                                 width: "100%",
                                 backgroundColor: GREEN,
                                 borderRadius: 5,
-                                flex: 1,
+                                // flex: 1,
                                 height: 15,
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -682,7 +682,7 @@ export class MonthCalendar extends React.Component {
                                   alignItems: "center",
                                   justifyContent: "center",
                                   borderRadius: 5,
-                                  flex: 1,
+                                  // flex: 1,
                                 }}
                               >
                                 <Text
@@ -709,7 +709,7 @@ export class MonthCalendar extends React.Component {
                                   height: 15,
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  flex: 1,
+                                  // flex: 1,
                                 }}
                               >
                                 <Text
@@ -741,7 +741,7 @@ export class MonthCalendar extends React.Component {
                               borderWidth: 1,
                               borderColor: "black",
                               borderRadius: 5,
-                              flex: 1,
+                              // flex: 1,
                             }}
                           >
                             <Text

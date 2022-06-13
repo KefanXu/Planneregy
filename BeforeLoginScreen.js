@@ -20,16 +20,16 @@ export class BeforeLoginScreen extends React.Component {
       userEmail: "",
       data: {},
       isLoaderVis: false,
+      dataType:""
     };
     // this.checkIfUserExist();
   }
   //Get DataModel
   componentDidMount() {
-    setTimeout(() => {
-      this.setState({
-        isLoaderVis: !this.state.isLoaderVis,
-      });
-    }, 1000);
+    this.setState({
+      isLoaderVis: !this.state.isLoaderVis,
+    });
+
     this.dataModel = getDataModel();
 
     this.loadFonts();
@@ -81,13 +81,13 @@ export class BeforeLoginScreen extends React.Component {
       if (userDefineActivitiesNotExist) {
         await this.dataModel.createUserActivities(key);
       }
+      this.setState({dataType: "user activities"})
       let userActivityList = await this.dataModel.getUserActivities(key);
       // console.log("userActivityList",userActivityList);
       //Get user's plans made in the app
       await this.dataModel.loadUserPlans(key);
       let userPlans = this.dataModel.getUserPlans();
-      //Show the loader image
-      this.setState({ isLoaderVis: false });
+      
       //Object: user's basic
       let userInfo = {
         key: key,
@@ -97,7 +97,7 @@ export class BeforeLoginScreen extends React.Component {
       let lastMonthWeather;
       let thisMonthWeather;
       let nextMonthWeather;
-
+      this.setState({dataType: "weather"});
       [lastMonthWeather, thisMonthWeather, nextMonthWeather] =
         await this.fetchWeatherInfo(userPlans);
       console.log("weather fetched");
@@ -157,6 +157,7 @@ export class BeforeLoginScreen extends React.Component {
         nextMonthWeather: nextMonthWeather,
         userActivityList: userActivityList[0].activityList,
       });
+      this.setState({ isLoaderVis: false });
       await this.dataModel.updateWeatherInfo(key, weatherFullList);
       console.log("weather updated");
 
@@ -251,6 +252,7 @@ export class BeforeLoginScreen extends React.Component {
   };
 
   fetchWeatherInfo = async (userPlans) => {
+    this.setState({dataType: "location"});
     let location = await this.getLocation();
     let latitude = location.coords.latitude;
     let longitude = location.coords.longitude;
@@ -291,6 +293,7 @@ export class BeforeLoginScreen extends React.Component {
       }
       let isoPlanDate = moment(date).unix();
       let weatherHistoryURL = `http://history.openweathermap.org/data/2.5/history/city?lat=${latitude}&lon=${longitude}&type=hour&start=${isoPlanDate}&cnt=1&appid=${WEATHER_API_KEY}`;
+      this.setState({dataType: "historical weather "});
       let weatherHistoryResponse = await fetch(weatherHistoryURL);
       let weatherHistoryJSON = await weatherHistoryResponse.json();
       // console.log("WEATHER_API_KEY",WEATHER_API_KEY);
@@ -324,7 +327,7 @@ export class BeforeLoginScreen extends React.Component {
         lastMonthWeather.push(weatherImgList);
       }
     }
-
+    this.setState({dataType: "current weather"});
     let weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=imperial&appid=${WEATHER_API_KEY}`;
     let currWeatherResponse = await fetch(weatherURL);
     let weatherJson = await currWeatherResponse.json();
@@ -342,6 +345,8 @@ export class BeforeLoginScreen extends React.Component {
 
     let weatherForecastList = [];
     let weatherForecastURL = `http://api.openweathermap.org/data/2.5/forecast/daily?lat=${latitude}&lon=${longitude}&cnt=${16}&units=imperial&appid=${WEATHER_API_KEY}`;
+    this.setState({dataType: "future weather"});
+
     let weatherForecastResponse = await fetch(weatherForecastURL);
     let weatherForecastJSON = await weatherForecastResponse.json();
     // console.log("weatherForecastJSON",weatherForecastJSON);
@@ -394,7 +399,7 @@ export class BeforeLoginScreen extends React.Component {
           speed={1}
         >
           <Text style={{ fontWeight: "bold", textAlign: "center" }}>
-            fetching data...
+            fetching {this.state.dataType} data...
           </Text>
         </AnimatedLoader>
       </View>
