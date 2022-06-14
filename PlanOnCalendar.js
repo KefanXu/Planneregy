@@ -102,6 +102,7 @@ export class PlanOnCalendar extends React.Component {
     this.mainContentSwiperRef = React.createRef();
     this.monthCalRef = React.createRef();
     this.panelSwiperRef = React.createRef();
+    this.weeklyCalendarScrollViewRef = React.createRef();
     this.activityData = [];
     this.index;
     //Get today's date
@@ -128,7 +129,13 @@ export class PlanOnCalendar extends React.Component {
     this.thisMonthWeather = this.props.route.params.thisMonthWeather;
     this.nextMonthWeather = this.props.route.params.nextMonthWeather;
 
-    this.weeklyCalendarScrollViewRef = React.createRef();
+    //For detailed view
+    this.selectedWeatherIcon;
+    this.selectedWeatherTxt;
+    this.selectedTemp;
+    this.selectedEventDate;
+    this.detailViewCalendar = [];
+
     this.state = {
       date: new Date(),
 
@@ -919,6 +926,52 @@ export class PlanOnCalendar extends React.Component {
   };
   onPress = (item, monthNum, month) => {
     console.log("item, monthNum, month", item, monthNum, month);
+    let today = new Date();
+    let weatherList = [];
+    let detailViewCalendar = [];
+    let selectedEventDate = new Date(this.today.getFullYear(), monthNum, item);
+    this.selectedEventDate = selectedEventDate;
+    let formattedSelectedEventDate = moment(selectedEventDate)
+      .format()
+      .slice(0, 10);
+
+    if (monthNum === today.getMonth()) {
+      weatherList = this.thisMonthWeather;
+      for (let event of this.combinedEventListThis) {
+        if (event.start.slice(0, 10) === formattedSelectedEventDate) {
+          detailViewCalendar.push(event);
+        }
+      }
+    } else if (monthNum < today.getMonth()) {
+      weatherList = this.lastMonthWeather;
+      for (let event of this.combinedEventListLast) {
+        if (event.start.slice(0, 10) === formattedSelectedEventDate) {
+          detailViewCalendar.push(event);
+        }
+      }
+    } else {
+      weatherList = this.nextMonthWeather;
+      for (let event of this.combinedEventListNext) {
+        if (event.start.slice(0, 10) === formattedSelectedEventDate) {
+          detailViewCalendar.push(event);
+        }
+      }
+    }
+    for (let weather of weatherList) {
+      if (weather.date === item) {
+        this.selectedWeatherIcon = weather.img;
+        this.selectedTemp = weather.temp;
+        this.selectedWeatherTxt = weather.text;
+      }
+    }
+
+
+    // console.log(formattedSelectedEventDate);
+
+
+    this.detailViewCalendar = detailViewCalendar;
+    this.setState({ isPlanDetailModalVis: true });
+    console.log("detailViewCalendar", detailViewCalendar);
   };
 
   render() {
@@ -2338,13 +2391,14 @@ export class PlanOnCalendar extends React.Component {
           </View>
         </Modal>
         {/* Plan Detail View */}
-        {/* <Modal
+        <Modal
           propagateSwipe={true}
           isVisible={this.state.isPlanDetailModalVis}
           style={{
             justifyContent: "flex-start",
             alignItems: "center",
-            marginTop: "50%",
+            marginTop: 70,
+            marginBottom: 130,
           }}
           hasBackdrop={true}
           backdropOpacity={0}
@@ -2358,22 +2412,27 @@ export class PlanOnCalendar extends React.Component {
               alignItems: "center",
               justifyContent: "center",
               flexDirection: "column",
+              width: "100%",
+              height: "100%",
             }}
           >
             <View
-              style={{
-                flex: 0.9,
-                width: "95%",
-                backgroundColor: "white",
-                borderWidth: 2,
-                borderColor: "black",
-                flexDirection: "column",
-                justifyContent: "flex-start",
-                alignItems: "center",
-                borderRadius: 15,
-              }}
+              style={[
+                generalStyles.shadowStyle,
+                {
+                  flex: 1,
+                  width: "100%",
+                  backgroundColor: "white",
+                  // borderWidth: 2,
+                  borderColor: "black",
+                  flexDirection: "column",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                  borderRadius: 15,
+                },
+              ]}
             >
-              <View
+              {/* <View
                 style={{
                   flex: 0.06,
                   width: "100%",
@@ -2390,25 +2449,29 @@ export class PlanOnCalendar extends React.Component {
                       this.setState({ isPlanDetailModalVis: false })
                     }
                   >
-                    <AntDesign name="closecircle" size={24} color="black" />{" "}
+                    <AntDesign name="closecircle" size={24} color="black" />
                   </TouchableOpacity>
                 </View>
-              </View>
-              <View style={{ flex: 0.9, width: "90%" }}>
+              </View> */}
+              <View style={{ flex: 0.9, width: "100%" }}>
                 <View
-                  style={{
-                    flex: 0.2,
-                    width: "100%",
-                    backgroundColor: "white",
-                    borderWidth: 2,
-                    borderColor: "black",
-                    borderRadius: 15,
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
+                  style={[
+                    generalStyles.shadowStyle,
+                    {
+                      height: 80,
+                      marginTop: 0,
+                      width: "100%",
+                      backgroundColor: "white",
+                      // borderWidth: 2,
+                      borderColor: "black",
+                      borderRadius: 15,
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    },
+                  ]}
                 >
-                  <View
+                  {/* <View
                     style={{
                       flex: 0.4,
                       width: "90%",
@@ -2421,21 +2484,26 @@ export class PlanOnCalendar extends React.Component {
                       Records on {this.eventToday.title},{" "}
                       {this.state.detailViewTop}
                     </Text>
-                  </View>
+                  </View> */}
                   <View
-                    style={{
-                      flex: 0.7,
-                      width: "90%",
-                      marginTop: 0,
-                      marginLeft: 10,
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      flexDirection: "row",
-                      // backgroundColor: RED,
-                    }}
+                    style={[
+                      generalStyles.shadowStyle,
+                      {
+                        flex: 1,
+                        width: "90%",
+                        marginTop: 0,
+                        marginLeft: 10,
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexDirection: "row",
+                        // backgroundColor: RED,
+                      },
+                    ]}
                   >
-                    <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                      {WEEKDAY[new Date(this.eventToday.end).getDay()]}
+                    <Text
+                      style={{ fontSize: 18, fontFamily: "RobotoBoldBlack" }}
+                    >
+                      {WEEKDAY[new Date(this.selectedEventDate).getDay()]}
                     </Text>
                     <View
                       style={{
@@ -2448,26 +2516,46 @@ export class PlanOnCalendar extends React.Component {
                         source={{
                           uri:
                             "http://openweathermap.org/img/wn/" +
-                            this.state.detailViewIcon +
+                            this.selectedWeatherIcon +
                             ".png",
                         }}
                         style={{ width: 60, height: 60 }}
                       ></Image>
-                      <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                        {this.state.weatherText}
+                      <Text
+                        style={{ fontSize: 14, fontFamily: "RobotoBoldBlack" }}
+                      >
+                        {this.selectedWeatherTxt}
                       </Text>
                     </View>
-                    <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                      {this.state.detailViewTemp}°F
+                    <Text
+                      style={{ fontSize: 18, fontFamily: "RobotoBoldBlack" }}
+                    >
+                      {this.selectedTemp}°F
                     </Text>
                   </View>
                 </View>
-                <View style={{ flex: 1 }}>
+                <View
+                  style={[
+                    generalStyles.shadowStyle,
+                    {
+                      height: "100%",
+                      backgroundColor: "white",
+                      borderRadius: 20,
+                      marginTop: 15,
+                      marginBottom: 15,
+                      paddingVertical: 5,
+                    },
+                  ]}
+                >
                   <Calendar
-                    events={this.state.detailViewCalendar}
-                    date={new Date(this.eventToday.start)}
+                    events={this.detailViewCalendar}
+                    date={new Date(this.selectedEventDate)}
                     scrollOffsetMinutes={
-                      parseInt(this.eventToday.start.slice(11, 13)) * 60
+                      this.detailViewCalendar[0]
+                        ? (parseInt(
+                            this.detailViewCalendar[0].start.slice(11, 13)
+                          ) - 5) * 60
+                        : 0
                     }
                     swipeEnabled={false}
                     height={90}
@@ -2477,7 +2565,7 @@ export class PlanOnCalendar extends React.Component {
               </View>
             </View>
           </View>
-        </Modal> */}
+        </Modal>
         {/* Calendar View & Buttons */}
         <View
           style={{
