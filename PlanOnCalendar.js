@@ -36,10 +36,10 @@ import SlidingUpPanel from "rn-sliding-up-panel";
 import ModalSelector from "react-native-modal-selector";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Popover from "react-native-popover-view";
-import Swiper from "react-native-web-swiper";
 import Modal from "react-native-modal";
 import FlashMessage from "react-native-flash-message";
 import { showMessage, hideMessage } from "react-native-flash-message";
+import { Calendar } from "react-native-big-calendar";
 
 //Load layout component libraries
 import ChipsList from "react-native-expandable-chips-list";
@@ -87,6 +87,7 @@ let TEST_DATA3 = [
   { title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 5 },
   { title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 6 },
 ];
+const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export class PlanOnCalendar extends React.Component {
   constructor(props) {
@@ -103,6 +104,10 @@ export class PlanOnCalendar extends React.Component {
     this.panelSwiperRef = React.createRef();
     this.activityData = [];
     this.index;
+    //Get today's date
+    this.today = new Date();
+    this.startTime = this.today.setHours(8, 0, 0);
+    this.endTime = this.today.setHours(8, 30, 0);
 
     //Get event lists
     this.eventsLastMonth = this.props.route.params.eventsLastMonth;
@@ -163,14 +168,16 @@ export class PlanOnCalendar extends React.Component {
       isStartTimeSelected: false,
       //Check if user selected the start time
       isEndTimeSelected: false,
+      //The date on the date picker
+      dateTimePickerDate: new Date(),
       //The date on "From"
-      startTime: new Date(),
+      startTime: new Date(this.startTime),
       //The date on "To"
-      endTime: new Date(),
+      endTime: new Date(this.endTime),
       //Check if user selected start time is valid
-      isStartTimeValid: false,
+      isStartTimeValid: true,
       //Check if user selected end time is valid
-      isEndTimeValid: false,
+      isEndTimeValid: true,
       //All the plans under this set up
       plansBuddle: [],
       //Visibility of content swiper under calendar view
@@ -199,7 +206,10 @@ export class PlanOnCalendar extends React.Component {
       confirmTxtDisplay: "none",
       //Panel display
       swipeAblePanelDisplay: "flex",
+      //Plan created view visibility
       thirdSlidePanelPageUpdatedDisplay: "none",
+      //Event detail modal visibility
+      isPlanDetailModalVis: false,
     };
     // console.log("this.state.activityData", this.state.activityData);
   }
@@ -448,6 +458,8 @@ export class PlanOnCalendar extends React.Component {
   //Validate the start time user selected
   pickStartTime = async (date) => {
     this.setState({ isStartTimeSelected: true });
+    await this.setState({ endTime: date });
+
     // await this.dateTimeFilter(date);
     console.log("date", date);
     if (date < this.state.endTime) {
@@ -472,7 +484,6 @@ export class PlanOnCalendar extends React.Component {
         icon: "warning",
       });
     }
-    // await this.setState({ endTime: date });
     console.log("this.state.endTime", this.state.endTime);
   };
   //Validate the end time user selected
@@ -508,15 +519,15 @@ export class PlanOnCalendar extends React.Component {
   };
   //Plan the activity and show it on the calendar and the list view, update the new activity on Firebase
   onPlanBtnPressed = async () => {
-    if (!(this.state.isStartTimeSelected && this.state.isEndTimeSelected)) {
-      showMessage({
-        message: "Please specify the time",
-        description: "You didn't pick the start or the end time",
-        type: "warning",
-        icon: "warning",
-      });
-      return;
-    }
+    // if (!(this.state.isStartTimeSelected && this.state.isEndTimeSelected)) {
+    //   showMessage({
+    //     message: "Please specify the time",
+    //     description: "You didn't pick the start or the end time",
+    //     type: "warning",
+    //     icon: "warning",
+    //   });
+    //   return;
+    // }
     if (!this.state.isDateSelected) {
       showMessage({
         message: "Please specify the date",
@@ -546,33 +557,33 @@ export class PlanOnCalendar extends React.Component {
     }
     let selectedDate = this.state.selectedDate;
     // console.log("selectedDate on pressed",selectedDate);
-    let isPlanDuplicated = false;
-    for (let event of this.userPlans) {
-      if (event.title && event.isDeleted === false) {
-        let eventDate = new Date(event.start);
-        if (
-          eventDate.getMonth() === selectedDate.getMonth() &&
-          eventDate.getDate() === selectedDate.getDate() + 1
-        ) {
-          console.log(
-            "eventDate.getDate(), selectedDate.getDate()",
-            eventDate.getDate(),
-            selectedDate.getDate()
-          );
-          console.log("isPlanDuplicated: event.title", event);
-          isPlanDuplicated = true;
-        }
-      }
-    }
-    if (isPlanDuplicated) {
-      showMessage({
-        message: "Please pick another day",
-        description: "Can't plan two activities on the same day",
-        type: "warning",
-        icon: "warning",
-      });
-      return;
-    }
+    // let isPlanDuplicated = false;
+    // for (let event of this.userPlans) {
+    //   if (event.title && event.isDeleted === false) {
+    //     let eventDate = new Date(event.start);
+    //     if (
+    //       eventDate.getMonth() === selectedDate.getMonth() &&
+    //       eventDate.getDate() === selectedDate.getDate() + 1
+    //     ) {
+    //       console.log(
+    //         "eventDate.getDate(), selectedDate.getDate()",
+    //         eventDate.getDate(),
+    //         selectedDate.getDate()
+    //       );
+    //       console.log("isPlanDuplicated: event.title", event);
+    //       isPlanDuplicated = true;
+    //     }
+    //   }
+    // }
+    // if (isPlanDuplicated) {
+    //   showMessage({
+    //     message: "Please pick another day",
+    //     description: "Can't plan two activities on the same day",
+    //     type: "warning",
+    //     icon: "warning",
+    //   });
+    //   return;
+    // }
     let startTimeMinutes = moment(this.state.startTime).format("HH:mm:ss");
     let endTimeMinutes = moment(this.state.endTime).format("HH:mm:ss");
     console.log("selectedDate on pressed", selectedDate);
@@ -617,13 +628,6 @@ export class PlanOnCalendar extends React.Component {
       }
     }
     console.log("new event", newEvent);
-    if (moment(selectedDate).month() === moment(new Date()).month()) {
-      this.combinedEventListThis.push(newEvent);
-      this.resetCalendarToCurrentMonth();
-    } else {
-      this.combinedEventListNext.push(newEvent);
-      this.nextMonthBtnPressed();
-    }
 
     let duration = moment.duration(
       moment(formattedEndTime).diff(moment(formattedStartTime))
@@ -631,6 +635,20 @@ export class PlanOnCalendar extends React.Component {
     let durationMinutes = parseInt(duration.asMinutes()) % 60;
 
     newEvent.duration = durationMinutes;
+    newEvent.activityReminderKey = await this.dataModel.scheduleNotification(
+      newEvent
+    );
+
+    newEvent.reportReminderKey =
+      await this.dataModel.scheduleReportNotification(newEvent);
+
+    if (moment(selectedDate).month() === moment(new Date()).month()) {
+      this.combinedEventListThis.push(newEvent);
+      this.resetCalendarToCurrentMonth();
+    } else {
+      this.combinedEventListNext.push(newEvent);
+      this.nextMonthBtnPressed();
+    }
 
     let updatedPlanBundle = this.state.plansBuddle;
     updatedPlanBundle.push(newEvent);
@@ -649,31 +667,26 @@ export class PlanOnCalendar extends React.Component {
       icon: "success",
     });
 
-    newEvent.activityReminderKey = await this.dataModel.scheduleNotification(
-      newEvent
-    );
+    // await this.dataModel.createNewPlan(this.userKey, newEvent);
+    // await this.dataModel.loadUserPlans(this.userKey);
+    // this.userPlans = this.dataModel.getUserPlans();
 
-    newEvent.reportReminderKey =
-      await this.dataModel.scheduleReportNotification(newEvent);
-
-    await this.dataModel.createNewPlan(this.userKey, newEvent);
-    await this.dataModel.loadUserPlans(this.userKey);
-    this.userPlans = this.dataModel.getUserPlans();
     // console.log("date",date);
   };
   //Delete the selected activity and update it on Firebase
   deleteActivity = async (selectedActivity) => {
     // console.log("this.state.plansBuddle on delete",this.state.plansBuddle);
-    let deleteIndexInPlansBuddle;
+    // let deleteIndexInPlansBuddle;
     for (let event of this.state.plansBuddle) {
       if (event.timeStamp === selectedActivity.timeStamp) {
-        deleteIndexInPlansBuddle = this.state.plansBuddle.indexOf(event);
+        // deleteIndexInPlansBuddle = this.state.plansBuddle.indexOf(event);
+        event.isDeleted = true;
       }
     }
     // console.log("deleteIndexInPlansBuddle",deleteIndexInPlansBuddle);
     // let currentPlansBuddle = this.state.plansBuddle;
     let updatedPlansBuddle = this.state.plansBuddle;
-    updatedPlansBuddle.splice(deleteIndexInPlansBuddle, 1);
+    // updatedPlansBuddle.splice(deleteIndexInPlansBuddle, 1);
     // updatedPlansBuddle.splice(deleteIndexInPlansBuddle,1);
     // console.log("updatedPlansBuddle",updatedPlansBuddle);
     await this.setState({ plansBuddle: updatedPlansBuddle });
@@ -692,7 +705,7 @@ export class PlanOnCalendar extends React.Component {
       }
     }
     // console.log("this.userPlans after delete 1",this.userPlans);
-    await this.dataModel.updatePlan(this.userKey, selectedActivity);
+    // await this.dataModel.updatePlan(this.userKey, selectedActivity);
     await this.dataModel.deleteReminders(selectedActivity);
     let monthNum = parseInt(selectedActivity.start.slice(5, 7));
 
@@ -856,7 +869,7 @@ export class PlanOnCalendar extends React.Component {
     this.setState({
       title: <SummarizePlanningStrategy height={28} width={300} />,
     });
-    this.panelSwiperRef.current.goTo(1);
+    this.panelSwiperRef.current.goToPage(1, true);
   };
   //Fired when user presses the confirm btn on the last page
   onConfirmBtnPressed = async () => {
@@ -883,18 +896,29 @@ export class PlanOnCalendar extends React.Component {
       moment(new Date()).format("MMM Do YY") +
       " " +
       moment(new Date()).add(7, "days").format("MMM Do YY");
+    let timeStamp = moment(new Date()).format();
 
     let newStrategy = {
       title: this.state.planStrategyName,
       duration: duration,
       keywords: this.state.keywordsBuddle,
       plans: this.state.plansBuddle,
+      timeStamp: timeStamp,
     };
+
+    for (let event of this.state.plansBuddle) {
+      await this.dataModel.createNewPlan(this.userKey, event);
+    }
+    await this.dataModel.loadUserPlans(this.userKey);
+    this.userPlans = this.dataModel.getUserPlans();
 
     await this.dataModel.addToUserDefinedPlanStrategyList(
       this.userKey,
       newStrategy
     );
+  };
+  onPress = (item, monthNum, month) => {
+    console.log("item, monthNum, month", item, monthNum, month);
   };
 
   render() {
@@ -1014,7 +1038,7 @@ export class PlanOnCalendar extends React.Component {
             }}
           >
             <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
-              Add New Activity
+              Self-Defined Activity
             </Text>
             {/* Add New Activity Text Field */}
             <View
@@ -1124,12 +1148,13 @@ export class PlanOnCalendar extends React.Component {
               }}
             >
               <DateTimePicker
-                value={new Date()}
+                value={this.state.dateTimePickerDate}
                 mode="date"
                 is24Hour={true}
                 display="default"
                 onChange={async (e, date) => {
                   this.pickTheDate(date);
+                  this.setState({ dateTimePickerDate: date });
                 }}
                 style={{
                   width: 80,
@@ -1164,7 +1189,8 @@ export class PlanOnCalendar extends React.Component {
             >
               <DateTimePicker
                 value={this.state.startTime}
-                mode="time"
+                mode="spinner"
+                minuteInterval={10}
                 is24Hour={true}
                 display="default"
                 onChange={async (e, date) => this.pickStartTime(date)}
@@ -1201,7 +1227,8 @@ export class PlanOnCalendar extends React.Component {
             >
               <DateTimePicker
                 value={this.state.endTime}
-                mode="time"
+                mode="spinner"
+                minuteInterval={10}
                 is24Hour={true}
                 display="default"
                 onChange={async (e, date) => this.pickEndTime(date)}
@@ -1563,58 +1590,66 @@ export class PlanOnCalendar extends React.Component {
             <FlatList
               data={this.state.plansBuddle}
               renderItem={({ item }) => {
-                // console.log("items in plansBuddle", item);
-                let timing =
-                  moment(item.start).format("ddd").toUpperCase() +
-                  " " +
-                  item.start.slice(11, 16) +
-                  " - " +
-                  item.end.slice(11, 16) +
-                  " | " +
-                  item.duration +
-                  " MIN";
+                if (!item.isDeleted) {
+                  let timing =
+                    moment(item.start).format("ddd").toUpperCase() +
+                    " " +
+                    item.start.slice(11, 16) +
+                    " - " +
+                    item.end.slice(11, 16) +
+                    " | " +
+                    item.duration +
+                    " MIN";
 
-                return (
-                  <View
-                    style={[
-                      {
-                        width: "100%",
-                        height: 39,
-                        borderRadius: 20,
-                        borderColor: "#F0F0F0",
-                        borderWidth: 1,
-                        paddingHorizontal: 6,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginTop: 5,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "RobotoBoldBold",
-                        fontSize: 14,
-                        paddingLeft: 8,
-                      }}
+                  return (
+                    <View
+                      style={[
+                        {
+                          width: "100%",
+                          height: 39,
+                          borderRadius: 20,
+                          borderColor: "#F0F0F0",
+                          borderWidth: 1,
+                          paddingHorizontal: 6,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          marginTop: 5,
+                        },
+                      ]}
                     >
-                      {item.title}
-                    </Text>
-                    <Text style={{ fontFamily: "RobotoRegular", fontSize: 14 }}>
-                      {timing}
-                    </Text>
-                    <Text style={{ fontFamily: "RobotoRegular", fontSize: 14 }}>
-                      {/* {item.duration} */}
-                    </Text>
-                    <TouchableOpacity onPress={() => this.deleteActivity(item)}>
-                      <Ionicons
-                        name="md-close-circle"
-                        size={24}
-                        color="black"
-                      />
-                    </TouchableOpacity>
-                  </View>
-                );
+                      <Text
+                        style={{
+                          fontFamily: "RobotoBoldBold",
+                          fontSize: 14,
+                          paddingLeft: 8,
+                        }}
+                      >
+                        {item.title}
+                      </Text>
+                      <Text
+                        style={{ fontFamily: "RobotoRegular", fontSize: 14 }}
+                      >
+                        {timing}
+                      </Text>
+                      <Text
+                        style={{ fontFamily: "RobotoRegular", fontSize: 14 }}
+                      >
+                        {/* {item.duration} */}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => this.deleteActivity(item)}
+                      >
+                        <Ionicons
+                          name="md-close-circle"
+                          size={24}
+                          color="black"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                }
+                // console.log("items in plansBuddle", item);
               }}
             />
           </View>
@@ -2027,7 +2062,7 @@ export class PlanOnCalendar extends React.Component {
             }}
           >
             {/* Swiper Control */}
-            <Swiper
+            {/* <Swiper
               ref={this.panelSwiperRef}
               onIndexChanged={(index) => {
                 // console.log("index changed", index);
@@ -2065,7 +2100,69 @@ export class PlanOnCalendar extends React.Component {
               {firstSlidePanelPage}
               {secondSlidePanelPage}
               {thirdSlidePanelPage}
-            </Swiper>
+            </Swiper> */}
+            <Onboarding
+              // bottomBarHighlight={false}
+              // ref={this.mainContentSwiperRef}
+              containerStyles={{ justifyContent: "flex-start" }}
+              ref={this.panelSwiperRef}
+              imageContainerStyles={{ height: 550 }}
+              bottomBarHeight={30}
+              showSkip={false}
+              showNext={true}
+              bottomBarColor="white"
+              showDone={false}
+              pageIndexCallback={(index) => {
+                if (index === 2) {
+                  // this.setState({ panelDisplay: "none" });
+                  this.setState({ panelHeight: 200 });
+                  this.setState({ displayCalView: "none" });
+                  this.setState({ displayTitle: "none" });
+                  this.setState({ mainContentSwiperDisplay: "none" });
+                  this.setState({ conformationPageDisplay: "flex" });
+                  this._panel.show();
+                } else {
+                  this.setState({ mainContentSwiperDisplay: "flex" });
+                  this.setState({ conformationPageDisplay: "none" });
+                  this.mainContentSwiperRef.current.goToPage(index, true);
+                  this.setState({ panelHeight: 500 });
+                  this._panel.hide();
+                  this.setState({ displayCalView: "flex" });
+                  this.setState({ displayTitle: "flex" });
+                  if (index === 1) {
+                    this.setState({
+                      title: (
+                        <SummarizePlanningStrategy height={28} width={300} />
+                      ),
+                    });
+                  } else if (index === 0) {
+                    this.setState({
+                      title: <PlanActivities height={28} width={150} />,
+                    });
+                  }
+                }
+              }}
+              pages={[
+                {
+                  title: "",
+                  subtitle: "",
+                  backgroundColor: "white",
+                  image: firstSlidePanelPage,
+                },
+                {
+                  title: "",
+                  subtitle: "",
+                  backgroundColor: "white",
+                  image: secondSlidePanelPage,
+                },
+                {
+                  title: "",
+                  subtitle: "",
+                  backgroundColor: "white",
+                  image: thirdSlidePanelPage,
+                },
+              ]}
+            />
           </View>
           {/* {firstSlidePanelPage} */}
           {/* {secondSlidePanelPage} */}
@@ -2088,7 +2185,7 @@ export class PlanOnCalendar extends React.Component {
           alignItems: "center",
         }}
       >
-        <FlashMessage position="top" />
+        <FlashMessage position="bottom" />
 
         {/* title */}
 
@@ -2240,6 +2337,147 @@ export class PlanOnCalendar extends React.Component {
             </ScrollView>
           </View>
         </Modal>
+        {/* Plan Detail View */}
+        {/* <Modal
+          propagateSwipe={true}
+          isVisible={this.state.isPlanDetailModalVis}
+          style={{
+            justifyContent: "flex-start",
+            alignItems: "center",
+            marginTop: "50%",
+          }}
+          hasBackdrop={true}
+          backdropOpacity={0}
+          onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
+          onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
+          swipeDirection="down"
+        >
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column",
+            }}
+          >
+            <View
+              style={{
+                flex: 0.9,
+                width: "95%",
+                backgroundColor: "white",
+                borderWidth: 2,
+                borderColor: "black",
+                flexDirection: "column",
+                justifyContent: "flex-start",
+                alignItems: "center",
+                borderRadius: 15,
+              }}
+            >
+              <View
+                style={{
+                  flex: 0.06,
+                  width: "100%",
+                  flexDirection: "row",
+                  // backgroundColor:RED,
+
+                  justifyContent: "flex-end",
+                  alignItems: "flex-start",
+                }}
+              >
+                <View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      this.setState({ isPlanDetailModalVis: false })
+                    }
+                  >
+                    <AntDesign name="closecircle" size={24} color="black" />{" "}
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={{ flex: 0.9, width: "90%" }}>
+                <View
+                  style={{
+                    flex: 0.2,
+                    width: "100%",
+                    backgroundColor: "white",
+                    borderWidth: 2,
+                    borderColor: "black",
+                    borderRadius: 15,
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      flex: 0.4,
+                      width: "90%",
+                      marginTop: 10,
+                      marginLeft: 10,
+                      marginBottom: 0,
+                    }}
+                  >
+                    <Text style={{ fontSize: 15, fontWeight: "bold" }}>
+                      Records on {this.eventToday.title},{" "}
+                      {this.state.detailViewTop}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      flex: 0.7,
+                      width: "90%",
+                      marginTop: 0,
+                      marginLeft: 10,
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexDirection: "row",
+                      // backgroundColor: RED,
+                    }}
+                  >
+                    <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                      {WEEKDAY[new Date(this.eventToday.end).getDay()]}
+                    </Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Image
+                        source={{
+                          uri:
+                            "http://openweathermap.org/img/wn/" +
+                            this.state.detailViewIcon +
+                            ".png",
+                        }}
+                        style={{ width: 60, height: 60 }}
+                      ></Image>
+                      <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+                        {this.state.weatherText}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                      {this.state.detailViewTemp}°F
+                    </Text>
+                  </View>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Calendar
+                    events={this.state.detailViewCalendar}
+                    date={new Date(this.eventToday.start)}
+                    scrollOffsetMinutes={
+                      parseInt(this.eventToday.start.slice(11, 13)) * 60
+                    }
+                    swipeEnabled={false}
+                    height={90}
+                    mode="day"
+                  />
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal> */}
         {/* Calendar View & Buttons */}
         <View
           style={{

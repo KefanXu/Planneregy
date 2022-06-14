@@ -36,6 +36,7 @@
     "react-dom": "17.0.1",
     "react-native": "0.64.3",
     "react-native-animated-loader": "^0.0.9",
+    "react-native-big-calendar": "^3.2.0",
     "react-native-chip": "^2.1.8",
     "react-native-expandable-chips-list": "^1.0.4",
     "react-native-flash-message": "^0.2.1",
@@ -52,7 +53,6 @@
     "react-native-swiper": "^1.6.0",
     "react-native-ui-lib": "^6.13.2",
     "react-native-web": "0.17.1",
-    "react-native-web-swiper": "^2.2.3",
     "rn-sliding-up-panel": "^2.4.5"
   },
   "devDependencies": {

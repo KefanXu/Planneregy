@@ -65,7 +65,7 @@ export class MonthCalendar extends React.Component {
   }
 
   onPress = async (item) => {
-    console.log("item pressed");
+    console.log("item pressed",item);
     await this.props.onPress(
       item,
       this.props.monthCalCurrDate.getMonth(),
