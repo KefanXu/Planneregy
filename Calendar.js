@@ -15,6 +15,7 @@ import {
   Dimensions,
   FlatList,
 } from "react-native";
+import { generalStyles } from "./styles/GeneralStyling";
 
 import moment, { min } from "moment";
 const RED = "#EE442F";
@@ -356,19 +357,19 @@ export class MonthCalendar extends React.Component {
               }}
             >
               <TouchableOpacity
-                style={{
+                style={[{
                   flex: 0.2,
                   height: 18,
                   width: "95%",
                   flexDirection: "row",
                   backgroundColor: item != -1 ? "white" : "rgba(0,0,0,0)",
                   borderColor: item != -1 ? "#D8D8D8" : "rgba(0,0,0,0)",
-                  borderWidth: 2,
+                  borderWidth: 1,
                   borderRadius: 15,
                   marginTop: 2,
                   justifyContent: "center",
                   alignItems: "center",
-                }}
+                }]}
                 disabled={item === -1 ? true : false}
                 activeOpacity={0.1}
                 onPress={() => this.onPress(item)}
@@ -438,6 +439,8 @@ export class MonthCalendar extends React.Component {
                     width: "100%",
                     justifyContent: "flex-start",
                     alignItems: "flex-start",
+                    borderBottomWidth:1,
+                    borderBottomColor:"#D8D8D8",
                   }}
                 >
                   {/* <View

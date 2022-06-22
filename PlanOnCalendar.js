@@ -21,9 +21,10 @@ import PlanActivities from "./assets/svg/planActivities.svg";
 import SlidingUpPanelTxt from "./assets/svg/slideUpPanelTxt.svg";
 import SlidingUpPanelTxt2 from "./assets/svg/slideUpPanelTxt2.svg";
 import AddActivityBtn from "./assets/svg/addActivityBtn.svg";
-import SummarizePlanningStrategy from "./assets/svg/summarizePlanningStrategy.svg";
+import SummarizePlanningStrategy from "./assets/svg/Summarize.svg";
 import CalendarHeader from "./assets/svg/calendarHeader.svg";
 import Indicator from "./assets/svg/indicator.svg";
+import Guide from "./assets/svg/Guide.svg";
 
 //Load icon source
 import { Feather } from "@expo/vector-icons";
@@ -88,6 +89,28 @@ let TEST_DATA3 = [
   { title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 6 },
 ];
 const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const ICONS = {
+  "01d": "☀️",
+  "01n": "🌙",
+  "02d": "🌥",
+  "02n": "🌥",
+  "03d": "⛅️",
+  "03n": "⛅️",
+  "04d": "☁️",
+  "04n": "☁️",
+  "09d": "🌧",
+  "09n": "🌧",
+  "10d": "🌧",
+  "10n": "🌧",
+  "11d": "⛈",
+  "11n": "⛈",
+  "13d": "❄️",
+  "13n": "❄️",
+  "50d": "💨",
+  "50n": "💨",
+  arrow: "",
+  unknown: "",
+};
 
 export class PlanOnCalendar extends React.Component {
   constructor(props) {
@@ -874,7 +897,7 @@ export class PlanOnCalendar extends React.Component {
     this.setState({ displayCalView: "flex" });
     this.setState({ displayTitle: "flex" });
     this.setState({
-      title: <SummarizePlanningStrategy height={28} width={300} />,
+      title: <SummarizePlanningStrategy height={28} width={119} />,
     });
     this.panelSwiperRef.current.goToPage(1, true);
   };
@@ -923,6 +946,7 @@ export class PlanOnCalendar extends React.Component {
       this.userKey,
       newStrategy
     );
+    this.dataModel.createDailyNotifications();
   };
   onPress = (item, monthNum, month) => {
     console.log("item, monthNum, month", item, monthNum, month);
@@ -965,9 +989,7 @@ export class PlanOnCalendar extends React.Component {
       }
     }
 
-
     // console.log(formattedSelectedEventDate);
-
 
     this.detailViewCalendar = detailViewCalendar;
     this.setState({ isPlanDetailModalVis: true });
@@ -2081,7 +2103,7 @@ export class PlanOnCalendar extends React.Component {
               justifyContent: "flex-start",
               flexDirection: "column",
               alignItems: "center",
-              borderRadius: 40,
+              borderRadius: 20,
               backgroundColor: "white",
             },
           ]}
@@ -2185,7 +2207,7 @@ export class PlanOnCalendar extends React.Component {
                   if (index === 1) {
                     this.setState({
                       title: (
-                        <SummarizePlanningStrategy height={28} width={300} />
+                        <SummarizePlanningStrategy height={28} width={119} />
                       ),
                     });
                   } else if (index === 0) {
@@ -2241,7 +2263,34 @@ export class PlanOnCalendar extends React.Component {
         <FlashMessage position="bottom" />
 
         {/* title */}
-
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            top: "5%",
+            height: 28,
+            width: 79,
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#D9D9D9",
+            borderBottomRightRadius: 20,
+            borderTopRightRadius: 20,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "RobotoBoldItalic",
+              color: "white",
+              textAlign: "center",
+              fontSize:18,
+              
+            }}
+          >
+            Guide
+          </Text>
+          {/* <Guide height={23} width={49}/> */}
+        </View>
         <View
           style={{
             position: "absolute",
@@ -2500,19 +2549,33 @@ export class PlanOnCalendar extends React.Component {
                       },
                     ]}
                   >
-                    <Text
-                      style={{ fontSize: 18, fontFamily: "RobotoBoldBlack" }}
+                    <View
+                      style={{
+                        borderRightWidth: 2,
+                        width: 60,
+                        borderColor: "grey",
+                      }}
                     >
-                      {WEEKDAY[new Date(this.selectedEventDate).getDay()]}
-                    </Text>
+                      <Text
+                        style={{
+                          fontSize: 18,
+                          fontFamily: "RobotoBoldBlack",
+                          textAlignVertical: "center",
+                        }}
+                      >
+                        {WEEKDAY[new Date(this.selectedEventDate).getDay()]}
+                      </Text>
+                    </View>
                     <View
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "center",
+                        height: "100%",
+                        // backgroundColor: "red",
                       }}
                     >
-                      <Image
+                      {/* <Image
                         source={{
                           uri:
                             "http://openweathermap.org/img/wn/" +
@@ -2520,18 +2583,37 @@ export class PlanOnCalendar extends React.Component {
                             ".png",
                         }}
                         style={{ width: 60, height: 60 }}
-                      ></Image>
+                      ></Image> */}
                       <Text
-                        style={{ fontSize: 14, fontFamily: "RobotoBoldBlack" }}
+                        style={{ fontSize: 32, textAlignVertical: "center" }}
+                      >
+                        {ICONS[this.selectedWeatherIcon]}{" "}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 18,
+                          fontFamily: "RobotoBoldBlack",
+                          textAlignVertical: "center",
+                        }}
                       >
                         {this.selectedWeatherTxt}
                       </Text>
                     </View>
-                    <Text
-                      style={{ fontSize: 18, fontFamily: "RobotoBoldBlack" }}
+                    <View
+                      style={{
+                        borderLeftWidth: 2,
+                        width: 100,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        borderColor: "grey",
+                      }}
                     >
-                      {this.selectedTemp}°F
-                    </Text>
+                      <Text
+                        style={{ fontSize: 18, fontFamily: "RobotoBoldBlack" }}
+                      >
+                        {this.selectedTemp}°F
+                      </Text>
+                    </View>
                   </View>
                 </View>
                 <View
@@ -2550,11 +2632,15 @@ export class PlanOnCalendar extends React.Component {
                   <Calendar
                     events={this.detailViewCalendar}
                     date={new Date(this.selectedEventDate)}
+                    dayHeaderStyle={{ display: "none" }}
+                    headerContentStyle={{ display: "none" }}
                     scrollOffsetMinutes={
                       this.detailViewCalendar[0]
                         ? (parseInt(
                             this.detailViewCalendar[0].start.slice(11, 13)
-                          ) - 5) * 60
+                          ) -
+                            5) *
+                          60
                         : 0
                     }
                     swipeEnabled={false}
@@ -2574,7 +2660,7 @@ export class PlanOnCalendar extends React.Component {
             display: this.state.displayCalView,
             marginTop: 10,
             backgroundColor: "white",
-            marginBottom: 10,
+            marginBottom: 0,
           }}
         >
           <CalendarHeader height={15} width={333} />
@@ -2709,7 +2795,7 @@ export class PlanOnCalendar extends React.Component {
             </TouchableOpacity>
           </View>
         </View>
-        {/* Body info */}
+        {/* Confirmation Page */}
         <View
           style={{
             height: "100%",
@@ -2720,13 +2806,19 @@ export class PlanOnCalendar extends React.Component {
         >
           {finalConfirmationPage}
         </View>
+        {/* Body info */}
         <View
-          style={{
-            height: "100%",
-            width: "100%",
-            backgroundColor: "white",
-            display: this.state.mainContentSwiperDisplay,
-          }}
+          style={[
+            generalStyles.shadowStyle,
+            {
+              height: "100%",
+              width: "100%",
+              backgroundColor: "white",
+              borderRadius: 20,
+              paddingTop: 20,
+              display: this.state.mainContentSwiperDisplay,
+            },
+          ]}
         >
           {/* <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
             {planSetUpPage}
@@ -2738,6 +2830,9 @@ export class PlanOnCalendar extends React.Component {
             ref={this.mainContentSwiperRef}
             showSkip={false}
             showNext={false}
+            pageIndexCallback={(index) => {
+              this.panelSwiperRef.current.goToPage(index, true);
+            }}
             pages={[
               {
                 title: "",

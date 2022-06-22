@@ -293,7 +293,7 @@ export class BeforeLoginScreen extends React.Component {
       }
       let isoPlanDate = moment(date).unix();
       let weatherHistoryURL = `http://history.openweathermap.org/data/2.5/history/city?lat=${latitude}&lon=${longitude}&type=hour&start=${isoPlanDate}&cnt=1&appid=${WEATHER_API_KEY}`;
-      this.setState({dataType: "historical weather "});
+      this.setState({dataType: "historical weather"});
       let weatherHistoryResponse = await fetch(weatherHistoryURL);
       let weatherHistoryJSON = await weatherHistoryResponse.json();
       // console.log("WEATHER_API_KEY",WEATHER_API_KEY);
