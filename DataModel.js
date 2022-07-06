@@ -2,6 +2,7 @@ import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import "firebase/compat/firestore";
 import * as SecureStore from "expo-secure-store";
+import moment, { min } from "moment";
 
 import { firebaseConfig } from "./secret";
 import * as Notification from "expo-notifications";
@@ -14,6 +15,7 @@ class DataModel {
     this.asyncInit();
     this.key = "";
     this.plans = [];
+    this.strategies = [];
   }
   //init firebase
   asyncInit = async () => {
@@ -21,6 +23,7 @@ class DataModel {
 
     this.users = [];
     this.plans = [];
+    this.strategies = [];
     this.key = "";
     await this.askPermission();
     // await this.loadUsers();
@@ -39,6 +42,7 @@ class DataModel {
       test: 1,
     };
     let newUserColl = await newUsersDocRef.collection("activity_plans");
+    let newUserStrategyColl = await newUsersDocRef.collection("my_strategies");
     await newUserColl.add(testColl);
 
     let userActivityList = {
@@ -83,6 +87,19 @@ class DataModel {
       let plan = qDocSnap.data();
       plan.key = key;
       this.plans.push(plan);
+    });
+  };
+  loadUserStrategies = async (key) => {
+    this.strategies = [];
+    let UserStrategyCollection = await this.usersRef
+      .doc(key)
+      .collection("my_strategies")
+      .get();
+    UserStrategyCollection.forEach(async (qDocSnap) => {
+      let key = qDocSnap.id;
+      let strategy = qDocSnap.data();
+      strategy.key = key;
+      this.strategies.push(strategy);
     });
   };
   //Update the weather list to Firebase
@@ -233,6 +250,14 @@ class DataModel {
       .doc(newEvent.key);
     newEventRef.update(newEvent);
   };
+  //Update the specified strategy
+  updateStrategy = async (userKey, newStrategy) => {
+    let newStrategyRef = this.usersRef
+      .doc(userKey)
+      .collection("my_strategies")
+      .doc(newStrategy.key);
+      newStrategyRef.update(newStrategy);
+  };
   //Cancel reminders associated with the deleted event
   deleteReminders = async (newEvent) => {
     await Notification.cancelScheduledNotificationAsync(
@@ -266,6 +291,9 @@ class DataModel {
   };
   getUserPlans = () => {
     return this.plans;
+  };
+  getUserStrategies = () => {
+    return this.strategies;
   };
 }
 

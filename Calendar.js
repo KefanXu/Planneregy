@@ -19,10 +19,12 @@ import { generalStyles } from "./styles/GeneralStyling";
 
 import moment, { min } from "moment";
 const RED = "#EE442F";
-const GREEN = "#63ACBE";
-const YELLOW = "#F0E442";
+const GREEN = "#1AB700";
+const YELLOW = "#FFB800";
+const BLACK = "#393939"
 const BACKGROUND_COLOR = "white";
 const HIGHLIGHT_COLOR = "white";
+const BLUE = "#579AFF";
 
 export class MonthCalendar extends React.Component {
   constructor(props) {
@@ -59,14 +61,13 @@ export class MonthCalendar extends React.Component {
       //thisMonthEvents: this.thisMonthEvents,
       dayEventsList: [],
       targetDate: targetDate.getDay(),
-      
     };
     this.processEvents();
     this.rowIndex = 0;
   }
 
   onPress = async (item) => {
-    console.log("item pressed",item);
+    console.log("item pressed", item);
     await this.props.onPress(
       item,
       this.props.monthCalCurrDate.getMonth(),
@@ -85,9 +86,9 @@ export class MonthCalendar extends React.Component {
     // EventRegister.emit("calendarPressed","pressed"+item);
   };
   getRowIndex = () => {
-    console.log("getRowIndex rowIndex",this.rowIndex);
+    console.log("getRowIndex rowIndex", this.rowIndex);
     return this.rowIndex;
-  }
+  };
   processEvents = () => {
     //console.log("ProcessEvents", this.state.thisMonthEvents);
     // console.log("ProcessEvents");
@@ -174,7 +175,7 @@ export class MonthCalendar extends React.Component {
     var rows = [];
     rows = matrix.map((row, rowIndex) => {
       var rowItems = row.map((item, colIndex) => {
-        //
+        //Render first row
         if (rowIndex === 0) {
           return (
             <View
@@ -255,7 +256,6 @@ export class MonthCalendar extends React.Component {
           let iconEmoji = "";
 
           if (item == this.props.monthCalCurrDate.getDate()) {
-            
             this.rowIndex = rowIndex;
           }
 
@@ -357,19 +357,21 @@ export class MonthCalendar extends React.Component {
               }}
             >
               <TouchableOpacity
-                style={[{
-                  flex: 0.2,
-                  height: 18,
-                  width: "95%",
-                  flexDirection: "row",
-                  backgroundColor: item != -1 ? "white" : "rgba(0,0,0,0)",
-                  borderColor: item != -1 ? "#D8D8D8" : "rgba(0,0,0,0)",
-                  borderWidth: 1,
-                  borderRadius: 15,
-                  marginTop: 2,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }]}
+                style={[
+                  {
+                    flex: 0.2,
+                    height: 18,
+                    width: "95%",
+                    flexDirection: "row",
+                    backgroundColor: item != -1 ? "white" : "rgba(0,0,0,0)",
+                    borderColor: item != -1 ? "#D8D8D8" : "rgba(0,0,0,0)",
+                    borderWidth: 1,
+                    borderRadius: 15,
+                    marginTop: 2,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  },
+                ]}
                 disabled={item === -1 ? true : false}
                 activeOpacity={0.1}
                 onPress={() => this.onPress(item)}
@@ -439,8 +441,8 @@ export class MonthCalendar extends React.Component {
                     width: "100%",
                     justifyContent: "flex-start",
                     alignItems: "flex-start",
-                    borderBottomWidth:1,
-                    borderBottomColor:"#D8D8D8",
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#D8D8D8",
                   }}
                 >
                   {/* <View
@@ -452,6 +454,7 @@ export class MonthCalendar extends React.Component {
                       backgroundColor: GREEN,
                     }}
                   > */}
+                  {/* Morning events  */}
                   {flatEventListMorning.map((item) => {
                     //console.log("render flat",item);
                     let feelingEmoji = "";
@@ -471,6 +474,7 @@ export class MonthCalendar extends React.Component {
                       if (item.isReported) {
                         if (item.isActivityCompleted) {
                           return (
+                            //Completed planned events
                             <View
                               style={{
                                 width: "100%",
@@ -497,8 +501,10 @@ export class MonthCalendar extends React.Component {
                             </View>
                           );
                         } else {
+                          //partially completed activity
                           if (item.isOtherActivity) {
                             return (
+                              //Partially completed events
                               <View
                                 style={{
                                   width: "100%",
@@ -527,10 +533,11 @@ export class MonthCalendar extends React.Component {
                             );
                           } else {
                             return (
+                              //Uncompleted events
                               <View
                                 style={{
                                   width: "100%",
-                                  backgroundColor: RED,
+                                  backgroundColor: BLACK,
                                   borderRadius: 5,
                                   // flex: 1,
                                   height: 15,
@@ -556,34 +563,69 @@ export class MonthCalendar extends React.Component {
                           }
                         }
                       } else {
-                        return (
-                          <View
-                            style={{
-                              width: "100%",
-                              height: 15,
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "white",
-                              borderWidth: 1,
-                              borderColor: "black",
-                              borderRadius: 5,
-                              // flex: 1,
-                            }}
-                          >
-                            <Text
+                        //User-added unplanned events
+                        if (item.isPlanned === "added-activity") {
+                          return (
+                            <View
                               style={{
-                                textAlign: "center",
-                                fontSize: 8,
-                                fontWeight: "bold",
+                                width: "100%",
+                                backgroundColor: BLUE,
+                                borderRadius: 5,
+                                // flex: 1,
+                                height: 15,
+                                alignItems: "center",
+                                justifyContent: "center",
                               }}
                             >
-                              {/* {item.start} */}
-                              {item.title ? item.title + feelingEmoji : "event"}
-                            </Text>
-                          </View>
-                        );
+                              <Text
+                                style={{
+                                  textAlign: "center",
+                                  fontSize: 8,
+                                  fontWeight: "bold",
+                                  color: "white",
+                                }}
+                              >
+                                {/* {item.start} */}
+                                {item.title
+                                  ? item.title + feelingEmoji
+                                  : "event"}
+                              </Text>
+                            </View>
+                          );
+                        } else {
+                          //Unreported events
+                          return (
+                            <View
+                              style={{
+                                width: "100%",
+                                height: 15,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "white",
+                                borderWidth: 1,
+                                borderColor: "black",
+                                borderRadius: 5,
+                                // flex: 1,
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  textAlign: "center",
+                                  fontSize: 8,
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {/* {item.start} */}
+                                {item.title
+                                  ? item.title + feelingEmoji
+                                  : "event"}
+                              </Text>
+                            </View>
+                          );
+                        }
                       }
                     } else {
+                      //Other Calendar events
                       return (
                         <View
                           style={{
@@ -628,6 +670,7 @@ export class MonthCalendar extends React.Component {
                     justifyContent: "flex-start",
                   }}
                 >
+                  {/* Afternoon Events */}
                   {flatEventListAfternoon.map((item) => {
                     //console.log("render flat",item);
                     let feelingEmoji = "";
@@ -648,6 +691,7 @@ export class MonthCalendar extends React.Component {
                       if (item.isReported) {
                         if (item.isActivityCompleted) {
                           return (
+                            //Completed planned events
                             <View
                               style={{
                                 width: "100%",
@@ -677,6 +721,7 @@ export class MonthCalendar extends React.Component {
                         } else {
                           if (item.isOtherActivity) {
                             return (
+                              //Partially completed events
                               <View
                                 style={{
                                   width: "100%",
@@ -704,10 +749,11 @@ export class MonthCalendar extends React.Component {
                             );
                           } else {
                             return (
+                              //uncompleted events
                               <View
                                 style={{
                                   width: "100%",
-                                  backgroundColor: RED,
+                                  backgroundColor: BLACK,
                                   borderRadius: 5,
                                   height: 15,
                                   alignItems: "center",
@@ -733,35 +779,70 @@ export class MonthCalendar extends React.Component {
                           }
                         }
                       } else {
-                        return (
-                          <View
-                            style={{
-                              width: "100%",
-                              height: 15,
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "white",
-                              borderWidth: 1,
-                              borderColor: "black",
-                              borderRadius: 5,
-                              // flex: 1,
-                            }}
-                          >
-                            <Text
+                        if (item.isPlanned === "added-activity") {
+                          return (
+                            //User-added planned events
+                            <View
                               style={{
-                                textAlign: "center",
-                                fontSize: 8,
-                                fontWeight: "bold",
+                                width: "100%",
+                                backgroundColor: BLUE,
+                                borderRadius: 5,
+                                // flex: 1,
+                                height: 15,
+                                alignItems: "center",
+                                justifyContent: "center",
                               }}
                             >
-                              {/* {item.start} */}
-                              {item.title ? item.title + feelingEmoji : "event"}
-                            </Text>
-                          </View>
-                        );
+                              <Text
+                                style={{
+                                  textAlign: "center",
+                                  fontSize: 8,
+                                  fontWeight: "bold",
+                                  color: "white",
+                                }}
+                              >
+                                {/* {item.start} */}
+                                {item.title
+                                  ? item.title + feelingEmoji
+                                  : "event"}
+                              </Text>
+                            </View>
+                          );
+                        } else {
+                          return (
+                            //Unreported events
+                            <View
+                              style={{
+                                width: "100%",
+                                height: 15,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "white",
+                                borderWidth: 1,
+                                borderColor: "black",
+                                borderRadius: 5,
+                                // flex: 1,
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  textAlign: "center",
+                                  fontSize: 8,
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {/* {item.start} */}
+                                {item.title
+                                  ? item.title + feelingEmoji
+                                  : "event"}
+                              </Text>
+                            </View>
+                          );
+                        }
                       }
                     } else {
                       return (
+                        //Other calendar events
                         <View
                           style={{
                             width: "100%",

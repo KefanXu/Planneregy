@@ -50,6 +50,7 @@ import Onboarding from "react-native-onboarding-swiper";
 
 //Load functional libraries
 import moment, { min } from "moment";
+import * as SecureStore from "expo-secure-store";
 
 //Load from other local components
 import { MonthCalendar } from "./Calendar";
@@ -119,6 +120,8 @@ export class PlanOnCalendar extends React.Component {
     this.userEmail = this.props.route.params.userEmail;
     this.userKey = this.props.route.params.userInfo.key;
     this.userPlans = this.props.route.params.userInfo.userPlans;
+    this.userStrategies = this.props.route.params.userStrategies;
+    // console.log("this.userStrategies",new Date(this.userStrategies));
     //Get data model
     this.dataModel = getDataModel();
 
@@ -194,6 +197,7 @@ export class PlanOnCalendar extends React.Component {
       isDateSelected: false,
       //Selected Date
       selectedDate: "",
+      selectedDateRaw: new Date(),
       //Check if user selected the start time
       isStartTimeSelected: false,
       //Check if user selected the start time
@@ -354,7 +358,7 @@ export class PlanOnCalendar extends React.Component {
   //Change calendar when next month btn pressed
   nextMonthBtnPressed = async () => {
     if (this.state.currentMonth === "THIS_MONTH") {
-      // console.log("past month pressed");
+      console.log("nxt month pressed");
       await this.setState({ currentMonth: "NEXT_MONTH" });
       await this.setState({
         currentMonthEvents: this.combinedEventListNext,
@@ -370,6 +374,43 @@ export class PlanOnCalendar extends React.Component {
           15
         ),
       });
+      await this.setState({ nextMonthBtnDisabled: true });
+      await this.setState({ pastMonthBtnDisabled: false });
+      await this.setState({
+        currentMonthName: moment().add(1, "month").format("MMMM"),
+      });
+
+      this.monthCalRef.current.processEvents();
+    } else if (this.state.currentMonth === "PAST_MONTH") {
+      this.resetCalendarToCurrentMonth();
+    }
+  };
+  nextMonthEventPlanned = async (date) => {
+    this.monthCalRef.current.processEvents();
+    if (this.state.currentMonth === "THIS_MONTH") {
+      console.log("nxt month pressed");
+      await this.setState({ currentMonth: "NEXT_MONTH" });
+      await this.setState({
+        currentMonthEvents: this.combinedEventListNext,
+      });
+      await this.setState({
+        currentWeatherLists: this.nextMonthWeather,
+      });
+      // await this.setState({ pastMonthBtnDisabled: true });
+      if (date) {
+        await this.setState({
+          currentMonthDate: date,
+        });
+      } else {
+        await this.setState({
+          currentMonthDate: new Date(
+            this.state.date.getFullYear(),
+            this.state.date.getMonth() + 1,
+            15
+          ),
+        });
+      }
+
       await this.setState({ nextMonthBtnDisabled: true });
       await this.setState({ pastMonthBtnDisabled: false });
       await this.setState({
@@ -459,14 +500,24 @@ export class PlanOnCalendar extends React.Component {
   //Validate the date user selected
   pickTheDate = async (date) => {
     let selectedDay = new Date(moment(date).format("YYYY-MM-DD"));
-    // console.log("selectedDay", selectedDay);
+
     let today = new Date(moment(new Date()).format("YYYY-MM-DD"));
 
     let endDay = new Date(moment(today).add(7, "days"));
-    // console.log("today", "endDay", today, endDay);
+
+    let startDate = moment(new Date()).format().slice(0, 10);
+    let endDate = moment(new Date()).add(7, "days").format().slice(0, 10);
+    console.log("startDate", startDate);
+    console.log("endDate", endDate);
+    // let formattedThisMonth = parseInt(moment(new Date()).format().slice(5,7));
+    // let formattedSelectedMonth = parseInt(moment(this.state.selectedDateRaw).format().slice(5,7));
+    // // console.log("selected Date", date);
+    // // console.log("formattedThisMonth", formattedThisMonth);
+    // // console.log("formattedSelectedMonth", formattedSelectedMonth);
+
     if (selectedDay > today && selectedDay <= endDay) {
+      await this.setState({ selectedDateRaw: date });
       await this.setState({ selectedDate: selectedDay });
-      console.log("selectedDate", this.state.selectedDate);
       await this.setState({ isDateSelected: true });
       showMessage({
         message: "Date Selected",
@@ -640,6 +691,7 @@ export class PlanOnCalendar extends React.Component {
 
     let timeStamp = moment(new Date()).format();
     newEvent.timeStamp = timeStamp;
+    newEvent.key = timeStamp;
 
     let weatherList = [];
     // console.log("moment.getMonth(selectedDate)",moment(selectedDate).month());
@@ -657,7 +709,7 @@ export class PlanOnCalendar extends React.Component {
         newEvent.temp = weather.temp;
       }
     }
-    console.log("new event", newEvent);
+    // console.log("new event", newEvent);
 
     let duration = moment.duration(
       moment(formattedEndTime).diff(moment(formattedStartTime))
@@ -671,13 +723,24 @@ export class PlanOnCalendar extends React.Component {
 
     newEvent.reportReminderKey =
       await this.dataModel.scheduleReportNotification(newEvent);
+    // console.log("moment(selectedDate).month()", moment(selectedDate).month());
+    // console.log("moment(new Date()).month()",moment(new Date()).month());
 
-    if (moment(selectedDate).month() === moment(new Date()).month()) {
+    let formattedThisMonth = parseInt(moment(new Date()).format().slice(5, 7));
+    let formattedSelectedMonth = parseInt(
+      moment(this.state.selectedDateRaw).format().slice(5, 7)
+    );
+    if (formattedSelectedMonth === formattedThisMonth) {
       this.combinedEventListThis.push(newEvent);
-      this.resetCalendarToCurrentMonth();
+      await this.resetCalendarToCurrentMonth();
+      await this.setState({
+        currentMonthDate: this.state.selectedDateRaw,
+      });
+      this.scrollToThisWeek();
     } else {
       this.combinedEventListNext.push(newEvent);
-      this.nextMonthBtnPressed();
+      await this.nextMonthEventPlanned(this.state.selectedDateRaw);
+      this.scrollToThisWeek();
     }
 
     let updatedPlanBundle = this.state.plansBuddle;
@@ -688,7 +751,7 @@ export class PlanOnCalendar extends React.Component {
     this.setState({ accumulatedMinutes: updatedMinutes });
 
     await this.setState({ plansBuddle: updatedPlanBundle });
-    console.log(this.state.plansBuddle);
+    // console.log(this.state.plansBuddle);
 
     showMessage({
       message: "Activity Planned!",
@@ -759,11 +822,14 @@ export class PlanOnCalendar extends React.Component {
       this.combinedEventListNext.splice(deleteIndex, 1);
       await this.setState({ eventsNextMonth: this.combinedEventListNext });
     }
-
-    if (moment(selectedActivity.start).month() === moment(new Date()).month()) {
+    let formattedThisMonth = parseInt(moment(new Date()).format().slice(5, 7));
+    let formattedSelectedMonth = parseInt(
+      moment(this.state.selectedDateRaw).format().slice(5, 7)
+    );
+    if (formattedThisMonth === formattedSelectedMonth) {
       this.resetCalendarToCurrentMonth();
     } else {
-      this.nextMonthBtnPressed();
+      await this.nextMonthEventPlanned();
     }
     await this.dataModel.loadUserPlans(this.userKey);
     this.userPlans = this.dataModel.getUserPlans();
@@ -926,14 +992,21 @@ export class PlanOnCalendar extends React.Component {
       moment(new Date()).format("MMM Do YY") +
       " " +
       moment(new Date()).add(7, "days").format("MMM Do YY");
+
+    let startDate = moment(new Date()).format().slice(0, 10);
+    let endDate = moment(new Date()).add(7, "days").format().slice(0, 10);
+
     let timeStamp = moment(new Date()).format();
 
     let newStrategy = {
       title: this.state.planStrategyName,
       duration: duration,
+      startDate: startDate,
+      endDate: endDate,
       keywords: this.state.keywordsBuddle,
       plans: this.state.plansBuddle,
       timeStamp: timeStamp,
+      isReported: false,
     };
 
     for (let event of this.state.plansBuddle) {
@@ -946,7 +1019,31 @@ export class PlanOnCalendar extends React.Component {
       this.userKey,
       newStrategy
     );
+
     this.dataModel.createDailyNotifications();
+
+    SecureStore.setItemAsync("START_DATE", startDate);
+    // console.log("save START_DATE");
+    SecureStore.setItemAsync("END_DATE", endDate);
+    // console.log("save END_DATE");
+    SecureStore.setItemAsync("TIME_STAMP", timeStamp);
+    // console.log("save TIME_STAMP");
+    SecureStore.setItemAsync(
+      "thisMonthWeather",
+      JSON.stringify(this.thisMonthWeather)
+    );
+    // console.log("save thisMonthWeather");
+    SecureStore.setItemAsync(
+      "lastMonthWeather",
+      JSON.stringify(this.lastMonthWeather)
+    );
+    // console.log("save lastMonthWeather");
+    SecureStore.setItemAsync(
+      "nextMonthWeather",
+      JSON.stringify(this.nextMonthWeather)
+    );
+    // console.log("save nextMonthWeather");
+    // SecureStore.setItemAsync("END_DATE", endDate);
   };
   onPress = (item, monthNum, month) => {
     console.log("item, monthNum, month", item, monthNum, month);
@@ -1603,6 +1700,24 @@ export class PlanOnCalendar extends React.Component {
                 justifyContent: "center",
                 alignSelf: "center",
               }}
+              onPress={async () => {
+                await this.dataModel.loadUserStrategies(this.userKey);
+                this.userStrategies = this.dataModel.getUserStrategies();
+                // console.log("this.userStrategies",this.userStrategies);
+                this.props.navigation.navigate("TrackingPage", {
+                  userEmail: this.userEmail,
+                  userInfo: this.props.route.params.userInfo,
+                  userStrategies: this.userStrategies,
+                  eventsLastMonth: this.eventsLastMonth,
+                  eventsThisMonth: this.eventsThisMonth,
+                  eventsNextMonth: this.eventsNextMonth,
+                  fullEventList: this.fullEventList,
+                  lastMonthWeather: this.lastMonthWeather,
+                  thisMonthWeather: this.thisMonthWeather,
+                  nextMonthWeather: this.nextMonthWeather,
+                  userActivityList: this.props.route.params.userActivityList,
+                });
+              }}
             >
               <Text
                 style={{
@@ -2090,6 +2205,10 @@ export class PlanOnCalendar extends React.Component {
       </View>
     );
     let slideUpPanel = (
+      // <KeyboardAvoidingView
+      //   behavior={Platform.OS === "ios" ? "padding" : "height"}
+      //   style={{height:"100%", width:"100%"}}
+      // >
       <SlidingUpPanel
         draggableRange={{ top: this.state.panelHeight, bottom: 160 }}
         showBackdrop={false}
@@ -2185,6 +2304,7 @@ export class PlanOnCalendar extends React.Component {
               bottomBarHeight={30}
               showSkip={false}
               showNext={true}
+              
               bottomBarColor="white"
               showDone={false}
               pageIndexCallback={(index) => {
@@ -2244,6 +2364,7 @@ export class PlanOnCalendar extends React.Component {
           {/* {thirdSlidePanelPage} */}
         </View>
       </SlidingUpPanel>
+      // </KeyboardAvoidingView>
     );
 
     return (
@@ -2251,237 +2372,244 @@ export class PlanOnCalendar extends React.Component {
       //   behavior={Platform.OS === "ios" ? "padding" : "height"}
       // >
       //   <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View
-        style={{
-          backgroundColor: "white",
-          width: "100%",
-          height: "100%",
-          justifyContent: "flex-start",
-          alignItems: "center",
-        }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <FlashMessage position="bottom" />
-
-        {/* title */}
         <View
           style={{
-            position: "absolute",
-            left: 0,
-            top: "5%",
-            height: 28,
-            width: 79,
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "#D9D9D9",
-            borderBottomRightRadius: 20,
-            borderTopRightRadius: 20,
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "RobotoBoldItalic",
-              color: "white",
-              textAlign: "center",
-              fontSize:18,
-              
-            }}
-          >
-            Guide
-          </Text>
-          {/* <Guide height={23} width={49}/> */}
-        </View>
-        <View
-          style={{
-            position: "absolute",
-            right: 15,
-            top: "5%",
-            height: 20,
-            width: 20,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Popover
-            popoverStyle={{ borderRadius: 20 }}
-            from={
-              <TouchableOpacity style={{ marginLeft: "5%" }}>
-                <AntDesign name="infocirlce" size={18} color="black" />
-              </TouchableOpacity>
-            }
-          >
-            <View
-              style={{
-                height: 30,
-                width: 350,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 20,
-                transform: [{ scale: 0.8 }],
-              }}
-            >
-              <Indicator height={22} width={330} />
-            </View>
-          </Popover>
-        </View>
-        <View
-          style={{
-            height: 28,
-            width: "50%",
-            marginTop: "10%",
-            alignItems: "center",
-            justifyContent: "center",
-            display: this.state.displayTitle,
-            flexDirection: "row",
-          }}
-        >
-          {this.state.title}
-        </View>
-        {/* Plan Strategy Detail Modal */}
-        <Modal
-          propagateSwipe={true}
-          isVisible={this.state.isStrategyDetailModalVis}
-          style={{
+            backgroundColor: "white",
+            width: "100%",
+            height: "100%",
             justifyContent: "flex-start",
             alignItems: "center",
-            marginTop: "50%",
           }}
-          hasBackdrop={true}
-          backdropOpacity={0}
-          onBackdropPress={() =>
-            this.setState({ isStrategyDetailModalVis: false })
-          }
-          onSwipeComplete={() =>
-            this.setState({ isStrategyDetailModalVis: false })
-          }
-          swipeDirection="down"
         >
+          <FlashMessage position="bottom" />
+
+          {/* Guide Btn */}
           <View
-            style={[
-              generalStyles.shadowStyle,
-              {
-                width: "98%",
-                height: "50%",
-                borderRadius: 20,
-                backgroundColor: "white",
-              },
-            ]}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: "5%",
+              height: 28,
+              width: 79,
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "#D9D9D9",
+              borderBottomRightRadius: 20,
+              borderTopRightRadius: 20,
+            }}
           >
             <Text
               style={{
-                fontSize: 20,
                 fontFamily: "RobotoBoldItalic",
-                marginTop: "10%",
-                marginLeft: "10%",
+                color: "white",
+                textAlign: "center",
+                fontSize: 18,
               }}
             >
-              {this.state.planStrategyName}
+              Guide
             </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                fontFamily: "RobotoBoldBold",
-                marginTop: 0,
-                marginLeft: "10%",
-              }}
+          </View>
+          {/* Popover Tips */}
+          <View
+            style={{
+              position: "absolute",
+              right: 15,
+              top: "5%",
+              height: 20,
+              width: 20,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Popover
+              popoverStyle={{ borderRadius: 20 }}
+              from={
+                <TouchableOpacity style={{ marginLeft: "5%" }}>
+                  <AntDesign name="infocirlce" size={18} color="black" />
+                </TouchableOpacity>
+              }
             >
-              {moment(new Date()).format("MMM Do YY")} -{" "}
-              {moment(new Date()).add(7, "days").format("MMM Do YY")}
-            </Text>
-            <View
-              style={{
-                height: 5,
-                width: "80%",
-                backgroundColor: "black",
-                marginHorizontal: "10%",
-                marginTop: "2%",
-              }}
-            ></View>
-            <ScrollView style={{ marginHorizontal: "10%", marginTop: "2%" }}>
               <View
                 style={{
-                  flexDirection: "row",
-                  flexWrap: "wrap",
+                  height: 30,
+                  width: 350,
                   alignItems: "center",
-                  marginTop: "5%",
+                  justifyContent: "center",
+                  borderRadius: 20,
+                  transform: [{ scale: 0.8 }],
                 }}
               >
-                {this.state.keywordsBuddle.map((item) => {
-                  return (
-                    <View
-                      style={{
-                        height: 25,
-                        borderRadius: 20,
-                        backgroundColor: "black",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        alignSelf: "center",
-                        marginBottom: 5,
-                        marginRight: 5,
-                        paddingHorizontal: 2,
-                        flexDirection: "row",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: "RobotoBoldBlack",
-                          color: "white",
-                          paddingHorizontal: 20,
-                          fontSize: 12,
-                        }}
-                      >
-                        {item.title}
-                      </Text>
-                    </View>
-                  );
-                })}
+                <Indicator height={22} width={330} />
               </View>
-            </ScrollView>
+            </Popover>
           </View>
-        </Modal>
-        {/* Plan Detail View */}
-        <Modal
-          propagateSwipe={true}
-          isVisible={this.state.isPlanDetailModalVis}
-          style={{
-            justifyContent: "flex-start",
-            alignItems: "center",
-            marginTop: 70,
-            marginBottom: 130,
-          }}
-          hasBackdrop={true}
-          backdropOpacity={0}
-          onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
-          onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
-          swipeDirection="down"
-        >
+          {/* Title */}
           <View
             style={{
-              flex: 1,
+              height: 28,
+              width: "50%",
+              marginTop: "10%",
               alignItems: "center",
               justifyContent: "center",
-              flexDirection: "column",
-              width: "100%",
-              height: "100%",
+              display: this.state.displayTitle,
+              flexDirection: "row",
             }}
+          >
+            {this.state.title}
+          </View>
+          {/* Plan Strategy Detail Modal */}
+          <Modal
+            propagateSwipe={true}
+            isVisible={this.state.isStrategyDetailModalVis}
+            style={{
+              justifyContent: "flex-start",
+              alignItems: "center",
+              marginTop: "50%",
+            }}
+            hasBackdrop={true}
+            backdropOpacity={0}
+            onBackdropPress={() =>
+              this.setState({ isStrategyDetailModalVis: false })
+            }
+            onSwipeComplete={() =>
+              this.setState({ isStrategyDetailModalVis: false })
+            }
+            swipeDirection="down"
           >
             <View
               style={[
                 generalStyles.shadowStyle,
                 {
-                  flex: 1,
-                  width: "100%",
+                  width: "98%",
+                  height: "50%",
+                  borderRadius: 20,
                   backgroundColor: "white",
-                  // borderWidth: 2,
-                  borderColor: "black",
-                  flexDirection: "column",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                  borderRadius: 15,
                 },
               ]}
             >
-              {/* <View
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontFamily: "RobotoBoldItalic",
+                  marginTop: "10%",
+                  marginLeft: "10%",
+                }}
+              >
+                {this.state.planStrategyName}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontFamily: "RobotoBoldBold",
+                  marginTop: 0,
+                  marginLeft: "10%",
+                }}
+              >
+                {moment(new Date()).format("MMM Do YY")} -{" "}
+                {moment(new Date()).add(7, "days").format("MMM Do YY")}
+              </Text>
+              <View
+                style={{
+                  height: 5,
+                  width: "80%",
+                  backgroundColor: "black",
+                  marginHorizontal: "10%",
+                  marginTop: "2%",
+                }}
+              ></View>
+              <ScrollView style={{ marginHorizontal: "10%", marginTop: "2%" }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    marginTop: "5%",
+                  }}
+                >
+                  {this.state.keywordsBuddle.map((item) => {
+                    return (
+                      <View
+                        style={{
+                          height: 25,
+                          borderRadius: 20,
+                          backgroundColor: "black",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          alignSelf: "center",
+                          marginBottom: 5,
+                          marginRight: 5,
+                          paddingHorizontal: 2,
+                          flexDirection: "row",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "RobotoBoldBlack",
+                            color: "white",
+                            paddingHorizontal: 20,
+                            fontSize: 12,
+                          }}
+                        >
+                          {item.title}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            </View>
+          </Modal>
+          {/* Plan Detail View */}
+          <Modal
+            propagateSwipe={true}
+            isVisible={this.state.isPlanDetailModalVis}
+            style={{
+              justifyContent: "flex-start",
+              alignItems: "center",
+              marginTop: 70,
+              marginBottom: 130,
+            }}
+            hasBackdrop={true}
+            backdropOpacity={0}
+            onBackdropPress={() =>
+              this.setState({ isPlanDetailModalVis: false })
+            }
+            onSwipeComplete={() =>
+              this.setState({ isPlanDetailModalVis: false })
+            }
+            swipeDirection="down"
+          >
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column",
+                width: "100%",
+                height: "100%",
+              }}
+            >
+              <View
+                style={[
+                  generalStyles.shadowStyle,
+                  {
+                    flex: 1,
+                    width: "100%",
+                    backgroundColor: "white",
+                    // borderWidth: 2,
+                    borderColor: "black",
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    borderRadius: 15,
+                  },
+                ]}
+              >
+                {/* <View
                 style={{
                   flex: 0.06,
                   width: "100%",
@@ -2502,25 +2630,25 @@ export class PlanOnCalendar extends React.Component {
                   </TouchableOpacity>
                 </View>
               </View> */}
-              <View style={{ flex: 0.9, width: "100%" }}>
-                <View
-                  style={[
-                    generalStyles.shadowStyle,
-                    {
-                      height: 80,
-                      marginTop: 0,
-                      width: "100%",
-                      backgroundColor: "white",
-                      // borderWidth: 2,
-                      borderColor: "black",
-                      borderRadius: 15,
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    },
-                  ]}
-                >
-                  {/* <View
+                <View style={{ flex: 0.9, width: "100%" }}>
+                  <View
+                    style={[
+                      generalStyles.shadowStyle,
+                      {
+                        height: 80,
+                        marginTop: 0,
+                        width: "100%",
+                        backgroundColor: "white",
+                        // borderWidth: 2,
+                        borderColor: "black",
+                        borderRadius: 15,
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      },
+                    ]}
+                  >
+                    {/* <View
                     style={{
                       flex: 0.4,
                       width: "90%",
@@ -2534,48 +2662,48 @@ export class PlanOnCalendar extends React.Component {
                       {this.state.detailViewTop}
                     </Text>
                   </View> */}
-                  <View
-                    style={[
-                      generalStyles.shadowStyle,
-                      {
-                        flex: 1,
-                        width: "90%",
-                        marginTop: 0,
-                        marginLeft: 10,
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        flexDirection: "row",
-                        // backgroundColor: RED,
-                      },
-                    ]}
-                  >
                     <View
-                      style={{
-                        borderRightWidth: 2,
-                        width: 60,
-                        borderColor: "grey",
-                      }}
+                      style={[
+                        generalStyles.shadowStyle,
+                        {
+                          flex: 1,
+                          width: "90%",
+                          marginTop: 0,
+                          marginLeft: 10,
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          flexDirection: "row",
+                          // backgroundColor: RED,
+                        },
+                      ]}
                     >
-                      <Text
+                      <View
                         style={{
-                          fontSize: 18,
-                          fontFamily: "RobotoBoldBlack",
-                          textAlignVertical: "center",
+                          borderRightWidth: 2,
+                          width: 60,
+                          borderColor: "grey",
                         }}
                       >
-                        {WEEKDAY[new Date(this.selectedEventDate).getDay()]}
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        // backgroundColor: "red",
-                      }}
-                    >
-                      {/* <Image
+                        <Text
+                          style={{
+                            fontSize: 18,
+                            fontFamily: "RobotoBoldBlack",
+                            textAlignVertical: "center",
+                          }}
+                        >
+                          {WEEKDAY[new Date(this.selectedEventDate).getDay()]}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          height: "100%",
+                          // backgroundColor: "red",
+                        }}
+                      >
+                        {/* <Image
                         source={{
                           uri:
                             "http://openweathermap.org/img/wn/" +
@@ -2584,274 +2712,278 @@ export class PlanOnCalendar extends React.Component {
                         }}
                         style={{ width: 60, height: 60 }}
                       ></Image> */}
-                      <Text
-                        style={{ fontSize: 32, textAlignVertical: "center" }}
-                      >
-                        {ICONS[this.selectedWeatherIcon]}{" "}
-                      </Text>
-                      <Text
+                        <Text
+                          style={{ fontSize: 32, textAlignVertical: "center" }}
+                        >
+                          {ICONS[this.selectedWeatherIcon]}{" "}
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 18,
+                            fontFamily: "RobotoBoldBlack",
+                            textAlignVertical: "center",
+                          }}
+                        >
+                          {this.selectedWeatherTxt}
+                        </Text>
+                      </View>
+                      <View
                         style={{
-                          fontSize: 18,
-                          fontFamily: "RobotoBoldBlack",
-                          textAlignVertical: "center",
+                          borderLeftWidth: 2,
+                          width: 100,
+                          justifyContent: "center",
+                          flexDirection: "row",
+                          borderColor: "grey",
                         }}
                       >
-                        {this.selectedWeatherTxt}
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        borderLeftWidth: 2,
-                        width: 100,
-                        justifyContent: "center",
-                        flexDirection: "row",
-                        borderColor: "grey",
-                      }}
-                    >
-                      <Text
-                        style={{ fontSize: 18, fontFamily: "RobotoBoldBlack" }}
-                      >
-                        {this.selectedTemp}°F
-                      </Text>
+                        <Text
+                          style={{
+                            fontSize: 18,
+                            fontFamily: "RobotoBoldBlack",
+                          }}
+                        >
+                          {this.selectedTemp}°F
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-                <View
-                  style={[
-                    generalStyles.shadowStyle,
-                    {
-                      height: "100%",
-                      backgroundColor: "white",
-                      borderRadius: 20,
-                      marginTop: 15,
-                      marginBottom: 15,
-                      paddingVertical: 5,
-                    },
-                  ]}
-                >
-                  <Calendar
-                    events={this.detailViewCalendar}
-                    date={new Date(this.selectedEventDate)}
-                    dayHeaderStyle={{ display: "none" }}
-                    headerContentStyle={{ display: "none" }}
-                    scrollOffsetMinutes={
-                      this.detailViewCalendar[0]
-                        ? (parseInt(
-                            this.detailViewCalendar[0].start.slice(11, 13)
-                          ) -
-                            5) *
-                          60
-                        : 0
-                    }
-                    swipeEnabled={false}
-                    height={90}
-                    mode="day"
-                  />
+                  <View
+                    style={[
+                      generalStyles.shadowStyle,
+                      {
+                        height: "100%",
+                        backgroundColor: "white",
+                        borderRadius: 20,
+                        marginTop: 15,
+                        marginBottom: 15,
+                        paddingVertical: 5,
+                      },
+                    ]}
+                  >
+                    <Calendar
+                      events={this.detailViewCalendar}
+                      date={new Date(this.selectedEventDate)}
+                      dayHeaderStyle={{ display: "none" }}
+                      headerContentStyle={{ display: "none" }}
+                      scrollOffsetMinutes={
+                        this.detailViewCalendar[0]
+                          ? (parseInt(
+                              this.detailViewCalendar[0].start.slice(11, 13)
+                            ) -
+                              5) *
+                            60
+                          : 0
+                      }
+                      swipeEnabled={false}
+                      height={90}
+                      mode="day"
+                    />
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
-        </Modal>
-        {/* Calendar View & Buttons */}
-        <View
-          style={{
-            width: "100%",
-            alignItems: "center",
-            display: this.state.displayCalView,
-            marginTop: 10,
-            backgroundColor: "white",
-            marginBottom: 0,
-          }}
-        >
-          <CalendarHeader height={15} width={333} />
+          </Modal>
+          {/* Calendar View & Buttons */}
           <View
             style={{
-              height: 145,
               width: "100%",
-              padding: 4,
+              alignItems: "center",
+              display: this.state.displayCalView,
+              marginTop: 10,
               backgroundColor: "white",
-              borderRadius: 0,
-              borderColor: "#F0F0F0",
-              borderTopWidth: 1,
-              borderBottomWidth: 1,
-              marginBottom: 5,
+              marginBottom: 0,
             }}
           >
-            <ScrollView
-              style={{ width: "100%", height: "20%" }}
-              ref={this.weeklyCalendarScrollViewRef}
-            >
-              <MonthCalendar
-                ref={this.monthCalRef}
-                thisMonthEvents={this.state.currentMonthEvents}
-                monthCalCurrDate={this.state.currentMonthDate}
-                weatherThisMonth={this.state.currentWeatherLists}
-                onPress={(item, monthNum, month) =>
-                  this.onPress(item, monthNum, month)
-                }
-              />
-            </ScrollView>
+            <CalendarHeader height={15} width={333} />
             <View
               style={{
-                position: "absolute",
-                right: 5,
-                bottom: "5%",
-                height: 20,
-                width: 20,
-                justifyContent: "center",
-                alignItems: "center",
-                // backgroundColor: "black",
-                width: 60,
-                height: 20,
-                borderRadius: 5,
-                flexDirection: "row",
-                opacity: 0.5,
+                height: 145,
+                width: "100%",
+                padding: 4,
+                backgroundColor: "white",
+                borderRadius: 0,
+                borderColor: "#F0F0F0",
+                borderTopWidth: 1,
+                borderBottomWidth: 1,
+                marginBottom: 5,
               }}
             >
-              <Text
+              <ScrollView
+                style={{ width: "100%", height: "20%" }}
+                ref={this.weeklyCalendarScrollViewRef}
+              >
+                <MonthCalendar
+                  ref={this.monthCalRef}
+                  thisMonthEvents={this.state.currentMonthEvents}
+                  monthCalCurrDate={this.state.currentMonthDate}
+                  weatherThisMonth={this.state.currentWeatherLists}
+                  onPress={(item, monthNum, month) =>
+                    this.onPress(item, monthNum, month)
+                  }
+                />
+              </ScrollView>
+              <View
                 style={{
-                  color: "black",
-                  fontFamily: "RobotoBoldBlack",
-                  fontSize: 18,
+                  position: "absolute",
+                  right: 5,
+                  bottom: "5%",
+                  height: 20,
+                  width: 20,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  // backgroundColor: "black",
+                  width: 60,
+                  height: 20,
+                  borderRadius: 5,
+                  flexDirection: "row",
+                  opacity: 0.5,
                 }}
               >
-                {this.state.currentMonthName}
-              </Text>
-              <View
-                style={{ width: 2, height: "100%", backgroundColor: "black" }}
-              ></View>
+                <Text
+                  style={{
+                    color: "black",
+                    fontFamily: "RobotoBoldBlack",
+                    fontSize: 18,
+                  }}
+                >
+                  {this.state.currentMonthName}
+                </Text>
+                <View
+                  style={{ width: 2, height: "100%", backgroundColor: "black" }}
+                ></View>
+              </View>
+            </View>
+
+            <View
+              style={{
+                width: "100%",
+                padding: 15,
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+                disabled={this.state.pastMonthBtnDisabled}
+                onPress={this.pastMonthBtnPressed}
+              >
+                <AntDesign name="leftcircle" size={18} color="black" />
+
+                <Text
+                  style={{
+                    color: "black",
+                    fontWeight: "bold",
+                    fontSize: 12,
+                    marginLeft: 5,
+                  }}
+                >
+                  Past Month
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  borderColor: "black",
+                  paddingHorizontal: 15,
+                  borderWidth: 2,
+                  borderRadius: 20,
+                  padding: 5,
+                }}
+                onPress={() => {
+                  this.scrollToThisWeek();
+                  this.resetCalendarToCurrentMonth();
+                }}
+              >
+                <Text
+                  style={{ color: "black", fontWeight: "bold", fontSize: 12 }}
+                >
+                  Current Week
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                }}
+                disabled={this.state.nextMonthBtnDisabled}
+                onPress={this.nextMonthBtnPressed}
+              >
+                <Text
+                  style={{
+                    color: "black",
+                    fontWeight: "bold",
+                    fontSize: 12,
+                    marginRight: 5,
+                  }}
+                >
+                  Next Month
+                </Text>
+                <AntDesign name="rightcircle" size={18} color="black" />
+              </TouchableOpacity>
             </View>
           </View>
-
+          {/* Confirmation Page */}
           <View
             style={{
-              width: "100%",
-              padding: 15,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                justifyContent: "flex-start",
-                alignItems: "center",
-              }}
-              disabled={this.state.pastMonthBtnDisabled}
-              onPress={this.pastMonthBtnPressed}
-            >
-              <AntDesign name="leftcircle" size={18} color="black" />
-
-              <Text
-                style={{
-                  color: "black",
-                  fontWeight: "bold",
-                  fontSize: 12,
-                  marginLeft: 5,
-                }}
-              >
-                Past Month
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                borderColor: "black",
-                paddingHorizontal: 15,
-                borderWidth: 2,
-                borderRadius: 20,
-                padding: 5,
-              }}
-              onPress={() => {
-                this.scrollToThisWeek();
-                this.resetCalendarToCurrentMonth();
-              }}
-            >
-              <Text
-                style={{ color: "black", fontWeight: "bold", fontSize: 12 }}
-              >
-                Current Week
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                justifyContent: "flex-end",
-                alignItems: "center",
-              }}
-              disabled={this.state.nextMonthBtnDisabled}
-              onPress={this.nextMonthBtnPressed}
-            >
-              <Text
-                style={{
-                  color: "black",
-                  fontWeight: "bold",
-                  fontSize: 12,
-                  marginRight: 5,
-                }}
-              >
-                Next Month
-              </Text>
-              <AntDesign name="rightcircle" size={18} color="black" />
-            </TouchableOpacity>
-          </View>
-        </View>
-        {/* Confirmation Page */}
-        <View
-          style={{
-            height: "100%",
-            width: "100%",
-            backgroundColor: "white",
-            display: this.state.conformationPageDisplay,
-          }}
-        >
-          {finalConfirmationPage}
-        </View>
-        {/* Body info */}
-        <View
-          style={[
-            generalStyles.shadowStyle,
-            {
               height: "100%",
               width: "100%",
               backgroundColor: "white",
-              borderRadius: 20,
-              paddingTop: 20,
-              display: this.state.mainContentSwiperDisplay,
-            },
-          ]}
-        >
-          {/* <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
+              display: this.state.conformationPageDisplay,
+            }}
+          >
+            {finalConfirmationPage}
+          </View>
+          {/* Body info */}
+          <View
+            style={[
+              generalStyles.shadowStyle,
+              {
+                height: "100%",
+                width: "100%",
+                backgroundColor: "white",
+                borderRadius: 20,
+                paddingTop: 20,
+                display: this.state.mainContentSwiperDisplay,
+              },
+            ]}
+          >
+            {/* <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
             {planSetUpPage}
             {summaryPage}
             {finalConfirmationPage}
           </Swiper> */}
-          <Onboarding
-            bottomBarHighlight={false}
-            ref={this.mainContentSwiperRef}
-            showSkip={false}
-            showNext={false}
-            pageIndexCallback={(index) => {
-              this.panelSwiperRef.current.goToPage(index, true);
-            }}
-            pages={[
-              {
-                title: "",
-                subtitle: "",
-                backgroundColor: "white",
-                image: planSetUpPage,
-              },
-              {
-                title: "",
-                subtitle: "",
-                backgroundColor: "white",
-                image: summaryPage,
-              },
-            ]}
-          />
+            <Onboarding
+              bottomBarHighlight={false}
+              ref={this.mainContentSwiperRef}
+              showSkip={false}
+              showNext={false}
+              pageIndexCallback={(index) => {
+                this.panelSwiperRef.current.goToPage(index, true);
+              }}
+              pages={[
+                {
+                  title: "",
+                  subtitle: "",
+                  backgroundColor: "white",
+                  image: planSetUpPage,
+                },
+                {
+                  title: "",
+                  subtitle: "",
+                  backgroundColor: "white",
+                  image: summaryPage,
+                },
+              ]}
+            />
+          </View>
+          {/* Slide Up Panel */}
+          {slideUpPanel}
         </View>
-        {/* Slide Up Panel */}
-        {slideUpPanel}
-      </View>
+      </KeyboardAvoidingView>
     );
   }
 }

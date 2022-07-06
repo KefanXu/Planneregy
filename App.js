@@ -6,6 +6,7 @@ import { Login } from "./Login";
 import { OnboardingScreen } from "./OnBoardingScreen";
 import { PlanOnCalendar } from "./PlanOnCalendar";
 import { BeforeLoginScreen } from "./BeforeLoginScreen";
+import { TrackingPage } from "./TrackingPage";
 import * as Font from "expo-font";
 
 const Stack = createNativeStackNavigator();
@@ -21,10 +22,10 @@ export default class App extends React.Component {
 
   async loadFonts() {
     await Font.loadAsync({
-      "RobotoBoldBold": require("./assets/fonts/Roboto/Roboto-Bold.ttf"),
-      "RobotoBoldBlack": require("./assets/fonts/Roboto/Roboto-Black.ttf"),
-      "RobotoBoldItalic": require("./assets/fonts/Roboto/Roboto-BlackItalic.ttf"),
-      "RobotoRegular": require("./assets/fonts/Roboto/Roboto-Regular.ttf"),
+      RobotoBoldBold: require("./assets/fonts/Roboto/Roboto-Bold.ttf"),
+      RobotoBoldBlack: require("./assets/fonts/Roboto/Roboto-Black.ttf"),
+      RobotoBoldItalic: require("./assets/fonts/Roboto/Roboto-BlackItalic.ttf"),
+      RobotoRegular: require("./assets/fonts/Roboto/Roboto-Regular.ttf"),
     });
     this.setState({ fontsLoaded: true });
   }
@@ -75,15 +76,20 @@ export default class App extends React.Component {
               component={OnboardingScreen}
             />
             <Stack.Screen
-              options={{ headerShown: false, gestureEnabled: false, }}
+              options={{ headerShown: false, gestureEnabled: false }}
               name="PlanOnCalendar"
               component={PlanOnCalendar}
+            />
+            <Stack.Screen
+              options={{ headerShown: false, gestureEnabled: false }}
+              name="TrackingPage"
+              component={TrackingPage}
             />
           </Stack.Navigator>
         </NavigationContainer>
       );
     } else {
-      return <Text>Loading</Text>;
+      return <Text></Text>;
     }
   }
 }
