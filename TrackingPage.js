@@ -1785,6 +1785,7 @@ export class TrackingPage extends React.Component {
   OnSubmitPressed_PartiallyComplete = async (reportStatus) => {
     let eventToUpdate = this.onReportActivity;
     let newActivity = Object.assign({}, this.onReportActivity);
+    let eventToUpdateToFirebaseActivities;
 
     let reason = this.state.reportScreen_THREETxt;
     let formattedSelectedMonth = parseInt(
@@ -1802,6 +1803,7 @@ export class TrackingPage extends React.Component {
       newActivity.isActivityCompleted = false;
       newActivity.isReported = true;
       newActivity.isOtherActivity = true;
+      newActivity.timeStamp = eventToUpdate.timeStamp + "PARTIAL_NEW"
       let startTimeMinutes = moment(this.state.startTime).format("HH:mm:ss");
       let endTimeMinutes = moment(this.state.endTime).format("HH:mm:ss");
       let formattedDate = this.onReportActivity.start.slice(0, 11);
@@ -1818,6 +1820,7 @@ export class TrackingPage extends React.Component {
       } else {
         this.combinedEventListLast.push(newActivity);
       }
+      await this.dataModel.createNewPlan(this.userKey, newActivity)
       //Update the original event
       eventToUpdate.isActivityCompleted = false;
       eventToUpdate.reason = reason;
@@ -1831,7 +1834,7 @@ export class TrackingPage extends React.Component {
       let durationMinutes = parseInt(duration.asMinutes()) % 60;
       eventToUpdate.newDuration = durationMinutes;
 
-      let eventToUpdateToFirebaseActivities;
+      // let eventToUpdateToFirebaseActivities;
       if (formattedSelectedMonth === formattedThisMonth) {
         for (let event of this.combinedEventListThis) {
           if (event.timeStamp) {
@@ -1839,6 +1842,8 @@ export class TrackingPage extends React.Component {
               // console.log("event from this.combinedEventListThis", event);
               event.isActivityCompleted = false;
               event.isReported = true;
+
+              
               event.reason = reason;
               eventToUpdateToFirebaseActivities = event;
             }
@@ -1849,6 +1854,7 @@ export class TrackingPage extends React.Component {
           currentMonthDate: this.state.selectedDateRaw,
         });
         this.scrollToThisWeek();
+        
       } else {
         for (let event of this.combinedEventListLast) {
           if (event.timeStamp) {
@@ -1863,6 +1869,7 @@ export class TrackingPage extends React.Component {
         await this.lastMonthEventReported(this.state.selectedDateRaw);
         this.scrollToThisWeek();
       }
+      
 
       // console.log("formattedStartTime",formattedStartTime);
       // console.log("formattedEndTime",formattedEndTime);
@@ -1875,8 +1882,8 @@ export class TrackingPage extends React.Component {
       eventToUpdate.partialStatus = "ACTIVITY";
       eventToUpdate.oldTitle = eventToUpdate.title;
       eventToUpdate.title = activityName;
-
-      let eventToUpdateToFirebaseActivities;
+      this.onDailyReportClose();
+      
       if (formattedSelectedMonth === formattedThisMonth) {
         for (let event of this.combinedEventListThis) {
           if (event.timeStamp) {
@@ -1913,6 +1920,19 @@ export class TrackingPage extends React.Component {
         this.scrollToThisWeek();
       }
     }
+    let strategyToUpdate = this.currentStrategy;
+    // console.log("this.currentStrategy.plans", this.currentStrategy.plans);
+
+    await this.dataModel.updatePlan(
+      this.userKey,
+      eventToUpdateToFirebaseActivities
+    );
+    await this.dataModel.loadUserPlans(this.userKey);
+    this.userPlans = this.dataModel.getUserPlans();
+
+    await this.dataModel.updateStrategy(this.userKey, strategyToUpdate);
+    await this.dataModel.loadUserStrategies(this.userKey);
+    this.userStrategies = this.dataModel.getUserStrategies();
   };
 
   lastMonthEventReported = async (date) => {
