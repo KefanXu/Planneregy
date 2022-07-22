@@ -65,6 +65,7 @@ import * as SecureStore from "expo-secure-store";
 import { MonthCalendar } from "./Calendar";
 import { getDataModel } from "./DataModel";
 import { generalStyles } from "./styles/GeneralStyling";
+import { timing } from "react-native-reanimated";
 
 // import Swiper from "react-native-swiper";
 
@@ -99,6 +100,16 @@ let TEST_DATA3 = [
   { title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 6 },
 ];
 const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAY_EX = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
 const ICONS = {
   "01d": "☀️",
   "01n": "🌙",
@@ -144,9 +155,9 @@ const REPORTSCREEN_SEVEN = [
   { label: "No", value: "No" },
 ];
 const REPORT_OPTIONS = [
-  { label: "Activity Reports", value: "activity" },
-  { label: "Daily Reports", value: "daily" },
-  { label: "Both", value: "both" },
+  { label: "Records", value: "activity" },
+  { label: "Reports", value: "daily" },
+  // { label: "Both", value: "both" },
 ];
 const GREEN = "#1AB700";
 const BLACK = "#393939";
@@ -215,7 +226,8 @@ export class TrackingPage extends React.Component {
 
     this.preList = [];
     this.processDailyReports();
-
+    //Determine where the report popup come from
+    this.isReportFromPopup = false;
     this.state = {
       date: new Date(),
 
@@ -335,6 +347,14 @@ export class TrackingPage extends React.Component {
       isActivityRecordsVis: "flex",
       //report status: check the type of the report user submit
       reportStatus: "default",
+      //calendar view height
+      calendarViewHeight: 145,
+      //hide icon
+      hideIcon: <Ionicons name="chevron-down-circle" size={25} color="black" />,
+      //The activity detail information view on the detail popup
+      isDetailViewActivityInfoListVis:"flex",
+      //Display "No activity" on the detail popup  when there is no planned activity 
+      isNoActivitySignVis: "none"
     };
     this.processUserStrategies();
     // console.log("this.state.activityData", this.state.activityData);
@@ -1116,6 +1136,9 @@ export class TrackingPage extends React.Component {
   };
   //Press the title on calendar
   onPress = (item, monthNum, month) => {
+    this.isReportFromPopup = true;
+    this.setState({isDetailViewActivityInfoListVis:"flex" });
+    this.setState({isNoActivitySignVis:"none"})
     console.log("item, monthNum, month", item, monthNum, month);
     let today = new Date();
     let weatherList = [];
@@ -1170,16 +1193,37 @@ export class TrackingPage extends React.Component {
 
     this.detailViewCalendar = detailViewCalendar;
     this.setState({ isPlanDetailModalVis: true });
+    let cnt = 0;
+    for (let event of this.detailViewCalendar) {
+      if (event.title) {
+        cnt ++;
+      }
+    }
+    if (cnt === 0) {
+      this.setState({isDetailViewActivityInfoListVis: "none"});
+      this.setState({ isNoActivitySignVis: "flex"})
+    }
     console.log("detailViewCalendar", detailViewCalendar);
   };
   //Report btn pressed
   onMyActivityReportPressed = (item) => {
+    if (this.isReportFromPopup) {
+      console.log("Vis");
+      for (let event of this.state.plansBuddle) {
+        if (event.timeStamp === item.timeStamp) {
+          this.onReportActivity = event;
+        }
+      }
+    } else {
+      console.log("Not Vis");
+      this.onReportActivity = item;
+    }
+    
     this.setState({ isReportModalVis: true });
     this.setState({ reportDetailInfoVis: "flex" });
     this.setState({ isReportSwipePERVvis: "flex" });
     this.setState({ reportNEXTbtn: "NEXT" });
 
-    this.onReportActivity = item;
   };
   //When user pressed the daily report btn
   onDailyPressed = (item) => {
@@ -1212,6 +1256,7 @@ export class TrackingPage extends React.Component {
     this.setState({ selectedActivity: "" });
     this.setState({ startTime: new Date(this.today.setHours(8, 0, 0)) });
     this.setState({ startTime: new Date(this.today.setHours(8, 30, 0)) });
+    this.isReportFromPopup = false;
   };
   //Add unplanned activity btn pressed
   onAddActivityPressed = () => {
@@ -1300,9 +1345,10 @@ export class TrackingPage extends React.Component {
         this.setState({ isReportModalVis: true }), 1000;
       });
     } else if (currentSwipePage === 4) {
-      this.setState({ currentSwipeIndex: 3 });
-      this.setState({ currentSwipePage: 3 });
-      this.reportModalSwiperRef.current.scrollBy(-1, true);
+      this.setState({ currentSwipeIndex: 2 });
+      this.setState({ currentSwipePage: 2 });
+      this.reportModalSwiperRef.current.scrollBy(-2, true);
+      this.setState({ reportModalHeight: "50%" });
 
       this.setState({ isReportModalVis: false });
       setTimeout(() => {
@@ -1422,7 +1468,7 @@ export class TrackingPage extends React.Component {
     } else if (this.state.currentSwipePage === 1) {
       currentSwipePage = currentSwipePage + 6;
       this.setState({ currentSwipeIndex: 7 });
-      this.setState({ reportModalHeight: "90%" });
+      this.setState({ reportModalHeight: 670 });
       this.setState({ isReportModalVis: false });
       this.setState({ reportStatus: "COMPLETE" });
       this.setState({ reportNEXTbtn: "SUBMIT" });
@@ -1435,9 +1481,13 @@ export class TrackingPage extends React.Component {
         this.onSubmitPressed_NoActivity();
       } else {
         this.reportModalSwiperRef.current.scrollBy(1, true);
-        currentSwipePage++;
-        this.setState({ currentSwipeIndex: 3 });
+        currentSwipePage = currentSwipePage + 2;
+        this.setState({ currentSwipeIndex: 4 });
+        this.setState({ reportModalHeight: 500 });
         this.setState({ isReportModalVis: false });
+        this.setState({ startTime: new Date(this.onReportActivity.start) });
+        this.setState({ endTime: new Date(this.onReportActivity.end) });
+        this.setState({ selectedActivity: this.onReportActivity.title });
         setTimeout(() => {
           this.setState({ isReportModalVis: true }), 1000;
         });
@@ -1456,7 +1506,7 @@ export class TrackingPage extends React.Component {
       } else {
         // console.log("Different_TIME");
         this.reportModalSwiperRef.current.scrollBy(1, true);
-
+        this.setState({ reportModalHeight: 500 });
         currentSwipePage = currentSwipePage + 1;
         this.setState({ currentSwipeIndex: 4 });
         this.setState({ isReportModalVis: false });
@@ -1468,7 +1518,7 @@ export class TrackingPage extends React.Component {
       this.reportModalSwiperRef.current.scrollBy(3, true);
       currentSwipePage = currentSwipePage + 3;
       this.setState({ currentSwipeIndex: 7 });
-      this.setState({ reportModalHeight: "90%" });
+      this.setState({ reportModalHeight: 670 });
       this.setState({ reportNEXTbtn: "SUBMIT" });
       this.setState({ reportStatus: "PARTIALLY_COMPLETE_TIME" });
       this.setState({ isReportModalVis: false });
@@ -1479,7 +1529,7 @@ export class TrackingPage extends React.Component {
       this.reportModalSwiperRef.current.scrollBy(2, true);
       currentSwipePage = currentSwipePage + 2;
       this.setState({ currentSwipeIndex: 7 });
-      this.setState({ reportModalHeight: "90%" });
+      this.setState({ reportModalHeight: 670 });
       this.setState({ reportNEXTbtn: "SUBMIT" });
       this.setState({ reportStatus: "PARTIALLY_COMPLETE_ACTIVITY" });
       this.setState({ isReportModalVis: false });
@@ -1491,7 +1541,7 @@ export class TrackingPage extends React.Component {
         this.reportModalSwiperRef.current.scrollBy(2, true);
         currentSwipePage = currentSwipePage + 1;
         this.setState({ currentSwipeIndex: 7 });
-        this.setState({ reportModalHeight: 600 });
+        this.setState({ reportModalHeight: 670 });
         this.setState({ reportNEXTbtn: "SUBMIT" });
 
         this.setState({ isReportModalVis: false });
@@ -1511,7 +1561,7 @@ export class TrackingPage extends React.Component {
         this.state.reportStatus == "PARTIALLY_COMPLETE_ACTIVITY" ||
         this.state.reportStatus == "PARTIALLY_COMPLETE_TIME"
       ) {
-        this.OnSubmitPressed_PartiallyComplete(this.state.reportStatus);
+        this.OnSubmitPressed_PartiallyComplete();
       }
       console.log("SUBMIT on Self Report");
     }
@@ -1782,7 +1832,9 @@ export class TrackingPage extends React.Component {
     await this.dataModel.loadUserStrategies(this.userKey);
     this.userStrategies = this.dataModel.getUserStrategies();
   };
-  OnSubmitPressed_PartiallyComplete = async (reportStatus) => {
+  //Submit the report when the activity is partially completed
+  OnSubmitPressed_PartiallyComplete = async () => {
+    this.setState({ isReportModalVis: false });
     let eventToUpdate = this.onReportActivity;
     let newActivity = Object.assign({}, this.onReportActivity);
     let eventToUpdateToFirebaseActivities;
@@ -1791,11 +1843,23 @@ export class TrackingPage extends React.Component {
     let formattedSelectedMonth = parseInt(
       moment(eventToUpdate.start).format().slice(5, 7)
     );
-    let formattedThisMonth = parseInt(
-      moment(new Date()).format().slice(5, 7)
-    );
+    let formattedThisMonth = parseInt(moment(new Date()).format().slice(5, 7));
     let eventDate = new Date(eventToUpdate.start);
     await this.setState({ selectedDateRaw: eventDate });
+
+    let reportStatus;
+    let formattedStart = moment(this.state.startTime).format().slice(11, 16);
+    let formattedEnd = moment(this.state.endTime).format().slice(11, 16);
+    if (
+      formattedStart === this.onReportActivity.start.slice(11, 16) &&
+      formattedEnd === this.onReportActivity.end.slice(11, 16)
+    ) {
+      reportStatus = "PARTIALLY_COMPLETE_ACTIVITY";
+    } else {
+      reportStatus = "PARTIALLY_COMPLETE_TIME";
+    }
+    console.log("reportStatus", reportStatus);
+    console.log("this.state.selectedActivity", this.state.selectedActivity);
 
     if (reportStatus === "PARTIALLY_COMPLETE_TIME") {
       // Add a new partially completed activity
@@ -1803,29 +1867,36 @@ export class TrackingPage extends React.Component {
       newActivity.isActivityCompleted = false;
       newActivity.isReported = true;
       newActivity.isOtherActivity = true;
-      newActivity.timeStamp = eventToUpdate.timeStamp + "PARTIAL_NEW"
+      newActivity.timeStamp = eventToUpdate.timeStamp + "PARTIAL_NEW";
       let startTimeMinutes = moment(this.state.startTime).format("HH:mm:ss");
       let endTimeMinutes = moment(this.state.endTime).format("HH:mm:ss");
       let formattedDate = this.onReportActivity.start.slice(0, 11);
-      this.onDailyReportClose();
+
       let formattedStartTime = formattedDate + startTimeMinutes;
       let formattedEndTime = formattedDate + endTimeMinutes;
       newActivity.start = formattedStartTime;
       newActivity.end = formattedEndTime;
-
-
+      newActivity.title = this.state.selectedActivity;
 
       if (formattedSelectedMonth === formattedThisMonth) {
         this.combinedEventListThis.push(newActivity);
       } else {
         this.combinedEventListLast.push(newActivity);
       }
-      await this.dataModel.createNewPlan(this.userKey, newActivity)
+      await this.dataModel.createNewPlan(this.userKey, newActivity);
       //Update the original event
       eventToUpdate.isActivityCompleted = false;
+      eventToUpdate.isOtherActivity = false;
       eventToUpdate.reason = reason;
       eventToUpdate.isReported = true;
-      eventToUpdate.partialStatus = "TIME";
+      if (this.state.selectedActivity === this.onReportActivity.title) {
+        eventToUpdate.partialStatus = "TIME";
+      } else {
+        eventToUpdate.partialStatus = "TIME_AND_ACTIVITY";
+        eventToUpdate.oldTitle = eventToUpdate.title;
+        eventToUpdate.title = this.state.selectedActivity;
+      }
+
       eventToUpdate.newStart = formattedStartTime;
       eventToUpdate.newEnd = formattedEndTime;
       let duration = moment.duration(
@@ -1842,8 +1913,7 @@ export class TrackingPage extends React.Component {
               // console.log("event from this.combinedEventListThis", event);
               event.isActivityCompleted = false;
               event.isReported = true;
-
-              
+              event.isOtherActivity = false;
               event.reason = reason;
               eventToUpdateToFirebaseActivities = event;
             }
@@ -1853,14 +1923,16 @@ export class TrackingPage extends React.Component {
         await this.setState({
           currentMonthDate: this.state.selectedDateRaw,
         });
+        this.onDailyReportClose();
+
         this.scrollToThisWeek();
-        
       } else {
         for (let event of this.combinedEventListLast) {
           if (event.timeStamp) {
             if (event.timeStamp === eventToUpdate.timeStamp) {
               event.isActivityCompleted = false;
               event.isReported = true;
+              event.isOtherActivity = false;
               event.reason = reason;
               eventToUpdateToFirebaseActivities = event;
             }
@@ -1869,7 +1941,6 @@ export class TrackingPage extends React.Component {
         await this.lastMonthEventReported(this.state.selectedDateRaw);
         this.scrollToThisWeek();
       }
-      
 
       // console.log("formattedStartTime",formattedStartTime);
       // console.log("formattedEndTime",formattedEndTime);
@@ -1882,17 +1953,18 @@ export class TrackingPage extends React.Component {
       eventToUpdate.partialStatus = "ACTIVITY";
       eventToUpdate.oldTitle = eventToUpdate.title;
       eventToUpdate.title = activityName;
-      this.onDailyReportClose();
-      
+
       if (formattedSelectedMonth === formattedThisMonth) {
         for (let event of this.combinedEventListThis) {
           if (event.timeStamp) {
             if (event.timeStamp === eventToUpdate.timeStamp) {
               // console.log("event from this.combinedEventListThis", event);
               event.isActivityCompleted = false;
+              event.partialStatus = "ACTIVITY";
               event.isReported = true;
               event.isOtherActivity = true;
               event.reason = reason;
+              event.oldTitle = event.title;
               event.title = activityName;
               eventToUpdateToFirebaseActivities = event;
             }
@@ -1908,15 +1980,18 @@ export class TrackingPage extends React.Component {
           if (event.timeStamp) {
             if (event.timeStamp === eventToUpdate.timeStamp) {
               event.isActivityCompleted = false;
+              event.partialStatus = "ACTIVITY";
               event.isReported = true;
               event.isOtherActivity = true;
               event.reason = reason;
+              event.oldTitle = event.title;
               event.title = activityName;
               eventToUpdateToFirebaseActivities = event;
             }
           }
         }
         await this.lastMonthEventReported(this.state.selectedDateRaw);
+        this.onDailyReportClose();
         this.scrollToThisWeek();
       }
     }
@@ -1971,6 +2046,606 @@ export class TrackingPage extends React.Component {
     } else if (this.state.currentMonth === "NEXT_MONTH") {
       this.resetCalendarToCurrentMonth();
     }
+  };
+  onHideDetailPressed = () => {
+    if (this.state.calendarViewHeight === 145) {
+      this.setState({ calendarViewHeight: 435 });
+      this.setState({
+        hideIcon: <Ionicons name="chevron-up-circle" size={25} color="black" />,
+      });
+    } else {
+      this.setState({ calendarViewHeight: 145 });
+      this.setState({
+        hideIcon: (
+          <Ionicons name="chevron-down-circle" size={25} color="black" />
+        ),
+      });
+    }
+  };
+  //Styling for records
+  itemCompletedBlockStyle = (item, timing) => {
+    return (
+      <View
+        style={[
+          {
+            width: "100%",
+            height: this.state.isPlanDetailModalVis ? 70 : 39,
+            borderRadius: 20,
+            borderColor: "#F0F0F0",
+            borderWidth: 0,
+            paddingHorizontal: 6,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginTop: this.state.isPlanDetailModalVis ? 10 : 15,
+            backgroundColor: GREEN,
+          },
+        ]}
+      >
+        <View style={{ position: "absolute", left: 5 }}>
+          <Ionicons name="checkmark-circle" size={20} color="white" />
+        </View>
+        <Text
+          ellipsizeMode="tail"
+          numberOfLines={1}
+          style={{
+            fontFamily: "RobotoBoldBold",
+            fontSize: 14,
+            paddingLeft: 18,
+            color: "white",
+            width: 100,
+          }}
+        >
+          {item.title}
+        </Text>
+        <Text
+          style={{
+            fontFamily: "RobotoRegular",
+            fontSize: 14,
+            color: "white",
+          }}
+        >
+          {moment(item.start).format().slice(5, 10)} {"| "}
+        </Text>
+        <Text
+          style={{
+            fontFamily: "RobotoRegular",
+            fontSize: 14,
+            color: "white",
+          }}
+        >
+          {timing}
+        </Text>
+      </View>
+    );
+  };
+  itemUnCompletedBlockStyle = (item, timing) => {
+    return (
+      <View
+        style={[
+          {
+            width: "100%",
+            height: 60,
+            borderRadius: 15,
+            borderColor: "#F0F0F0",
+            borderWidth: 0,
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginTop: 15,
+            backgroundColor: BLACK,
+            // paddingVertical: 10,
+            flex: 1,
+          },
+        ]}
+      >
+        <View
+          style={{
+            // marginTop:10,
+            flexDirection: "row",
+            width: "100%",
+            height: 32,
+            // paddingHorizontal: 25,
+            // backgroundColor:"red",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <View style={{ position: "absolute", left: 5 }}>
+            <MaterialIcons name="cancel" size={24} color="white" />
+          </View>
+          <Text
+            ellipsizeMode="tail"
+            numberOfLines={1}
+            style={{
+              fontFamily: "RobotoBoldBold",
+              fontSize: 14,
+              paddingLeft: 18,
+              color: "white",
+              width: 100,
+            }}
+          >
+            {item.title}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              color: "white",
+            }}
+          >
+            {moment(item.start).format().slice(5, 10)} {"| "}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              color: "white",
+            }}
+          >
+            {timing}
+          </Text>
+        </View>
+        <View
+          style={{
+            justifyContent: "flex-start",
+            flexDirection: "row",
+            backgroundColor: "white",
+            borderColor: BLACK,
+            alignItems: "center",
+            flex: 1,
+            borderBottomLeftRadius: 15,
+            borderBottomRightRadius: 15,
+            borderWidth: 2,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              textAlignVertical: "center",
+              color: "white",
+              flex: 1,
+              marginLeft: 35,
+              color: BLACK,
+            }}
+          >
+            Affected by: {item.reason}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+  itemUnreportedBlockStyle = (item, timing) => {
+    let itemUnreportedBlockStyle = (
+      <View
+        style={[
+          {
+            width: "100%",
+            height: 60,
+            borderRadius: 15,
+            borderColor: "black",
+            borderWidth: 2,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginTop: 15,
+            backgroundColor: "white",
+            // flexDirection: "column",
+          },
+        ]}
+      >
+        <View
+          style={{
+            flexDirection: "column",
+            justifyContent: "space-between",
+            width: "80%",
+            paddingVertical: 0,
+            paddingHorizontal: 6,
+            height: "70%",
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "RobotoBoldBold",
+              fontSize: 14,
+              paddingLeft: 8,
+              color: "black",
+            }}
+          >
+            {item.title}
+            {" | "}
+            <Text
+              style={{
+                fontFamily: "RobotoRegular",
+                fontSize: 14,
+              }}
+            >
+              {moment(item.start).format().slice(5, 10)}
+            </Text>
+          </Text>
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              width: "100%",
+              paddingLeft: 8,
+            }}
+          >
+            {timing}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={{
+            borderBottomRightRadius: 12,
+            borderTopRightRadius: 12,
+            borderWidth: 3,
+            height: "100%",
+            backgroundColor: "black",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          onPress={() => {
+            // item.isReported = true;
+            // console.log(
+            //   "this.state.plansBuddle",
+            //   this.state.plansBuddle
+            // );
+            
+            setTimeout(() => {
+              this.onMyActivityReportPressed(item), 1000;
+            });
+            this.setState({ isPlanDetailModalVis: false });
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              color: "white",
+              paddingHorizontal: 10,
+              alignSelf: "center",
+              backgroundColor: "black",
+            }}
+          >
+            Report
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+    return itemUnreportedBlockStyle;
+  };
+  itemPartialCompleteStyle_TIME = (item, timing, newTiming) => {
+    let itemPartialCompleteStyle_TIME = (
+      <View
+        style={[
+          {
+            width: "100%",
+            height: 85,
+            borderRadius: 15,
+            borderColor: "#F0F0F0",
+            borderWidth: 0,
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginTop: 15,
+            backgroundColor: YELLOW,
+            flex: 1,
+          },
+        ]}
+      >
+        <View
+          style={{
+            marginTop: 10,
+            flexDirection: "row",
+            width: "100%",
+            paddingHorizontal: 20,
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          <View style={{ position: "absolute", left: 5 }}>
+            <Ionicons name="remove-circle" size={24} color="white" />
+          </View>
+          <Text
+            ellipsizeMode="tail"
+            numberOfLines={1}
+            style={{
+              fontFamily: "RobotoBoldBold",
+              fontSize: 14,
+              paddingLeft: 18,
+              color: "white",
+              marginRight: 10,
+              // width: 100,
+            }}
+          >
+            {item.title}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              color: "white",
+            }}
+          >
+            {moment(item.start).format().slice(5, 10)} {"|"}{" "}
+            {moment(item.start).format("ddd").toUpperCase()}
+          </Text>
+        </View>
+        <View
+          style={{
+            justifyContent: "flex-start",
+            flexDirection: "row",
+            // backgroundColor:"white",
+            borderRadius: 20,
+            marginTop: 2,
+            marginRight: 5,
+            marginLeft: 28,
+            // borderColor: "white",
+            alignItems: "center",
+            flex: 1,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "RobotoBoldBold",
+              fontSize: 12,
+              flex: 1,
+              color: "black",
+              marginLeft: 10,
+            }}
+          >
+            {timing.slice(4)} → {newTiming}
+          </Text>
+        </View>
+        <View
+          style={{
+            justifyContent: "flex-start",
+            flexDirection: "row",
+            // borderTopWidth: 1,
+            borderColor: "white",
+            alignItems: "center",
+            backgroundColor: "white",
+            flex: 1,
+            borderBottomLeftRadius: 15,
+            borderBottomRightRadius: 15,
+            borderWidth: 2,
+            borderColor: YELLOW,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              color: YELLOW,
+              marginLeft: 35,
+              flex: 1,
+            }}
+          >
+            Affected by: {item.reason}
+          </Text>
+        </View>
+      </View>
+    );
+    return itemPartialCompleteStyle_TIME;
+  };
+  itemPartialCompleteStyle_ACTIVITY = (item, timing) => {
+    let itemPartialCompleteStyle_ACTIVITY = (
+      <View
+        style={[
+          {
+            width: "100%",
+            height: 85,
+            borderRadius: 15,
+            borderColor: "#F0F0F0",
+            borderWidth: 0,
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginTop: this.state.isPlanDetailModalVis ? 7: 15,
+            backgroundColor: YELLOW,
+            paddingVertical: 0,
+            flex: 1,
+          },
+        ]}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            width: "100%",
+            paddingHorizontal: 20,
+            justifyContent: "flex-start",
+            alignItems: "center",
+            marginTop: 10,
+          }}
+        >
+          <View style={{ position: "absolute", left: 5 }}>
+            <Ionicons name="remove-circle" size={24} color="white" />
+          </View>
+          <View style={{ borderRadius: 20, width: "100%" }}>
+            <Text
+              ellipsizeMode="tail"
+              numberOfLines={1}
+              style={{
+                fontFamily: "RobotoBoldBold",
+                fontSize: 14,
+                paddingLeft: 18,
+                width: "100%",
+                color: "black",
+              }}
+            >
+              {item.oldTitle} → {item.title}{" "}
+              <Text style={{ fontFamily: "RobotoRegular", color: "white" }}>
+                {item.start.slice(5, 10)} | {timing.slice(0, 3)}
+              </Text>
+            </Text>
+          </View>
+        </View>
+        <View
+          style={{
+            justifyContent: "flex-start",
+            flexDirection: "row",
+            // borderTopWidth: 1,
+            borderColor: "white",
+            alignItems: "center",
+            flex: 1,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              flex: 1,
+              color: "white",
+              marginLeft: 38,
+            }}
+          >
+            {timing.slice(4)}
+          </Text>
+        </View>
+        <View
+          style={{
+            justifyContent: "flex-start",
+            flexDirection: "row",
+            borderColor: YELLOW,
+            alignItems: "center",
+            backgroundColor: "white",
+            flex: 1,
+            width: "100%",
+            borderWidth: 2,
+            borderBottomLeftRadius: 15,
+            borderBottomRightRadius: 15,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              color: YELLOW,
+              marginLeft: 35,
+              flex: 1,
+            }}
+          >
+            Affected by: {item.reason}
+          </Text>
+        </View>
+      </View>
+    );
+    return itemPartialCompleteStyle_ACTIVITY;
+  };
+  itemPartialCompleteStyle_TIME_ACTIVITY = (item, timing, newTiming) => {
+    let itemPartialCompleteStyle_TIME = (
+      <View
+        style={[
+          {
+            width: "100%",
+            height: 85,
+            borderRadius: 15,
+            borderColor: "#F0F0F0",
+            borderWidth: 0,
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginTop: 15,
+            backgroundColor: YELLOW,
+            flex: 1,
+          },
+        ]}
+      >
+        <View
+          style={{
+            marginTop: 10,
+            flexDirection: "row",
+            width: "100%",
+            paddingHorizontal: 20,
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          <View style={{ position: "absolute", left: 5 }}>
+            <Ionicons name="remove-circle" size={24} color="white" />
+          </View>
+          <Text
+            ellipsizeMode="tail"
+            numberOfLines={1}
+            style={{
+              fontFamily: "RobotoBoldBold",
+              fontSize: 14,
+              paddingLeft: 18,
+              color: "black",
+              marginRight: 10,
+              // width: 100,
+            }}
+          >
+            {item.oldTitle} → {item.title}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              color: "white",
+            }}
+          >
+            {moment(item.start).format().slice(5, 10)} {"|"}{" "}
+            {moment(item.start).format("ddd").toUpperCase()}
+          </Text>
+        </View>
+        <View
+          style={{
+            justifyContent: "flex-start",
+            flexDirection: "row",
+            // backgroundColor:"white",
+            borderRadius: 20,
+            marginTop: 2,
+            marginRight: 5,
+            marginLeft: 28,
+            // borderColor: "white",
+            alignItems: "center",
+            flex: 1,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "RobotoBoldBold",
+              fontSize: 12,
+              flex: 1,
+              color: "black",
+              marginLeft: 10,
+            }}
+          >
+            {timing.slice(4)} → {newTiming}
+          </Text>
+        </View>
+        <View
+          style={{
+            justifyContent: "flex-start",
+            flexDirection: "row",
+            // borderTopWidth: 1,
+            borderColor: "white",
+            alignItems: "center",
+            backgroundColor: "white",
+            flex: 1,
+            borderBottomLeftRadius: 15,
+            borderBottomRightRadius: 15,
+            borderWidth: 2,
+            borderColor: YELLOW,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "RobotoRegular",
+              fontSize: 14,
+              color: YELLOW,
+              marginLeft: 35,
+              flex: 1,
+            }}
+          >
+            Affected by: {item.reason}
+          </Text>
+        </View>
+      </View>
+    );
+    return itemPartialCompleteStyle_TIME;
   };
 
   render() {
@@ -2543,7 +3218,6 @@ export class TrackingPage extends React.Component {
               Current Planning Strategy
             </Text>
           </View>
-
           <View
             style={[
               generalStyles.shadowStyle,
@@ -2953,7 +3627,7 @@ export class TrackingPage extends React.Component {
           {/* Report option switch selector */}
           <View
             style={{
-              width: "85%",
+              width: "100%",
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
@@ -2964,9 +3638,25 @@ export class TrackingPage extends React.Component {
             {/* <Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}>
               My Activities
             </Text> */}
+            <TouchableOpacity
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+                marginRight: 10,
+              }}
+              onPress={() => {
+                this.onHideDetailPressed();
+              }}
+            >
+              {this.state.hideIcon}
+            </TouchableOpacity>
+
             <View
               style={{
                 width: "100%",
+                flex: 10,
+
                 height: 20,
                 alignItems: "center",
                 flexDirection: "row",
@@ -3019,6 +3709,7 @@ export class TrackingPage extends React.Component {
                 alignItems: "center",
                 justifyContent: "center",
                 marginLeft: 10,
+                flex: 1,
               }}
               onPress={() => {
                 this.onAddActivityPressed();
@@ -3057,469 +3748,55 @@ export class TrackingPage extends React.Component {
                     " MIN";
                   let itemBlockStyle;
                   if (item.newStart) {
-                    newTiming =                     
-                    item.newStart.slice(11, 16) +
-                    " - " +
-                    item.newEnd.slice(11, 16) +
-                    " | " +
-                    item.newDuration +
-                    " MIN";
+                    newTiming =
+                      item.newStart.slice(11, 16) +
+                      " - " +
+                      item.newEnd.slice(11, 16) +
+                      " | " +
+                      item.newDuration +
+                      " MIN";
                   }
-                  let itemCompletedBlockStyle = (
-                    <View
-                      style={[
-                        {
-                          width: "100%",
-                          height: 39,
-                          borderRadius: 20,
-                          borderColor: "#F0F0F0",
-                          borderWidth: 0,
-                          paddingHorizontal: 20,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          marginTop: 15,
-                          backgroundColor: GREEN,
-                        },
-                      ]}
-                    >
-                      <View style={{ position: "absolute", left: 5 }}>
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={24}
-                          color="white"
-                        />
-                      </View>
-                      <Text
-                        ellipsizeMode="tail"
-                        numberOfLines={1}
-                        style={{
-                          fontFamily: "RobotoBoldBold",
-                          fontSize: 14,
-                          paddingLeft: 18,
-                          color: "white",
-                          width: 100,
-                        }}
-                      >
-                        {item.title}
-                      </Text>
-                      <Text
-                        style={{
-                          fontFamily: "RobotoRegular",
-                          fontSize: 14,
-                          color: "white",
-                        }}
-                      >
-                        {moment(item.start).format().slice(5, 10)} {"| "}
-                      </Text>
-                      <Text
-                        style={{
-                          fontFamily: "RobotoRegular",
-                          fontSize: 14,
-                          color: "white",
-                        }}
-                      >
-                        {timing}
-                      </Text>
-                    </View>
-                  );
-                  let itemUnCompletedBlockStyle = (
-                    <View
-                      style={[
-                        {
-                          width: "100%",
-                          height: 60,
-                          borderRadius: 20,
-                          borderColor: "#F0F0F0",
-                          borderWidth: 0,
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          marginTop: 15,
-                          backgroundColor: BLACK,
-                          paddingVertical: 10,
-                          flex: 1,
-                        },
-                      ]}
-                    >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          width: "100%",
-                          paddingHorizontal: 20,
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View style={{ position: "absolute", left: 5 }}>
-                          <MaterialIcons
-                            name="cancel"
-                            size={24}
-                            color="white"
-                          />
-                        </View>
-                        <Text
-                          ellipsizeMode="tail"
-                          numberOfLines={1}
-                          style={{
-                            fontFamily: "RobotoBoldBold",
-                            fontSize: 14,
-                            paddingLeft: 18,
-                            color: "white",
-                            width: 100,
-                          }}
-                        >
-                          {item.title}
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: "RobotoRegular",
-                            fontSize: 14,
-                            color: "white",
-                          }}
-                        >
-                          {moment(item.start).format().slice(5, 10)} {"| "}
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: "RobotoRegular",
-                            fontSize: 14,
-                            color: "white",
-                          }}
-                        >
-                          {timing}
-                        </Text>
-                      </View>
-                      <View
-                        style={{
-                          justifyContent: "flex-start",
-                          flexDirection: "row",
-                          // borderTopWidth: 1,
-                          borderColor: "white",
-                          alignItems: "center",
-                          flex: 1,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "RobotoRegular",
-                            fontSize: 14,
-                            textAlignVertical: "center",
-                            color: "white",
-                            flex: 1,
-                            marginLeft: 35,
-                            marginTop: 5,
-                          }}
-                        >
-                          Affected by: {item.reason}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                  let itemUnreportedBlockStyle = (
-                    <View
-                      style={[
-                        {
-                          width: "100%",
-                          height: 60,
-                          borderRadius: 20,
-                          borderColor: "#F0F0F0",
-                          borderWidth: 1,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          marginTop: 15,
-                          backgroundColor: "white",
-                          // flexDirection: "column",
-                        },
-                      ]}
-                    >
-                      <View
-                        style={{
-                          flexDirection: "column",
-                          justifyContent: "space-between",
-                          width: "80%",
-                          paddingVertical: 0,
-                          paddingHorizontal: 6,
-                          height: "70%",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "RobotoBoldBold",
-                            fontSize: 14,
-                            paddingLeft: 8,
-                            color: "black",
-                          }}
-                        >
-                          {item.title}
-                          {" | "}
-                          <Text
-                            style={{
-                              fontFamily: "RobotoRegular",
-                              fontSize: 14,
-                            }}
-                          >
-                            {moment(item.start).format().slice(5, 10)}
-                          </Text>
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: "RobotoRegular",
-                            fontSize: 14,
-                            width: "100%",
-                            paddingLeft: 8,
-                          }}
-                        >
-                          {timing}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        style={{
-                          borderBottomRightRadius: 20,
-                          borderTopRightRadius: 20,
-                          height: "100%",
-                          backgroundColor: "black",
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                        onPress={() => {
-                          // item.isReported = true;
-                          // console.log(
-                          //   "this.state.plansBuddle",
-                          //   this.state.plansBuddle
-                          // );
-                          this.onMyActivityReportPressed(item);
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "RobotoRegular",
-                            fontSize: 14,
-                            color: "white",
-                            paddingHorizontal: 10,
-                            alignSelf: "center",
-                          }}
-                        >
-                          Report
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  );
-                  let itemPartialCompleteStyle_TIME = (
-                    <View
-                      style={[
-                        {
-                          width: "100%",
-                          height: 90,
-                          borderRadius: 20,
-                          borderColor: "#F0F0F0",
-                          borderWidth: 0,
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          marginTop: 15,
-                          backgroundColor: YELLOW,
-                          paddingVertical: 10,
-                          flex: 1,
-                        },
-                      ]}
-                    >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          width: "100%",
-                          paddingHorizontal: 20,
-                          justifyContent: "flex-start",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View style={{ position: "absolute", left: 5 }}>
-                          <Ionicons
-                            name="remove-circle"
-                            size={24}
-                            color="white"
-                          />
-                        </View>
-                        <Text
-                          ellipsizeMode="tail"
-                          numberOfLines={1}
-                          style={{
-                            fontFamily: "RobotoBoldBold",
-                            fontSize: 14,
-                            paddingLeft: 18,
-                            color: "white",
-                            width: 100,
-                          }}
-                        >
-                          {item.title}
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: "RobotoRegular",
-                            fontSize: 14,
-                            color: "white",
-                          }}
-                        >
-                          {moment(item.start).format().slice(5, 10)} {"|"} {moment(item.start).format("ddd").toUpperCase() }
-                        </Text>
-                      </View>
-                      <View
-                        style={{
-                          justifyContent: "flex-start",
-                          flexDirection: "row",
-                          // borderTopWidth: 1,
-                          borderColor: "white",
-                          alignItems: "center",
-                          flex: 1,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "RobotoRegular",
-                            fontSize: 14,
-                            flex:1,
-                            color: "white",
-                            marginLeft:35
-                          }}
-                        >
-                          Affected by: {item.reason}
-                        </Text>
-                      </View>
-                      <View
-                        style={{
-                          justifyContent: "flex-start",
-                          flexDirection: "row",
-                          // borderTopWidth: 1,
-                          borderColor: "white",
-                          alignItems: "center",
-                          flex: 1,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "RobotoRegular",
-                            fontSize: 14,
-                            color: "white",
-                            marginLeft:35
-                          }}
-                        >
-                          {timing.slice(4,)} → {newTiming}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                  let itemPartialCompleteStyle_ACTIVITY = (
-                    <View
-                      style={[
-                        {
-                          width: "100%",
-                          height: 90,
-                          borderRadius: 20,
-                          borderColor: "#F0F0F0",
-                          borderWidth: 0,
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          marginTop: 15,
-                          backgroundColor: YELLOW,
-                          paddingVertical: 10,
-                          flex: 1,
-                        },
-                      ]}
-                    >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          width: "100%",
-                          paddingHorizontal: 20,
-                          justifyContent: "flex-start",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View style={{ position: "absolute", left: 5 }}>
-                          <Ionicons
-                            name="remove-circle"
-                            size={24}
-                            color="white"
-                          />
-                        </View>
-                        <Text
-                          ellipsizeMode="tail"
-                          numberOfLines={1}
-                          style={{
-                            fontFamily: "RobotoBoldBold",
-                            fontSize: 14,
-                            paddingLeft: 18,
-                            color: "white",
-                            width: "100%",
-                          }}
-                        >
-                          {item.oldTitle} → {item.title}
-                        </Text>
-                      </View>
-                      <View
-                        style={{
-                          justifyContent: "flex-start",
-                          flexDirection: "row",
-                          // borderTopWidth: 1,
-                          borderColor: "white",
-                          alignItems: "center",
-                          flex: 1,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "RobotoRegular",
-                            fontSize: 14,
-                            flex:1,
-                            color: "white",
-                            marginLeft:35
-                          }}
-                        >
-                          Affected by: {item.reason}
-                        </Text>
-                      </View>
-                      <View
-                        style={{
-                          justifyContent: "flex-start",
-                          flexDirection: "row",
-                          // borderTopWidth: 1,
-                          borderColor: "white",
-                          alignItems: "center",
-                          flex: 1,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "RobotoRegular",
-                            fontSize: 14,
-                            color: "white",
-                            marginLeft:35,
-                            flex:1
-                          }}
-                        >
-                          {timing}
-                        </Text>
-                      </View>
-                    </View>
-                  );
+
                   if (!item.isReported) {
-                    itemBlockStyle = itemUnreportedBlockStyle;
+                    itemBlockStyle = this.itemUnreportedBlockStyle(
+                      item,
+                      timing
+                    );
                   } else {
                     if (item.isActivityCompleted) {
-                      itemBlockStyle = itemCompletedBlockStyle;
+                      itemBlockStyle = this.itemCompletedBlockStyle(
+                        item,
+                        timing
+                      );
                     } else {
                       if (item.isOtherActivity) {
                       } else {
                         if (item.partialStatus) {
                           if (item.partialStatus === "TIME") {
-                            itemBlockStyle = itemPartialCompleteStyle_TIME;
+                            itemBlockStyle = this.itemPartialCompleteStyle_TIME(
+                              item,
+                              timing,
+                              newTiming
+                            );
+                          } else if (item.partialStatus === "ACTIVITY") {
+                            itemBlockStyle =
+                              this.itemPartialCompleteStyle_ACTIVITY(
+                                item,
+                                timing
+                              );
                           } else {
-                            itemBlockStyle = itemPartialCompleteStyle_ACTIVITY;
+                            itemBlockStyle =
+                              this.itemPartialCompleteStyle_TIME_ACTIVITY(
+                                item,
+                                timing,
+                                newTiming
+                              );
                           }
                         } else {
-                          itemBlockStyle = itemUnCompletedBlockStyle;
+                          itemBlockStyle = this.itemUnCompletedBlockStyle(
+                            item,
+                            timing
+                          );
                         }
                       }
                     }
@@ -4197,6 +4474,169 @@ export class TrackingPage extends React.Component {
             marginBottom: 30,
           }}
         ></View>
+        {/* First Row of Activity Selection */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: "5%",
+            paddingVertical: "2%",
+            height: 90,
+            width: "100%",
+            borderColor: "#DADADA",
+            borderWidth: 2,
+            borderRadius: 20,
+            marginTop: "2%",
+          }}
+        >
+          <View
+            style={{
+              justifyContent: "space-between",
+              alignItems: "center",
+              height: "100%",
+              width: "50%",
+              paddingVertical: "2%",
+              paddingHorizontal: "2%",
+            }}
+          >
+            <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 12 }}>
+              Activity
+            </Text>
+            <View
+              style={{
+                backgroundColor: "black",
+                borderRadius: 40,
+                height: "50%",
+                width: "100%",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <ModalSelector
+                style={{ borderWidth: 0, borderRadius: 20 }}
+                // touchableStyle={{ color: "white" }}
+                optionContainerStyle={{
+                  borderWidth: 0,
+                  backgroundColor: "white",
+                  borderColor: "grey",
+                  borderWidth: 2,
+                  borderRadius: 15,
+                }}
+                selectStyle={{ borderWidth: 0 }}
+                selectTextStyle={{
+                  textAlign: "center",
+                  color: "white",
+                  fontWeight: "bold",
+                  borderRadius: 20,
+                  fontSize: 12,
+                }}
+                initValueTextStyle={{
+                  textAlign: "center",
+                  color: "white",
+                  fontWeight: "bold",
+                  backgroundColor: "black",
+                  borderRadius: 20,
+                  fontSize: 12,
+                }}
+                backdropPressToClose={true}
+                overlayStyle={{
+                  flex: 1,
+                  padding: "5%",
+                  justifyContent: "center",
+                  backgroundColor: "rgba(0,0,0,0)",
+                  borderRadius: 20,
+                }}
+                optionTextStyle={{
+                  fontWeight: "bold",
+                  fontFamily: "RobotoBoldBlack",
+                }}
+                sectionTextStyle={{
+                  fontWeight: "bold",
+                  fontFamily: "RobotoBoldItalic",
+                }}
+                cancelStyle={{
+                  backgroundColor: "black",
+                  borderRadius: 15,
+                }}
+                cancelTextStyle={{ fontWeight: "bold", color: "white" }}
+                data={this.state.activityData}
+                initValue={this.onReportActivity.title}
+                onChange={async (item) => {
+                  this.setState({ isActivityTypeSelected: true });
+                  this.setState({ selectedActivity: item.label });
+                  // await this.activityFilter(item);
+                }}
+              />
+            </View>
+          </View>
+          <View
+            style={{
+              justifyContent: "space-between",
+              alignItems: "center",
+              height: "100%",
+              width: "50%",
+              paddingVertical: "2%",
+              paddingHorizontal: "2%",
+            }}
+          >
+            <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 12 }}>
+              Self-Defined Activity
+            </Text>
+            {/* Add New Activity Text Field */}
+            <View
+              style={{
+                backgroundColor: "white",
+                height: "50%",
+                borderRadius: 20,
+                borderWidth: 2,
+                borderColor: "black",
+                marginRight: 0,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <TextInput
+                style={{
+                  fontSize: 16,
+                  marginLeft: 5,
+                  width: "100%",
+                  textAlign: "center",
+                  fontFamily: "RobotoBoldItalic",
+                }}
+                ref={(input) => {
+                  this.textInput = input;
+                }}
+                placeholder="new activity"
+                value={this.state.userDefinedActivityText}
+                onChangeText={(text) =>
+                  this.setState({ userDefinedActivityText: text })
+                }
+              ></TextInput>
+              <View
+                style={{
+                  margin: 1,
+                  justifyContent: "center",
+                  position: "absolute",
+                  marginRight: 1,
+                }}
+              >
+                <TouchableOpacity
+                  style={{ alignItems: "center", justifyContent: "center" }}
+                  onPress={this.addNewActivityBtnPressed}
+                >
+                  <Ionicons
+                    name="ios-add-circle"
+                    size={25}
+                    color={"black"}
+                    // style={{flex:0.1}}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
         {/* Time Picker */}
         <View
           style={{
@@ -5322,27 +5762,28 @@ export class TrackingPage extends React.Component {
           </View>
         </Modal>
         {/* Plan Detail View */}
-        <Modal
-          propagateSwipe={true}
-          isVisible={this.state.isPlanDetailModalVis}
+        <RNModal
+          animationType="slide"
+          visible={this.state.isPlanDetailModalVis}
+          // propagateSwipe={true}
+          // isVisible={this.state.isPlanDetailModalVis}
           style={{
             justifyContent: "flex-start",
             alignItems: "center",
-            marginTop: 70,
-            marginBottom: 130,
+            // marginBottom: 130,
           }}
-          hasBackdrop={true}
-          backdropOpacity={0}
-          onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
-          onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
-          swipeDirection="down"
+          presentationStyle="overFullScreen"
+          transparent={true}
+          // hasBackdrop={true}
+          // backdropOpacity={0}
+          // onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
+          // onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
+          // swipeDirection="down"
         >
           <View
             style={{
-              flex: 1,
               alignItems: "center",
               justifyContent: "center",
-              flexDirection: "column",
               width: "100%",
               height: "100%",
             }}
@@ -5351,8 +5792,8 @@ export class TrackingPage extends React.Component {
               style={[
                 generalStyles.shadowStyle,
                 {
-                  flex: 1,
-                  width: "100%",
+                  height: "70%",
+                  width: "95%",
                   backgroundColor: "white",
                   // borderWidth: 2,
                   borderColor: "black",
@@ -5384,13 +5825,23 @@ export class TrackingPage extends React.Component {
                   </TouchableOpacity>
                 </View>
               </View> */}
-              <View style={{ flex: 0.9, width: "100%" }}>
+              <View style={{ height: "85%", width: "100%" }}>
+                <TouchableOpacity
+                  style={{ position: "absolute", top: 3, right: 3, zIndex: 1 }}
+                  onPress={() => {
+                    this.setState({ isPlanDetailModalVis: false });
+
+                    // this.reportModalSwiperRef.current.scrollBy(2, true);
+                  }}
+                >
+                  <AntDesign name="closecircle" size={24} color="black" />
+                </TouchableOpacity>
+
                 <View
                   style={[
                     generalStyles.shadowStyle,
                     {
-                      height: 80,
-                      marginTop: 0,
+                      height: 180,
                       width: "100%",
                       backgroundColor: "white",
                       // borderWidth: 2,
@@ -5421,21 +5872,26 @@ export class TrackingPage extends React.Component {
                       generalStyles.shadowStyle,
                       {
                         flex: 1,
-                        width: "90%",
+                        width: "100%",
                         marginTop: 0,
-                        marginLeft: 10,
+                        marginLeft: 0,
                         justifyContent: "space-between",
                         alignItems: "center",
                         flexDirection: "row",
-                        // backgroundColor: RED,
+                        borderColor: "grey",
+                        backgroundColor: "white",
+                        borderRadius: 15,
                       },
                     ]}
                   >
                     <View
                       style={{
                         borderRightWidth: 2,
-                        width: 60,
+                        width: 100,
                         borderColor: "grey",
+                        height: "50%",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
                       <Text
@@ -5485,6 +5941,8 @@ export class TrackingPage extends React.Component {
                       style={{
                         borderLeftWidth: 2,
                         width: 100,
+                        height: "50%",
+                        alignItems: "center",
                         justifyContent: "center",
                         flexDirection: "row",
                         borderColor: "grey",
@@ -5497,7 +5955,112 @@ export class TrackingPage extends React.Component {
                       </Text>
                     </View>
                   </View>
+                  <View
+                    style={{
+                      height: "50%",
+                      paddingHorizontal: 15,
+                      marginBottom: 10,
+                      display:this.state.isNoActivitySignVis,
+                      justifyContent:"center",
+                      alignItems:"center"
+                    }}
+                  ><Text style={{fontFamily:"RobotoBoldBlack", fontSize:22, color:"grey", textAlign:"center"}}>No Activity Planned for This Day</Text></View>
+                  <View
+                    style={{
+                      height: "55%",
+                      paddingHorizontal: 5,
+                      paddingBottom:5,
+                      marginBottom:5,
+                      display:this.state.isDetailViewActivityInfoListVis
+                    }}
+                  >
+                    <FlatList
+                      data={this.detailViewCalendar}
+                      contentContainerStyle={{
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                        paddingHorizontal: 5,
+                      }}
+                      renderItem={({ item }) => {
+                        if (item.title) {
+                          if (!item.isDeleted) {
+                            let newTiming = "";
+                            let timing =
+                              moment(item.start).format("ddd").toUpperCase() +
+                              " " +
+                              item.start.slice(11, 16) +
+                              " - " +
+                              item.end.slice(11, 16) +
+                              " | " +
+                              item.duration +
+                              " MIN";
+                            let itemBlockStyle;
+                            if (item.newStart) {
+                              newTiming =
+                                item.newStart.slice(11, 16) +
+                                " - " +
+                                item.newEnd.slice(11, 16) +
+                                " | " +
+                                item.newDuration +
+                                " MIN";
+                            }
+
+                            if (!item.isReported) {
+                              itemBlockStyle = this.itemUnreportedBlockStyle(
+                                item,
+                                timing
+                              );
+                            } else {
+                              if (item.isActivityCompleted) {
+                                itemBlockStyle = this.itemCompletedBlockStyle(
+                                  item,
+                                  timing
+                                );
+                              } else {
+                                if (item.partialStatus) {
+                                  if (item.partialStatus === "TIME") {
+                                    itemBlockStyle =
+                                      this.itemPartialCompleteStyle_TIME(
+                                        item,
+                                        timing,
+                                        newTiming
+                                      );
+                                  } else if (
+                                    item.partialStatus === "ACTIVITY"
+                                  ) {
+                                    itemBlockStyle =
+                                      this.itemPartialCompleteStyle_ACTIVITY(
+                                        item,
+                                        timing
+                                      );
+                                  } else {
+                                    itemBlockStyle =
+                                      this.itemPartialCompleteStyle_TIME_ACTIVITY(
+                                        item,
+                                        timing,
+                                        newTiming
+                                      );
+                                  }
+                                } else {
+                                  itemBlockStyle =
+                                    this.itemUnCompletedBlockStyle(
+                                      item,
+                                      timing
+                                    );
+                                }
+                              }
+                            }
+
+                            return itemBlockStyle;
+                          }
+                        }
+
+                        // console.log("items in plansBuddle", item);
+                      }}
+                    />
+                  </View>
                 </View>
+                {/* Calendar View */}
                 <View
                   style={[
                     generalStyles.shadowStyle,
@@ -5533,7 +6096,7 @@ export class TrackingPage extends React.Component {
               </View>
             </View>
           </View>
-        </Modal>
+        </RNModal>
         {/* Calendar View & Buttons */}
         <View
           style={{
@@ -5548,7 +6111,7 @@ export class TrackingPage extends React.Component {
           <CalendarHeader height={15} width={333} />
           <View
             style={{
-              height: 145,
+              height: this.state.calendarViewHeight,
               width: "100%",
               padding: 4,
               backgroundColor: "white",

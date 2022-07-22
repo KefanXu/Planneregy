@@ -502,13 +502,14 @@ export class MonthCalendar extends React.Component {
                           );
                         } else {
                           //partially completed activity
-                          if (item.isOtherActivity) {
+                          if ("isOtherActivity" in item) {
                             return (
                               //Partially completed events
                               <View
                                 style={{
                                   width: "100%",
                                   backgroundColor: YELLOW,
+                                  opacity: item.isOtherActivity ? 1 : 0.5,
                                   borderRadius: 5,
                                   // flex: 1,
                                   height: 15,
@@ -719,7 +720,7 @@ export class MonthCalendar extends React.Component {
                             </View>
                           );
                         } else {
-                          if (item.isOtherActivity) {
+                          if ("isOtherActivity" in item) {
                             return (
                               //Partially completed events
                               <View
@@ -727,6 +728,7 @@ export class MonthCalendar extends React.Component {
                                   width: "100%",
                                   backgroundColor: YELLOW,
                                   height: 15,
+                                  opacity: item.isOtherActivity ? 1 : 0.5,
                                   alignItems: "center",
                                   justifyContent: "center",
                                   borderRadius: 5,
