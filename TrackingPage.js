@@ -225,9 +225,12 @@ export class TrackingPage extends React.Component {
     // this.userAddedActivityList = [];
 
     this.preList = [];
+    this.reportCnt;
     this.processDailyReports();
     //Determine where the report popup come from
-    this.isReportFromPopup = false;
+    this.isReportFromPopup = true;
+    //Daily report item to be submit
+    this.dailyReportItem
     this.state = {
       date: new Date(),
 
@@ -354,9 +357,14 @@ export class TrackingPage extends React.Component {
       //The activity detail information view on the detail popup
       isDetailViewActivityInfoListVis:"flex",
       //Display "No activity" on the detail popup  when there is no planned activity 
-      isNoActivitySignVis: "none"
+      isNoActivitySignVis: "none",
+      //Report count number shown on the badge
+      reportCnt: this.reportCnt,
+      //Visibility of the badge
+      isBadgeVis: "flex"
     };
     this.processUserStrategies();
+    this.processDailyReports_after();
     // console.log("this.state.activityData", this.state.activityData);
   }
   componentDidMount() {
@@ -365,8 +373,10 @@ export class TrackingPage extends React.Component {
     this.dataModel.loadUserStrategies();
     // console.log("componentDidMount");
   }
-  //Get previous 7-day's daily reports
+  //Get previous 5-day's daily reports
   processDailyReports = () => {
+    this.preList = [];
+    this.reportCnt = 0;
     let todayDate = new Date();
     let dailyReport = {};
     dailyReport.start = moment(todayDate).format().slice(0, 10);
@@ -374,6 +384,7 @@ export class TrackingPage extends React.Component {
     dailyReport.key = dailyReport.start;
     dailyReport.title = "Daily Report";
     let isReportExist = false;
+
     for (let event of this.userPlans) {
       if (event.start && !event.isDeleted) {
         if (event.start.slice(0, 10) === dailyReport.start.slice(0, 10)) {
@@ -387,7 +398,13 @@ export class TrackingPage extends React.Component {
     }
 
     //this.preList.push(dailyReport);
-    for (let i = 1; i < 5; i++) {
+    // let eventList;
+    // if (this.state.plansBuddle) {
+    //   eventList = this.state.plansBuddle;
+    // }else {
+    //   eventList = this.userPlans;
+    // }
+    for (let i = 1; i <= 5; i++) {
       let preDate = todayDate.setDate(todayDate.getDate() - 1);
       let report = {};
       let date = moment(preDate).format().slice(0, 10);
@@ -408,9 +425,94 @@ export class TrackingPage extends React.Component {
         report.end = report.start;
         report.key = report.start;
         this.preList.push(report);
+      } else {
+        for (let event of this.userPlans) {
+          if (event.start.slice(0,10) === date && !event.isReported) {
+            this.preList.push(event);
+            console.log("push event");
+          }
+        }
       }
     }
-    // console.log(this.preList);
+    this.reportCnt = this.preList.length;
+    this.setState({preList:this.preList});
+    this.setState({reportCnt:this.reportCnt});
+    if (this.reportCnt != 0) {
+      this.setState({ isBadgeVis : "flex"})
+    } else {
+      this.setState({ isBadgeVis : "none"})
+    }
+    console.log("this.state.preList",this.preList);
+  };
+  processDailyReports_after = () => {
+    this.preList = [];
+    this.reportCnt = 0;
+    let todayDate = new Date();
+    let dailyReport = {};
+    dailyReport.start = moment(todayDate).format().slice(0, 10);
+    dailyReport.end = dailyReport.start;
+    dailyReport.key = dailyReport.start;
+    dailyReport.title = "Daily Report";
+    let isReportExist = false;
+
+    for (let event of this.userPlans) {
+      if (event.start && !event.isDeleted) {
+        if (event.start.slice(0, 10) === dailyReport.start.slice(0, 10)) {
+          isReportExist = true;
+        }
+      }
+    }
+    if (!isReportExist) {
+      //report.date = date;
+      this.preList.push(dailyReport);
+    }
+
+    //this.preList.push(dailyReport);
+    // let eventList;
+    // if (this.state.plansBuddle) {
+    //   eventList = this.state.plansBuddle;
+    // }else {
+    //   eventList = this.userPlans;
+    // }
+    for (let i = 1; i <= 5; i++) {
+      let preDate = todayDate.setDate(todayDate.getDate() - 1);
+      let report = {};
+      let date = moment(preDate).format().slice(0, 10);
+      let isReportExist = false;
+      for (let event of this.userPlans) {
+        if (event.start) {
+          if (
+            event.start.slice(0, 10) === date.slice(0, 10) &&
+            !event.isDeleted
+          ) {
+            isReportExist = true;
+          }
+        }
+      }
+      if (!isReportExist) {
+        report.title = "Daily Report";
+        report.start = date;
+        report.end = report.start;
+        report.key = report.start;
+        this.preList.push(report);
+      } else {
+        for (let event of this.state.plansBuddle) {
+          if (event.start.slice(0,10) === date && !event.isReported) {
+            this.preList.push(event);
+            console.log("push event");
+          }
+        }
+      }
+    }
+    this.reportCnt = this.preList.length;
+    this.setState({preList:this.preList});
+    this.setState({reportCnt:this.reportCnt});
+    if (this.reportCnt != 0) {
+      this.setState({ isBadgeVis : "flex"})
+    } else {
+      this.setState({ isBadgeVis : "none"})
+    }
+    console.log("this.state.preList",this.preList);
   };
   //Click the "Current Week" and scroll to the current week
   scrollToThisWeek = () => {
@@ -1154,7 +1256,7 @@ export class TrackingPage extends React.Component {
       // console.log("this.combinedEventListThis",this.combinedEventListThis);
       for (let event of this.combinedEventListThis) {
         if (
-          event.start &&
+          event.start && event.timeStamp &&
           event.start.slice(0, 10) === formattedSelectedEventDate
         ) {
           detailViewCalendar.push(event);
@@ -1164,7 +1266,7 @@ export class TrackingPage extends React.Component {
       weatherList = this.lastMonthWeather;
       for (let event of this.combinedEventListLast) {
         if (
-          event.start &&
+          event.start && event.timeStamp &&
           event.start.slice(0, 10) === formattedSelectedEventDate
         ) {
           detailViewCalendar.push(event);
@@ -1174,7 +1276,7 @@ export class TrackingPage extends React.Component {
       weatherList = this.nextMonthWeather;
       for (let event of this.combinedEventListNext) {
         if (
-          event.start &&
+          event.start && event.timeStamp &&
           event.start.slice(0, 10) === formattedSelectedEventDate
         ) {
           detailViewCalendar.push(event);
@@ -1208,14 +1310,14 @@ export class TrackingPage extends React.Component {
   //Report btn pressed
   onMyActivityReportPressed = (item) => {
     if (this.isReportFromPopup) {
-      console.log("Vis");
       for (let event of this.state.plansBuddle) {
         if (event.timeStamp === item.timeStamp) {
           this.onReportActivity = event;
         }
       }
+      console.log('isReportFromPopup');
     } else {
-      console.log("Not Vis");
+      console.log('not ReportFromPopup');
       this.onReportActivity = item;
     }
     
@@ -1227,6 +1329,7 @@ export class TrackingPage extends React.Component {
   };
   //When user pressed the daily report btn
   onDailyPressed = (item) => {
+    this.dailyReportItem = item;
     this.setState({ isReportModalVis: true });
     this.setState({ currentSwipeIndex: 6 });
     this.setState({ currentSwipePage: 6 });
@@ -1256,7 +1359,7 @@ export class TrackingPage extends React.Component {
     this.setState({ selectedActivity: "" });
     this.setState({ startTime: new Date(this.today.setHours(8, 0, 0)) });
     this.setState({ startTime: new Date(this.today.setHours(8, 30, 0)) });
-    this.isReportFromPopup = false;
+    this.isReportFromPopup = true;
   };
   //Add unplanned activity btn pressed
   onAddActivityPressed = () => {
@@ -1368,21 +1471,31 @@ export class TrackingPage extends React.Component {
       this.setState({ isReportModalVis: false });
       this.setState({ reportNEXTbtn: "NEXT" });
       this.setState({ reportModalHeight: "50%" });
-      if (this.state.reportPageONEvalue == 1) {
-        this.setState({ currentSwipeIndex: 1 });
-        this.setState({ currentSwipePage: 1 });
-        this.reportModalSwiperRef.current.scrollBy(-6, true);
-      } else if (this.state.reportPageONEvalue == 3) {
-        if (this.state.reportPage_FOUR_value == "Different_Activity") {
-          this.setState({ currentSwipeIndex: 5 });
-          this.setState({ currentSwipePage: 5 });
-          this.reportModalSwiperRef.current.scrollBy(-2, true);
-        } else {
-          this.setState({ currentSwipeIndex: 4 });
-          this.setState({ currentSwipePage: 4 });
-          this.reportModalSwiperRef.current.scrollBy(-3, true);
+      if (this.state.reportModalHeight === 600) {
+        this.setState({ currentSwipeIndex: 6 });
+        this.setState({ currentSwipePage: 6 });
+        this.reportModalSwiperRef.current.scrollBy(-1, true);
+        this.setState({ isReportSwipePERVvis: "none"});
+        this.setState( { isReportSwipePERVdisabled: true})
+        this.setState({ reportModalHeight: "50%" });
+      } else {
+        if (this.state.reportPageONEvalue == 1) {
+          this.setState({ currentSwipeIndex: 1 });
+          this.setState({ currentSwipePage: 1 });
+          this.reportModalSwiperRef.current.scrollBy(-6, true);
+        } else if (this.state.reportPageONEvalue == 3) {
+          if (this.state.reportPage_FOUR_value == "Different_Activity") {
+            this.setState({ currentSwipeIndex: 5 });
+            this.setState({ currentSwipePage: 5 });
+            this.reportModalSwiperRef.current.scrollBy(-2, true);
+          } else {
+            this.setState({ currentSwipeIndex: 4 });
+            this.setState({ currentSwipePage: 4 });
+            this.reportModalSwiperRef.current.scrollBy(-3, true);
+          }
         }
       }
+
       setTimeout(() => {
         this.setState({ isReportModalVis: true }), 1000;
       });
@@ -1541,15 +1654,17 @@ export class TrackingPage extends React.Component {
         this.reportModalSwiperRef.current.scrollBy(2, true);
         currentSwipePage = currentSwipePage + 1;
         this.setState({ currentSwipeIndex: 7 });
-        this.setState({ reportModalHeight: 670 });
+        this.setState({ reportModalHeight: 600 });
         this.setState({ reportNEXTbtn: "SUBMIT" });
-
+        this.setState({ isReportSwipePERVvis: "flex"});
+        this.setState( { isReportSwipePERVdisabled: false})
         this.setState({ isReportModalVis: false });
         setTimeout(() => {
           this.setState({ isReportModalVis: true }), 1000;
         });
       } else {
         this.setState({ reportNEXTbtn: "SUBMIT" });
+        this.onSubmitDailyReport_NoActivity();
         console.log("SUBMIT FUNCTION HERE");
       }
     } else {
@@ -1562,8 +1677,10 @@ export class TrackingPage extends React.Component {
         this.state.reportStatus == "PARTIALLY_COMPLETE_TIME"
       ) {
         this.OnSubmitPressed_PartiallyComplete();
+      } else {
+        console.log("SUBMIT on daily Report");
       }
-      console.log("SUBMIT on Self Report");
+
     }
     // } else if (this.state.currentSwipePage === 1) {
     //   this.setState({ currentSwipeIndex: 2 });
@@ -1693,6 +1810,32 @@ export class TrackingPage extends React.Component {
     });
     selectedActivity.isDeleted = true;
   };
+  onSubmitDailyReport_NoActivity = async() => {
+    this.setState({ isReportModalVis: false });
+    let itemToSubmit = this.dailyReportItem;
+    itemToSubmit.isReported = true;
+    let formattedSelectedMonth = parseInt(
+      moment(itemToSubmit.start).format().slice(5, 7)
+    );
+    this.userPlans.push(itemToSubmit);
+    this.processDailyReports_after();
+    let formattedThisMonth = parseInt(moment(new Date()).format().slice(5, 7));
+    if (formattedSelectedMonth === formattedThisMonth) {
+      this.combinedEventListThis.push(itemToSubmit);
+    } else {
+      this.combinedEventListLast.push(itemToSubmit);
+    }
+    await this.dataModel.createNewPlan(this.userKey, itemToSubmit);
+    this.onDailyReportClose();
+    let eventDate = new Date(itemToSubmit.start);
+    await this.setState({ selectedDateRaw: eventDate });
+    await this.setState({
+      currentMonthDate: this.state.selectedDateRaw,
+    });
+    this.scrollToThisWeek();
+    
+    this.onDailyReportClose();
+  }
   //Submit the user added activities
   onSubmitPressed_UserAddedActivity = () => {
     for (let event of this.state.selfReportedActivityList) {
@@ -1731,6 +1874,7 @@ export class TrackingPage extends React.Component {
             console.log("event from this.combinedEventListThis", event);
             event.isActivityCompleted = true;
             event.isReported = true;
+            event.satisfactionScore = this.state.satisfactionScore;
             eventToUpdateToFirebaseActivities = event;
           }
         }
@@ -1767,6 +1911,7 @@ export class TrackingPage extends React.Component {
     await this.dataModel.updateStrategy(this.userKey, strategyToUpdate);
     await this.dataModel.loadUserStrategies(this.userKey);
     this.userStrategies = this.dataModel.getUserStrategies();
+    this.processDailyReports_after();
   };
   onSubmitPressed_NoActivity = async () => {
     let eventToUpdate = this.onReportActivity;
@@ -1774,6 +1919,7 @@ export class TrackingPage extends React.Component {
     eventToUpdate.isActivityCompleted = false;
     eventToUpdate.reason = reason;
     eventToUpdate.isReported = true;
+    eventToUpdate.partialStatus = "NONE";
     // eventToUpdate.satisfactionScore = this.state.satisfactionScore;
     this.onDailyReportClose();
     let formattedThisMonth = parseInt(moment(new Date()).format().slice(5, 7));
@@ -1794,6 +1940,7 @@ export class TrackingPage extends React.Component {
             event.isActivityCompleted = false;
             event.isReported = true;
             event.reason = reason;
+            event.partialStatus = "NONE"
             eventToUpdateToFirebaseActivities = event;
           }
         }
@@ -1810,6 +1957,7 @@ export class TrackingPage extends React.Component {
             event.isActivityCompleted = false;
             event.isReported = true;
             event.reason = reason;
+            event.partialStatus = "NONE"
             eventToUpdateToFirebaseActivities = event;
           }
         }
@@ -1831,6 +1979,7 @@ export class TrackingPage extends React.Component {
     await this.dataModel.updateStrategy(this.userKey, strategyToUpdate);
     await this.dataModel.loadUserStrategies(this.userKey);
     this.userStrategies = this.dataModel.getUserStrategies();
+    this.processDailyReports_after();
   };
   //Submit the report when the activity is partially completed
   OnSubmitPressed_PartiallyComplete = async () => {
@@ -1858,8 +2007,8 @@ export class TrackingPage extends React.Component {
     } else {
       reportStatus = "PARTIALLY_COMPLETE_TIME";
     }
-    console.log("reportStatus", reportStatus);
-    console.log("this.state.selectedActivity", this.state.selectedActivity);
+    // console.log("reportStatus", reportStatus);
+    // console.log("this.state.selectedActivity", this.state.selectedActivity);
 
     if (reportStatus === "PARTIALLY_COMPLETE_TIME") {
       // Add a new partially completed activity
@@ -1891,20 +2040,27 @@ export class TrackingPage extends React.Component {
       eventToUpdate.isReported = true;
       if (this.state.selectedActivity === this.onReportActivity.title) {
         eventToUpdate.partialStatus = "TIME";
+        newActivity.partialStatus = "TIME"
       } else {
         eventToUpdate.partialStatus = "TIME_AND_ACTIVITY";
-        eventToUpdate.oldTitle = eventToUpdate.title;
+        let oldTitle = eventToUpdate.title;
+        eventToUpdate.oldTitle = oldTitle;
         eventToUpdate.title = this.state.selectedActivity;
+        newActivity.partialStatus = "TIME_AND_ACTIVITY";
+        newActivity.oldTitle = oldTitle;
       }
 
       eventToUpdate.newStart = formattedStartTime;
       eventToUpdate.newEnd = formattedEndTime;
+      newActivity.newStart = formattedStartTime;
+      newActivity.newEnd = formattedEndTime;
+
       let duration = moment.duration(
         moment(formattedEndTime).diff(moment(formattedStartTime))
       );
       let durationMinutes = parseInt(duration.asMinutes()) % 60;
       eventToUpdate.newDuration = durationMinutes;
-
+      newActivity.newDuration = durationMinutes;
       // let eventToUpdateToFirebaseActivities;
       if (formattedSelectedMonth === formattedThisMonth) {
         for (let event of this.combinedEventListThis) {
@@ -2008,6 +2164,7 @@ export class TrackingPage extends React.Component {
     await this.dataModel.updateStrategy(this.userKey, strategyToUpdate);
     await this.dataModel.loadUserStrategies(this.userKey);
     this.userStrategies = this.dataModel.getUserStrategies();
+    this.processDailyReports_after();
   };
 
   lastMonthEventReported = async (date) => {
@@ -2053,6 +2210,7 @@ export class TrackingPage extends React.Component {
       this.setState({
         hideIcon: <Ionicons name="chevron-up-circle" size={25} color="black" />,
       });
+
     } else {
       this.setState({ calendarViewHeight: 145 });
       this.setState({
@@ -2060,6 +2218,8 @@ export class TrackingPage extends React.Component {
           <Ionicons name="chevron-down-circle" size={25} color="black" />
         ),
       });
+      this.scrollToThisWeek();
+      this.resetCalendarToCurrentMonth();
     }
   };
   //Styling for records
@@ -2073,7 +2233,7 @@ export class TrackingPage extends React.Component {
             borderRadius: 20,
             borderColor: "#F0F0F0",
             borderWidth: 0,
-            paddingHorizontal: 6,
+            paddingHorizontal: 18,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
@@ -2160,7 +2320,7 @@ export class TrackingPage extends React.Component {
             style={{
               fontFamily: "RobotoBoldBold",
               fontSize: 14,
-              paddingLeft: 18,
+              paddingLeft: 25,
               color: "white",
               width: 100,
             }}
@@ -2326,22 +2486,22 @@ export class TrackingPage extends React.Component {
             borderColor: "#F0F0F0",
             borderWidth: 0,
             flexDirection: "column",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "space-between",
-            marginTop: 15,
+            marginTop: this.state.isPlanDetailModalVis ? 7: 15,
             backgroundColor: YELLOW,
-            flex: 1,
+            paddingVertical: 0,
           },
         ]}
       >
         <View
           style={{
-            marginTop: 10,
             flexDirection: "row",
             width: "100%",
             paddingHorizontal: 20,
             justifyContent: "flex-start",
             alignItems: "center",
+            marginTop: 10,
           }}
         >
           <View style={{ position: "absolute", left: 5 }}>
@@ -2445,7 +2605,6 @@ export class TrackingPage extends React.Component {
             marginTop: this.state.isPlanDetailModalVis ? 7: 15,
             backgroundColor: YELLOW,
             paddingVertical: 0,
-            flex: 1,
           },
         ]}
       >
@@ -2544,22 +2703,23 @@ export class TrackingPage extends React.Component {
             borderColor: "#F0F0F0",
             borderWidth: 0,
             flexDirection: "column",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "space-between",
-            marginTop: 15,
+            marginTop: this.state.isPlanDetailModalVis ? 7: 15,
             backgroundColor: YELLOW,
-            flex: 1,
+            paddingVertical: 0,
           },
         ]}
       >
         <View
           style={{
-            marginTop: 10,
+            
             flexDirection: "row",
             width: "100%",
             paddingHorizontal: 20,
             justifyContent: "flex-start",
             alignItems: "center",
+            marginTop: 10,
           }}
         >
           <View style={{ position: "absolute", left: 5 }}>
@@ -3688,18 +3848,23 @@ export class TrackingPage extends React.Component {
                   if (value == "daily") {
                     this.setState({ isDailyReportVis: "flex" });
                     this.setState({ isActivityRecordsVis: "none" });
+                    this.isReportFromPopup = true;
                   } else {
                     this.setState({ isDailyReportVis: "none" });
                     this.setState({ isActivityRecordsVis: "flex" });
+                    
+                    this.isReportFromPopup = false;
                   }
                 }}
               />
+              <View                 style={{ position: "absolute", top: -5, right: -5, display: this.state.isBadgeVis }}>
               <Badge
-                label={"8"}
+                label={this.state.reportCnt}
                 size={16}
                 backgroundColor={"red"}
-                style={{ position: "absolute", top: -6, left: -8 }}
+
               />
+              </View>
             </View>
             {/* <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 13 }}>
               {this.state.accumulatedMinutes}/150 minutes remains
@@ -3758,10 +3923,10 @@ export class TrackingPage extends React.Component {
                   }
 
                   if (!item.isReported) {
-                    itemBlockStyle = this.itemUnreportedBlockStyle(
-                      item,
-                      timing
-                    );
+                    // itemBlockStyle = this.itemUnreportedBlockStyle(
+                    //   item,
+                    //   timing
+                    // );
                   } else {
                     if (item.isActivityCompleted) {
                       itemBlockStyle = this.itemCompletedBlockStyle(
@@ -3784,7 +3949,13 @@ export class TrackingPage extends React.Component {
                                 item,
                                 timing
                               );
-                          } else {
+                          } else if (item.partialStatus === "NONE") {
+                            itemBlockStyle = this.itemUnCompletedBlockStyle(
+                              item,
+                              timing
+                            );
+                          }
+                          else {
                             itemBlockStyle =
                               this.itemPartialCompleteStyle_TIME_ACTIVITY(
                                 item,
@@ -3793,10 +3964,7 @@ export class TrackingPage extends React.Component {
                               );
                           }
                         } else {
-                          itemBlockStyle = this.itemUnCompletedBlockStyle(
-                            item,
-                            timing
-                          );
+
                         }
                       }
                     }
@@ -3821,6 +3989,15 @@ export class TrackingPage extends React.Component {
               data={this.state.preList}
               renderItem={
                 ({ item }) => {
+                  let timing =
+                  moment(item.start).format("ddd").toUpperCase() +
+                  " " +
+                  item.start.slice(11, 16) +
+                  " - " +
+                  item.end.slice(11, 16) +
+                  " | " +
+                  item.duration +
+                  " MIN";
                   let itemUnreportedBlockStyle = (
                     <View
                       style={[
@@ -3828,8 +4005,8 @@ export class TrackingPage extends React.Component {
                           width: "100%",
                           height: 40,
                           borderRadius: 20,
-                          borderColor: "#F0F0F0",
-                          borderWidth: 1,
+                          borderColor: "black",
+                          borderWidth: 2,
                           paddingHorizontal: 10,
                           flexDirection: "row",
                           alignItems: "center",
@@ -3900,7 +4077,12 @@ export class TrackingPage extends React.Component {
                       </View>
                     </View>
                   );
-                  return itemUnreportedBlockStyle;
+                  if (item.timeStamp) {
+                    return this.itemUnreportedBlockStyle(item, timing);
+                  } else {
+                    return itemUnreportedBlockStyle;
+                  }
+                  
                 }
                 // console.log("items in plansBuddle", item);
               }
@@ -4462,7 +4644,7 @@ export class TrackingPage extends React.Component {
         style={{ height: "100%", width: "100%", padding: 15, marginTop: 20 }}
       >
         <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 16 }}>
-          Tell us the time that you did this activity:
+          Tell us the difference from what you planned:
         </Text>
         <View
           style={{
@@ -4516,13 +4698,13 @@ export class TrackingPage extends React.Component {
               <ModalSelector
                 style={{ borderWidth: 0, borderRadius: 20 }}
                 // touchableStyle={{ color: "white" }}
-                optionContainerStyle={{
+                optionContainerStyle={[generalStyles.shadowStyle,{
                   borderWidth: 0,
                   backgroundColor: "white",
                   borderColor: "grey",
-                  borderWidth: 2,
+                  // borderWidth: 2,
                   borderRadius: 15,
-                }}
+                }]}
                 selectStyle={{ borderWidth: 0 }}
                 selectTextStyle={{
                   textAlign: "center",
@@ -4942,8 +5124,16 @@ export class TrackingPage extends React.Component {
           selectedTextStyle={{ fontSize: 10 }}
           borderWidth={0}
           initial={0}
-          onPress={async (value) =>
+          onPress={async (value) => {
+            console.log("value",value);
             this.setState({ reportPage_SEVEN_value: value })
+            if (value === "No") {
+              this.setState({ reportNEXTbtn: "SUBMIT" });
+            } else {
+              this.setState({ reportNEXTbtn: "NEXT" });
+            }
+
+          }
           }
         />
       </View>
@@ -5088,13 +5278,13 @@ export class TrackingPage extends React.Component {
               <ModalSelector
                 style={{ borderWidth: 0, borderRadius: 20 }}
                 // touchableStyle={{ color: "white" }}
-                optionContainerStyle={{
+                optionContainerStyle={[generalStyles.shadowStyle, {
                   borderWidth: 0,
                   backgroundColor: "white",
                   borderColor: "grey",
-                  borderWidth: 2,
+                  // borderWidth: 2,
                   borderRadius: 15,
-                }}
+                }]}
                 selectStyle={{ borderWidth: 0 }}
                 selectTextStyle={{
                   textAlign: "center",
@@ -5964,14 +6154,15 @@ export class TrackingPage extends React.Component {
                       justifyContent:"center",
                       alignItems:"center"
                     }}
-                  ><Text style={{fontFamily:"RobotoBoldBlack", fontSize:22, color:"grey", textAlign:"center"}}>No Activity Planned for This Day</Text></View>
+                  ><Text style={{fontFamily:"RobotoBoldBlack", fontSize:22, color:"grey", textAlign:"center"}}>No Activity Record for This Day</Text></View>
                   <View
                     style={{
                       height: "55%",
                       paddingHorizontal: 5,
                       paddingBottom:5,
                       marginBottom:5,
-                      display:this.state.isDetailViewActivityInfoListVis
+                      display:this.state.isDetailViewActivityInfoListVis,
+                      width:"100%",
                     }}
                   >
                     <FlatList
@@ -5980,6 +6171,8 @@ export class TrackingPage extends React.Component {
                         alignItems: "center",
                         justifyContent: "flex-start",
                         paddingHorizontal: 5,
+                        width:"100%",
+                        // backgroundColor:"red"
                       }}
                       renderItem={({ item }) => {
                         if (item.title) {
@@ -6033,6 +6226,12 @@ export class TrackingPage extends React.Component {
                                         item,
                                         timing
                                       );
+                                  } else if (item.partialStatus === "NONE") {
+                                    itemBlockStyle =
+                                      this.itemUnCompletedBlockStyle(
+                                        item,
+                                        timing
+                                      );
                                   } else {
                                     itemBlockStyle =
                                       this.itemPartialCompleteStyle_TIME_ACTIVITY(
@@ -6041,13 +6240,7 @@ export class TrackingPage extends React.Component {
                                         newTiming
                                       );
                                   }
-                                } else {
-                                  itemBlockStyle =
-                                    this.itemUnCompletedBlockStyle(
-                                      item,
-                                      timing
-                                    );
-                                }
+                                } 
                               }
                             }
 
