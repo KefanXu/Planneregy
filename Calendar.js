@@ -25,6 +25,7 @@ const BLACK = "#393939"
 const BACKGROUND_COLOR = "white";
 const HIGHLIGHT_COLOR = "white";
 const BLUE = "#579AFF";
+const LIGHTBLUE = "#00D4E1";
 
 export class MonthCalendar extends React.Component {
   constructor(props) {
@@ -58,6 +59,7 @@ export class MonthCalendar extends React.Component {
 
     this.state = {
       activeDate: this.props.monthCalCurrDate,
+      
       //thisMonthEvents: this.thisMonthEvents,
       dayEventsList: [],
       targetDate: targetDate.getDay(),
@@ -175,6 +177,24 @@ export class MonthCalendar extends React.Component {
     var rows = [];
     rows = matrix.map((row, rowIndex) => {
       var rowItems = row.map((item, colIndex) => {
+        let strategyStartDate = new Date(this.props.monthCalStrategyStartDate);
+        // console.log("strategyStartDate",strategyStartDate);
+        let strategyEndDate = new Date(this.props.monthCalStrategyStartDate);
+        strategyEndDate.setDate(strategyEndDate.getDate() + 7);
+        // console.log("strategyStartDate",strategyStartDate);
+        let todayDate = new Date();
+        let selectedDate = new Date(
+          todayDate.getFullYear(),
+          this.props.monthCalCurrDate.getMonth(),
+          item
+        );
+        let isWithinStrategy;;
+        if (selectedDate >= strategyStartDate && selectedDate <= strategyEndDate) {
+          isWithinStrategy=true;
+          // console.log("isWithinStrategy",isWithinStrategy);
+        } else {
+          // console.log("not within");
+        }
         //Render first row
         if (rowIndex === 0) {
           return (
@@ -364,8 +384,8 @@ export class MonthCalendar extends React.Component {
                     width: "95%",
                     flexDirection: "row",
                     backgroundColor: item != -1 ? "white" : "rgba(0,0,0,0)",
-                    borderColor: item != -1 ? "#D8D8D8" : "rgba(0,0,0,0)",
-                    borderWidth: 1,
+                    borderColor: item != -1 ? isWithinStrategy ? LIGHTBLUE: "#D8D8D8" : "rgba(0,0,0,0)",
+                    borderWidth: isWithinStrategy? 2 :1,
                     borderRadius: 15,
                     marginTop: 2,
                     justifyContent: "center",

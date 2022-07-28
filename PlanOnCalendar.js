@@ -993,7 +993,7 @@ export class PlanOnCalendar extends React.Component {
       " " +
       moment(new Date()).add(7, "days").format("MMM Do YY");
 
-    let startDate = moment(new Date()).format().slice(0, 10);
+    let startDate = moment(new Date()).add(1, "days").format().slice(0, 10);
     let endDate = moment(new Date()).add(7, "days").format().slice(0, 10);
 
     let timeStamp = moment(new Date()).format();

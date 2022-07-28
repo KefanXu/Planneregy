@@ -8,7 +8,7 @@ export const generalStyles = StyleSheet.create({
       height: 4,
     },
     shadowOpacity: 0.2,
-    shadowRadius: 16.0,
+    shadowRadius: 10.0,
   },
 });
 // shadowColor: "#000",
