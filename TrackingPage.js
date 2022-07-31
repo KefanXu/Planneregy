@@ -36,7 +36,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
 
 //Load interactive component libraries
 import SlidingUpPanel from "rn-sliding-up-panel";
@@ -380,17 +380,51 @@ export class TrackingPage extends React.Component {
       monthCalStrategyStartDate: "",
       //Selected strategy
       selectedStrategy: "",
+      selectedKeywords: [],
+      selectedStrategyPlans: [],
     };
     this.processUserStrategies();
     this.processDailyReports_after();
+    this.dailyReportPopup();
     // console.log("this.state.activityData", this.state.activityData);
   }
   componentDidMount() {
     this.scrollToThisWeek();
     this.dataModel = getDataModel();
     this.dataModel.loadUserStrategies();
+    this.dailyReportPopup();
     // console.log("componentDidMount");
   }
+  dailyReportPopup = () => {
+    // console.log("this.state.preList", this.state.preList);
+    let today = moment(new Date()).format().slice(5, 10);
+    let reportItem;
+    let isActivityPlanned = false;
+    let isReportExist = false;
+    for (let item of this.state.preList) {
+      if (item.start.slice(5, 10) === today) {
+        reportItem = item;
+        isReportExist = true;
+        if (item.timeStamp) {
+          isActivityPlanned = true;
+        }
+      }
+    }
+    if (isReportExist) {
+      if (isActivityPlanned) {
+        console.log("isActivity PLanned");
+        setTimeout(() => {
+          this.onMyActivityReportPressed(reportItem), 1000;
+        });
+        this.setState({ isPlanDetailModalVis: false });
+      } else {
+        console.log("no Activity PLanned");
+        this.onDailyPressed(reportItem);
+        // this.setState({ isReportModalVis: true });
+      }
+    }
+
+  };
   //Get previous 5-day's daily reports
   processDailyReports = () => {
     this.preList = [];
@@ -451,6 +485,7 @@ export class TrackingPage extends React.Component {
       } else {
         for (let event of this.userPlans) {
           if (event.start.slice(0, 10) === date && !event.isReported) {
+            console.log("push event1", event.title);
             this.preList.push(event);
             // console.log("push event");
           }
@@ -482,7 +517,7 @@ export class TrackingPage extends React.Component {
       if (
         event.start &&
         !event.isDeleted &&
-        event.isPlanned != "added-activity"
+        event.isPlanned != "added-activity" 
       ) {
         if (event.start.slice(0, 10) === dailyReport.start.slice(0, 10)) {
           isReportExist = true;
@@ -524,10 +559,11 @@ export class TrackingPage extends React.Component {
         report.key = report.start;
         this.preList.push(report);
       } else {
+        console.log("this.state.plansBuddle",this.state.plansBuddle);
         for (let event of this.state.plansBuddle) {
           if (event.start.slice(0, 10) === date && !event.isReported) {
             this.preList.push(event);
-            console.log("push event");
+            console.log("push event2",event.title);
           }
         }
       }
@@ -618,12 +654,15 @@ export class TrackingPage extends React.Component {
         }
         this.setState({ keywordsBuddle: strategy.keywords });
         this.setState({ plansBuddle: strategy.plans });
+        this.setState({ selectedKeywords: strategy.keywords });
+        this.setState({ selectedStrategyPlans: strategy.plans });
       }
     }
     this.setState({
       monthCalStrategyStartDate: this.currentStrategy.startDate,
     });
     this.setState({ selectedStrategy: this.currentStrategy });
+    console.log("this.state.selectedStrategy");
     // console.log("this.state.monthCalStrategyStartDate",this.state.monthCalStrategyStartDate);
   };
   //Process user defined activities
@@ -1921,13 +1960,14 @@ export class TrackingPage extends React.Component {
   onSubmitPressed_UserAddedActivity = async () => {
     this.setState({ isReportModalVis: false });
     for (let event of this.state.selfReportedActivityList) {
+      event.isReported = true;
       await this.dataModel.createNewPlan(this.userKey, event);
       if (moment(event.start).month() === moment(new Date()).month()) {
         this.combinedEventListThis.push(event);
         this.resetCalendarToCurrentMonth();
       } else {
-        this.combinedEventListNext.push(event);
-        this.nextMonthBtnPressed();
+        this.combinedEventListLast.push(event);
+        this.pastMonthBtnPressed();
       }
     }
   };
@@ -2395,7 +2435,6 @@ export class TrackingPage extends React.Component {
             marginTop: 15,
             backgroundColor: BLACK,
             // paddingVertical: 10,
-            flex: 1,
           },
         ]}
       >
@@ -2913,7 +2952,7 @@ export class TrackingPage extends React.Component {
     } else {
       selectedStrategyPlans = this.state.plansBuddle;
     }
-    console.log("selectedStrategyPlans", selectedStrategyPlans);
+    // console.log("selectedStrategyPlans", selectedStrategyPlans);
     let accCompletion = 0;
     for (let event of selectedStrategyPlans) {
       if (event.isActivityCompleted) {
@@ -2934,12 +2973,13 @@ export class TrackingPage extends React.Component {
       selectedStrategyPlans = this.state.plansBuddle;
     }
     let accCompletion = 0;
+    let totalPlans = selectedStrategyPlans.length;
     for (let event of selectedStrategyPlans) {
       if (event.isActivityCompleted) {
         accCompletion++;
       }
     }
-    return accCompletion;
+    return [accCompletion, totalPlans];
   };
   calculateSatisfaction = () => {
     let selectedStrategyPlans;
@@ -2977,6 +3017,7 @@ export class TrackingPage extends React.Component {
   };
 
   render() {
+    // console.log("this.state.selectedKeywords", this.state.selectedKeywords);
     let firstSlidePanelPage = (
       <View
         style={{
@@ -3648,10 +3689,10 @@ export class TrackingPage extends React.Component {
               <View
                 style={{
                   width: "100%",
-                  height: "100%",
+                  height: "50%",
                   flexDirection: "row",
                   paddingLeft: "5%",
-                  // alignItems:"center"
+                  alignItems: "center",
                 }}
               >
                 {this.state.keywordsBuddle.map((item) => {
@@ -3726,9 +3767,33 @@ export class TrackingPage extends React.Component {
           height: "100%",
         }}
       >
-        <TouchableOpacity style={[generalStyles.shadowStyle,{width:110,height:40,backgroundColor:"white", position:"absolute",bottom:5, borderRadius:20, flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingHorizontal:10}]}>
-        <MaterialIcons name="all-inclusive" size={20} color="black" />
-          <Text style={{fontFamily:"RobotoBoldItalic", fontSize:14, color:"black"}}>Overview</Text>
+        <TouchableOpacity
+          style={[
+            generalStyles.shadowStyle,
+            {
+              width: 110,
+              height: 35,
+              backgroundColor: "white",
+              position: "absolute",
+              bottom: 8,
+              borderRadius: 20,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingHorizontal: 10,
+            },
+          ]}
+        >
+          <MaterialIcons name="all-inclusive" size={20} color="black" />
+          <Text
+            style={{
+              fontFamily: "RobotoBoldItalic",
+              fontSize: 14,
+              color: "black",
+            }}
+          >
+            Overview
+          </Text>
         </TouchableOpacity>
         <View
           style={{
@@ -3780,6 +3845,31 @@ export class TrackingPage extends React.Component {
               }
               isSelected = item.startDate === this.state.selectedStrategyDate;
 
+              let completionRate;
+              let completionCnt = 0;
+
+              for (let event of item.plans) {
+                if (event.isActivityCompleted) {
+                  completionCnt++;
+                }
+              }
+              completionRate = (
+                (completionCnt / item.plans.length) *
+                100
+              ).toFixed(2);
+
+              let satisfaction = 0;
+              let satisfactionCnt = 0;
+              let accDuration = 0;
+              for (let event of item.plans) {
+                if (event.satisfactionScore) {
+                  satisfaction =
+                    satisfaction + parseInt(event.satisfactionScore);
+                  satisfactionCnt++;
+                  accDuration += event.duration;
+                }
+              }
+              let avgSatisfaction = (satisfaction / satisfactionCnt).toFixed(2);
               // console.log("isTodayInBetween", item.title, isTodayInBetween);
 
               return (
@@ -3787,7 +3877,7 @@ export class TrackingPage extends React.Component {
                   style={[
                     // generalStyles.shadowStyle,
                     {
-                      height: 81,
+                      height: 90,
                       width: 335,
                       borderColor: isSelected
                         ? LIGHTBLUE
@@ -3826,6 +3916,8 @@ export class TrackingPage extends React.Component {
                           item.startDate.slice(5, 7)
                         );
                         this.setState({ selectedStrategy: item });
+                        this.setState({ selectedKeywords: item.keywords });
+                        this.setState({ selectedStrategyPlans: item.plans });
                         if (thisMonthNum > selectedMonthNum) {
                           this.pastMonthBtnPressed();
                           this.setState({
@@ -3875,11 +3967,10 @@ export class TrackingPage extends React.Component {
                   >
                     <View
                       style={{
-                        flexDirection: "row",
-                        alignItems: "center",
+                        flexDirection: "column",
                         justifyContent: "flex-start",
                         width: "100%",
-                        height: "50%",
+                        height: "70%",
                         borderTopLeftRadius: 18,
                         borderTopRightRadius: 18,
                         backgroundColor: isSelected
@@ -3893,10 +3984,18 @@ export class TrackingPage extends React.Component {
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
-                          justifyContent: "center",
+                          justifyContent: "flex-start",
+                          marginTop: 10,
                         }}
                       >
-                        {/* <View
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {/* <View
                     style={{
                       height: 9,
                       width: 9,
@@ -3905,73 +4004,154 @@ export class TrackingPage extends React.Component {
                       marginRight: 10,
                     }}
                   /> */}
-                        <Text
+                          <Text
+                            style={{
+                              fontFamily: "RobotoBoldBlack",
+                              fontSize: 18,
+                              marginBottom: 0,
+                              marginRight: 10,
+
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginLeft: "10%",
+                              color: "white",
+                              alignSelf: "center",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.title}
+                          </Text>
+                        </View>
+                        <View
                           style={{
-                            fontFamily: "RobotoBoldBlack",
-                            fontSize: 18,
-                            marginBottom: 0,
-                            marginRight: 10,
-                            alignItems: "center",
+                            flexDirection: "column",
                             justifyContent: "center",
-                            marginLeft: "10%",
-                            color: "white",
-                            alignSelf: "center",
-                            textAlign: "center",
+                            // backgroundColor: "red",
+                            alignItems: "center",
+                            backgroundColor: "white",
+                            borderRadius: 20,
+                            paddingHorizontal: 10,
                           }}
                         >
-                          {item.title}
-                        </Text>
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              fontFamily: "RobotoBoldBold",
+                              textAlign: "center",
+                              marginTop: 0,
+                              color: isSelected
+                                ? LIGHTBLUE
+                                : isTodayInBetween
+                                ? GREEN
+                                : "black",
+                            }}
+                          >
+                            {item.startDate.slice(5)} → {item.endDate.slice(5)}
+                          </Text>
+                        </View>
+                        <View style={{ position: "absolute", right: 5 }}>
+                          {isTodayInBetween ? (
+                            <MaterialIcons
+                              name="track-changes"
+                              size={20}
+                              color="white"
+                            />
+                          ) : (
+                            <MaterialIcons
+                              name="motion-photos-paused"
+                              size={20}
+                              color="white"
+                            />
+                          )}
+                        </View>
                       </View>
                       <View
                         style={{
-                          flexDirection: "column",
-                          justifyContent: "center",
-                          // backgroundColor: "red",
+                          width: "100%",
+                          flexDirection: "row",
+                          paddingLeft: "6%",
                           alignItems: "center",
-                          backgroundColor: "white",
-                          borderRadius: 20,
-                          paddingHorizontal: 10,
+                          justifyContent: "flex-start",
+                          paddingHorizontal: 25,
+                          marginTop: 5,
+                          // backgroundColor:"red"
                         }}
                       >
-                        <Text
+                        <View
                           style={{
-                            fontSize: 12,
-                            fontFamily: "RobotoBoldBold",
-                            textAlign: "center",
-                            marginTop: 0,
-                            color: isSelected
-                              ? LIGHTBLUE
-                              : isTodayInBetween
-                              ? GREEN
-                              : "black",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginRight: 10,
                           }}
                         >
-                          {item.startDate.slice(5)} → {item.endDate.slice(5)}
-                        </Text>
-                      </View>
-                      <View style={{ position: "absolute", right: 5 }}>
-                        {isTodayInBetween ? (
-                          <MaterialIcons
-                            name="track-changes"
-                            size={20}
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={15}
                             color="white"
                           />
-                        ) : (
-                          <MaterialIcons
-                            name="motion-photos-paused"
-                            size={20}
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              fontSize: 11,
+                              color: "white",
+                              marginLeft: 5,
+                            }}
+                          >
+                            {completionRate}%
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginRight: 10,
+                          }}
+                        >
+                          <Ionicons
+                            name="heart-circle"
+                            size={15}
                             color="white"
                           />
-                        )}
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              fontSize: 11,
+                              color: "white",
+                              marginLeft: 5,
+                            }}
+                          >
+                            {avgSatisfaction}
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginRight: 10,
+                          }}
+                        >
+                          <Ionicons name="timer" size={15} color="white" />
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              fontSize: 11,
+                              color: "white",
+                              marginLeft: 5,
+                            }}
+                          >
+                            {accDuration} min
+                          </Text>
+                        </View>
                       </View>
                     </View>
+
                     <View
                       style={{
                         width: "100%",
-                        height: "100%",
+                        height: "30%",
                         flexDirection: "row",
                         paddingLeft: "5%",
-                        // alignItems:"center"
+                        alignItems: "center",
                       }}
                     >
                       {item.keywords.map((item) => {
@@ -3983,17 +4163,14 @@ export class TrackingPage extends React.Component {
                               // backgroundColor: "#E7E7E7",
                               marginRight: 2,
                               padding: 5,
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
                             <Text
                               style={{
                                 color: "black",
                                 fontWeight: "bold",
-                                color: isSelected
-                                  ? LIGHTBLUE
-                                  : isTodayInBetween
-                                  ? GREEN
-                                  : "black",
                                 fontSize: 13,
                               }}
                             >
@@ -4396,7 +4573,7 @@ export class TrackingPage extends React.Component {
               width: "98%",
               height: "90%",
               backgroundColor: "white",
-              marginTop: 4,
+              marginTop: 0,
               borderRadius: 20,
               justifyContent: "flex-start",
               alignItems: "center",
@@ -4412,7 +4589,7 @@ export class TrackingPage extends React.Component {
               alignItems: "center",
               padding: 15,
               paddingBottom: 0,
-              marginTop: 5,
+              marginTop: 0,
             }}
           >
             <TouchableOpacity
@@ -4470,181 +4647,361 @@ export class TrackingPage extends React.Component {
               </View>
             </View>
           </View>
-          <ScrollView
-            style={{ height: "100%", width: "100%", zIndex: 1 }}
-            contentContainerStyle={{
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}
-          >
-            <View
-              style={[
-                generalStyles.shadowStyle,
-                {
-                  width: "90%",
-                  height: 100,
-                  flexDirection: "row",
-
-                  backgroundColor: "white",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginTop: 10,
-                  borderRadius: 20,
-                  paddingVertical: 10,
-                },
-              ]}
+          <View style={{ height: 300 }}>
+            <ScrollView
+              style={{ width: "100%", zIndex: 1 }}
+              contentContainerStyle={{
+                justifyContent: "flex-start",
+                alignItems: "center",
+              }}
             >
               <View
                 style={[
+                  generalStyles.shadowStyle,
                   {
-                    height: "100%",
-                    width: "33%",
+                    width: "90%",
+                    height: 100,
+                    flexDirection: "row",
                     backgroundColor: "white",
-                    borderTopLeftRadius: 20,
-                    borderBottomLeftRadius: 20,
-                    flexDirection: "column",
-                    borderRightWidth: 2,
-                    borderColor: "#D8D8D8",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginTop: 10,
+                    borderRadius: 20,
+                    paddingVertical: 10,
+                    zIndex: 1,
                   },
                 ]}
               >
                 <View
-                  style={{
-                    width: "100%",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "20%",
-                  }}
+                  style={[
+                    {
+                      height: "100%",
+                      width: "33%",
+                      backgroundColor: "white",
+                      borderTopLeftRadius: 20,
+                      borderBottomLeftRadius: 20,
+                      flexDirection: "column",
+                      borderRightWidth: 2,
+                      borderColor: "#D8D8D8",
+                    },
+                  ]}
                 >
-                  <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 12 }}>
-                    Completion
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    width: "100%",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    height: "80%",
-                    paddingVertical: 8,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "RobotoBoldBold",
-                      fontSize: 15,
-                      fontFamily: "RobotoBoldItalic",
-                    }}
-                  >
-                    {this.calculateCompletion()}%
-                  </Text>
                   <View
                     style={{
-                      height: 2,
-                      width: "30%",
-                      backgroundColor: "black",
-                    }}
-                  ></View>
-                  <Text
-                    style={{
-                      fontFamily: "RobotoBoldBold",
-                      fontSize: 15,
-                      fontFamily: "RobotoBoldItalic",
+                      width: "100%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "20%",
                     }}
                   >
-                    <Text style={{ color: GREEN }}>
-                      {this.calculateComplete()}
-                    </Text>{" "}
-                    / {this.state.plansBuddle.length}
-                  </Text>
+                    <Text
+                      style={{ fontFamily: "RobotoBoldBold", fontSize: 12 }}
+                    >
+                      Completion
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      width: "100%",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      height: "80%",
+                      paddingVertical: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "RobotoBoldBold",
+                        fontSize: 15,
+                        fontFamily: "RobotoBoldItalic",
+                      }}
+                    >
+                      {this.calculateCompletion()}%
+                    </Text>
+                    <View
+                      style={{
+                        height: 2,
+                        width: "30%",
+                        backgroundColor: "black",
+                      }}
+                    ></View>
+                    <Text
+                      style={{
+                        fontFamily: "RobotoBoldBold",
+                        fontSize: 15,
+                        fontFamily: "RobotoBoldItalic",
+                      }}
+                    >
+                      <Text style={{ color: GREEN }}>
+                        {this.calculateComplete()[0]}
+                      </Text>{" "}
+                      / {this.calculateComplete()[1]}
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={[
+                    {
+                      height: "100%",
+                      width: "33%",
+                      backgroundColor: "white",
+                      borderRightWidth: 2,
+                      borderColor: "#D8D8D8",
+                    },
+                  ]}
+                >
+                  <View
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "20%",
+                    }}
+                  >
+                    <Text
+                      style={{ fontFamily: "RobotoBoldBold", fontSize: 12 }}
+                    >
+                      Satisfaction
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "80%",
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "RobotoBoldBold",
+                        fontSize: 18,
+                        fontFamily: "RobotoBoldItalic",
+                      }}
+                    >
+                      {this.calculateSatisfaction()}
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={[
+                    {
+                      height: "100%",
+                      width: "33%",
+                      backgroundColor: "white",
+                      borderRadius: 20,
+                    },
+                  ]}
+                >
+                  <View
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "20%",
+                    }}
+                  >
+                    <Text
+                      style={{ fontFamily: "RobotoBoldBold", fontSize: 12 }}
+                    >
+                      Activity Level
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "80%",
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontFamily: "RobotoBoldItalic",
+                      }}
+                    >
+                      {this.calculateTotalDuration()} min
+                    </Text>
+                  </View>
                 </View>
               </View>
               <View
                 style={[
+                  // generalStyles.shadowStyle,
                   {
-                    height: "100%",
-                    width: "33%",
-                    backgroundColor: "white",
-                    borderRightWidth: 2,
-                    borderColor: "#D8D8D8",
-                  },
-                ]}
-              >
-                <View
-                  style={{
-                    width: "100%",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "20%",
-                  }}
-                >
-                  <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 12 }}>
-                    Satisfaction
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    width: "100%",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "80%",
-                    paddingVertical: 10,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "RobotoBoldBold",
-                      fontSize: 18,
-                      fontFamily: "RobotoBoldItalic",
-                    }}
-                  >
-                    {this.calculateSatisfaction()}
-                  </Text>
-                </View>
-              </View>
-              <View
-                style={[
-                  {
-                    height: "100%",
-                    width: "33%",
+                    width: "95%",
                     backgroundColor: "white",
                     borderRadius: 20,
+                    marginTop: 10,
                   },
                 ]}
               >
                 <View
                   style={{
                     width: "100%",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "20%",
+                    justifyContent: "flex-start",
+                    flexDirection: "row",
+                    marginTop: 10,
+                    marginLeft: "5%",
                   }}
                 >
-                  <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 12 }}>
-                    Activity Level
-                  </Text>
+                  <View style={{ flexDirection: "row" }}>
+                    <FontAwesome name="asterisk" size={15} color="black" />
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: 12,
+                        marginLeft: "5%",
+                      }}
+                    >
+                      Keywords
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    marginTop: "2%",
+                    paddingHorizontal: "5%",
+                  }}
+                >
+                  {this.state.selectedKeywords.map((item) => {
+                    return (
+                      <View
+                        style={{
+                          height: 25,
+                          borderRadius: 20,
+                          backgroundColor: "black",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          alignSelf: "center",
+                          marginBottom: 5,
+                          marginRight: 5,
+                          paddingHorizontal: 2,
+                          flexDirection: "row",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "RobotoBoldBlack",
+                            color: "white",
+                            paddingHorizontal: 20,
+                            fontSize: 12,
+                          }}
+                        >
+                          {item.title}
+                        </Text>
+                      </View>
+                    );
+                  })}
                 </View>
                 <View
                   style={{
                     width: "100%",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "80%",
-                    paddingVertical: 10,
+                    justifyContent: "flex-start",
+                    flexDirection: "row",
+                    marginTop: 15,
+                    marginLeft: "5%",
                   }}
                 >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontFamily: "RobotoBoldItalic",
-                    }}
-                  >
-                    {this.calculateTotalDuration()} min
-                  </Text>
+                  <View style={{ flexDirection: "row" }}>
+                    <MaterialIcons name="event-note" size={15} color="black" />
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: 12,
+                        marginLeft: "5%",
+                      }}
+                    >
+                      Activity Plan Records
+                    </Text>
+                  </View>
                 </View>
+                <FlatList
+                  data={this.state.selectedStrategyPlans}
+                  renderItem={({ item }) => {
+                    if (!item.isDeleted) {
+                      let newTiming = "";
+                      let timing =
+                        moment(item.start).format("ddd").toUpperCase() +
+                        " " +
+                        item.start.slice(11, 16) +
+                        " - " +
+                        item.end.slice(11, 16) +
+                        " | " +
+                        item.duration +
+                        " MIN";
+                      let itemBlockStyle;
+                      if (item.newStart) {
+                        newTiming =
+                          item.newStart.slice(11, 16) +
+                          " - " +
+                          item.newEnd.slice(11, 16) +
+                          " | " +
+                          item.newDuration +
+                          " MIN";
+                      }
+
+                      if (!item.isReported) {
+                        // itemBlockStyle = this.itemUnreportedBlockStyle(
+                        //   item,
+                        //   timing
+                        // );
+                      } else {
+                        if (item.isActivityCompleted) {
+                          itemBlockStyle = this.itemCompletedBlockStyle(
+                            item,
+                            timing
+                          );
+                        } else {
+                          if (item.isOtherActivity) {
+                          } else {
+                            if (item.partialStatus) {
+                              if (item.partialStatus === "TIME") {
+                                itemBlockStyle =
+                                  this.itemPartialCompleteStyle_TIME(
+                                    item,
+                                    timing,
+                                    newTiming
+                                  );
+                              } else if (item.partialStatus === "ACTIVITY") {
+                                itemBlockStyle =
+                                  this.itemPartialCompleteStyle_ACTIVITY(
+                                    item,
+                                    timing
+                                  );
+                              } else if (item.partialStatus === "NONE") {
+                                itemBlockStyle = this.itemUnCompletedBlockStyle(
+                                  item,
+                                  timing
+                                );
+                              } else {
+                                itemBlockStyle =
+                                  this.itemPartialCompleteStyle_TIME_ACTIVITY(
+                                    item,
+                                    timing,
+                                    newTiming
+                                  );
+                              }
+                            } else {
+                            }
+                          }
+                        }
+                      }
+
+                      return itemBlockStyle;
+                    }
+                    // console.log("items in plansBuddle", item);
+                  }}
+                />
               </View>
-            </View>
-          </ScrollView>
+            </ScrollView>
+          </View>
         </View>
       </View>
     );
@@ -4968,6 +5325,13 @@ export class TrackingPage extends React.Component {
                     title: "Strategies",
                   });
                 } else if (index === 0) {
+                  this.setState({ selectedStrategy: this.currentStrategy });
+                  this.setState({
+                    selectedKeywords: this.currentStrategy.keywords,
+                  });
+                  this.setState({
+                    selectedStrategyPlans: this.currentStrategy.plans,
+                  });
                   this.setState({ panelHeight: 250 });
                   this.setState({
                     title: "Tracking",
@@ -4977,7 +5341,7 @@ export class TrackingPage extends React.Component {
                   if (this.state.currentMonth != "THIS_MONTH") {
                     this.resetCalendarToCurrentMonth();
                   }
-                  this.setState({ selectedStrategy: this.currentStrategy });
+
                   this.setState({
                     selectedStrategyDate: this.currentStrategy.startDate,
                   });

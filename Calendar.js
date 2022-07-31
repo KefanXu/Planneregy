@@ -21,7 +21,7 @@ import moment, { min } from "moment";
 const RED = "#EE442F";
 const GREEN = "#1AB700";
 const YELLOW = "#FFB800";
-const BLACK = "#393939"
+const BLACK = "#393939";
 const BACKGROUND_COLOR = "white";
 const HIGHLIGHT_COLOR = "white";
 const BLUE = "#579AFF";
@@ -59,7 +59,7 @@ export class MonthCalendar extends React.Component {
 
     this.state = {
       activeDate: this.props.monthCalCurrDate,
-      
+
       //thisMonthEvents: this.thisMonthEvents,
       dayEventsList: [],
       targetDate: targetDate.getDay(),
@@ -188,9 +188,12 @@ export class MonthCalendar extends React.Component {
           this.props.monthCalCurrDate.getMonth(),
           item
         );
-        let isWithinStrategy;;
-        if (selectedDate >= strategyStartDate && selectedDate <= strategyEndDate) {
-          isWithinStrategy=true;
+        let isWithinStrategy;
+        if (
+          selectedDate >= strategyStartDate &&
+          selectedDate <= strategyEndDate
+        ) {
+          isWithinStrategy = true;
           // console.log("isWithinStrategy",isWithinStrategy);
         } else {
           // console.log("not within");
@@ -384,8 +387,13 @@ export class MonthCalendar extends React.Component {
                     width: "95%",
                     flexDirection: "row",
                     backgroundColor: item != -1 ? "white" : "rgba(0,0,0,0)",
-                    borderColor: item != -1 ? isWithinStrategy ? LIGHTBLUE: "#D8D8D8" : "rgba(0,0,0,0)",
-                    borderWidth: isWithinStrategy? 2 :1,
+                    borderColor:
+                      item != -1
+                        ? isWithinStrategy
+                          ? LIGHTBLUE
+                          : "#D8D8D8"
+                        : "rgba(0,0,0,0)",
+                    borderWidth: isWithinStrategy ? 2 : 1,
                     borderRadius: 15,
                     marginTop: 2,
                     justifyContent: "center",
@@ -552,6 +560,34 @@ export class MonthCalendar extends React.Component {
                                 </Text>
                               </View>
                             );
+                          } else if (item.isPlanned === "added-activity") {
+                            return (
+                              <View
+                                style={{
+                                  width: "100%",
+                                  backgroundColor: BLUE,
+                                  borderRadius: 5,
+                                  // flex: 1,
+                                  height: 15,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    textAlign: "center",
+                                    fontSize: 8,
+                                    fontWeight: "bold",
+                                    color: "white",
+                                  }}
+                                >
+                                  {/* {item.start} */}
+                                  {item.title
+                                    ? item.title + feelingEmoji
+                                    : "event"}
+                                </Text>
+                              </View>
+                            );
                           } else {
                             return (
                               //Uncompleted events
@@ -585,65 +621,33 @@ export class MonthCalendar extends React.Component {
                         }
                       } else {
                         //User-added unplanned events
-                        if (item.isPlanned === "added-activity") {
-                          return (
-                            <View
+                        //Unreported events
+                        return (
+                          <View
+                            style={{
+                              width: "100%",
+                              height: 15,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "white",
+                              borderWidth: 1,
+                              borderColor: "black",
+                              borderRadius: 5,
+                              // flex: 1,
+                            }}
+                          >
+                            <Text
                               style={{
-                                width: "100%",
-                                backgroundColor: BLUE,
-                                borderRadius: 5,
-                                // flex: 1,
-                                height: 15,
-                                alignItems: "center",
-                                justifyContent: "center",
+                                textAlign: "center",
+                                fontSize: 8,
+                                fontWeight: "bold",
                               }}
                             >
-                              <Text
-                                style={{
-                                  textAlign: "center",
-                                  fontSize: 8,
-                                  fontWeight: "bold",
-                                  color: "white",
-                                }}
-                              >
-                                {/* {item.start} */}
-                                {item.title
-                                  ? item.title + feelingEmoji
-                                  : "event"}
-                              </Text>
-                            </View>
-                          );
-                        } else {
-                          //Unreported events
-                          return (
-                            <View
-                              style={{
-                                width: "100%",
-                                height: 15,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                backgroundColor: "white",
-                                borderWidth: 1,
-                                borderColor: "black",
-                                borderRadius: 5,
-                                // flex: 1,
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  textAlign: "center",
-                                  fontSize: 8,
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                {/* {item.start} */}
-                                {item.title
-                                  ? item.title + feelingEmoji
-                                  : "event"}
-                              </Text>
-                            </View>
-                          );
-                        }
+                              {/* {item.start} */}
+                              {item.title ? item.title + feelingEmoji : "event"}
+                            </Text>
+                          </View>
+                        );
                       }
                     } else {
                       //Other Calendar events
@@ -769,6 +773,35 @@ export class MonthCalendar extends React.Component {
                                 </Text>
                               </View>
                             );
+                          } else if (item.isPlanned === "added-activity") {
+                            return (
+                              //User-added planned events
+                              <View
+                                style={{
+                                  width: "100%",
+                                  backgroundColor: BLUE,
+                                  borderRadius: 5,
+                                  // flex: 1,
+                                  height: 15,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    textAlign: "center",
+                                    fontSize: 8,
+                                    fontWeight: "bold",
+                                    color: "white",
+                                  }}
+                                >
+                                  {/* {item.start} */}
+                                  {item.title
+                                    ? item.title + feelingEmoji
+                                    : "event"}
+                                </Text>
+                              </View>
+                            );
                           } else {
                             return (
                               //uncompleted events
@@ -801,66 +834,33 @@ export class MonthCalendar extends React.Component {
                           }
                         }
                       } else {
-                        if (item.isPlanned === "added-activity") {
-                          return (
-                            //User-added planned events
-                            <View
+                        return (
+                          //Unreported events
+                          <View
+                            style={{
+                              width: "100%",
+                              height: 15,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "white",
+                              borderWidth: 1,
+                              borderColor: "black",
+                              borderRadius: 5,
+                              // flex: 1,
+                            }}
+                          >
+                            <Text
                               style={{
-                                width: "100%",
-                                backgroundColor: BLUE,
-                                borderRadius: 5,
-                                // flex: 1,
-                                height: 15,
-                                alignItems: "center",
-                                justifyContent: "center",
+                                textAlign: "center",
+                                fontSize: 8,
+                                fontWeight: "bold",
                               }}
                             >
-                              <Text
-                                style={{
-                                  textAlign: "center",
-                                  fontSize: 8,
-                                  fontWeight: "bold",
-                                  color: "white",
-                                }}
-                              >
-                                {/* {item.start} */}
-                                {item.title
-                                  ? item.title + feelingEmoji
-                                  : "event"}
-                              </Text>
-                            </View>
-                          );
-                        } else {
-                          return (
-                            //Unreported events
-                            <View
-                              style={{
-                                width: "100%",
-                                height: 15,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                backgroundColor: "white",
-                                borderWidth: 1,
-                                borderColor: "black",
-                                borderRadius: 5,
-                                // flex: 1,
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  textAlign: "center",
-                                  fontSize: 8,
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                {/* {item.start} */}
-                                {item.title
-                                  ? item.title + feelingEmoji
-                                  : "event"}
-                              </Text>
-                            </View>
-                          );
-                        }
+                              {/* {item.start} */}
+                              {item.title ? item.title + feelingEmoji : "event"}
+                            </Text>
+                          </View>
+                        );
                       }
                     } else {
                       return (
