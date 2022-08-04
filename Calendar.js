@@ -25,7 +25,7 @@ const BLACK = "#393939";
 const BACKGROUND_COLOR = "white";
 const HIGHLIGHT_COLOR = "white";
 const BLUE = "#579AFF";
-const LIGHTBLUE = "#00D4E1";
+const LIGHTBLUE = "#1AB700";
 
 export class MonthCalendar extends React.Component {
   constructor(props) {
@@ -651,23 +651,25 @@ export class MonthCalendar extends React.Component {
                       }
                     } else {
                       //Other Calendar events
-                      return (
-                        <View
-                          style={{
-                            width: "100%",
-                            height: 10,
-                            backgroundColor: "grey",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: 5,
-                          }}
-                        >
-                          <Text style={{ textAlign: "center", fontSize: 5 }}>
-                            {/* {item.start} */}
-                            {item.title ? item.title + feelingEmoji : ""}
-                          </Text>
-                        </View>
-                      );
+                      if (!("title" in item)) {
+                        return (
+                          <View
+                            style={{
+                              width: "100%",
+                              height: 10,
+                              backgroundColor: "grey",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: 5,
+                            }}
+                          >
+                            <Text style={{ textAlign: "center", fontSize: 5 }}>
+                              {/* {item.start} */}
+                              {item.title ? item.title + feelingEmoji : ""}
+                            </Text>
+                          </View>
+                        );
+                      }
                     }
                   })}
                   {/* <FlatList
@@ -863,26 +865,28 @@ export class MonthCalendar extends React.Component {
                         );
                       }
                     } else {
-                      return (
-                        //Other calendar events
-                        <View
-                          style={{
-                            width: "100%",
-                            // height:5,
-                            backgroundColor: "grey",
-                            borderRadius: 5,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            height: 10,
-                            // flex: 1,
-                          }}
-                        >
-                          <Text style={{ textAlign: "center", fontSize: 5 }}>
-                            {/* {item.start} */}
-                            {item.title ? item.title + feelingEmoji : ""}
-                          </Text>
-                        </View>
-                      );
+                      if (!("title" in item)) {
+                        return (
+                          //Other calendar events
+                          <View
+                            style={{
+                              width: "100%",
+                              // height:5,
+                              backgroundColor: "grey",
+                              borderRadius: 5,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              height: 10,
+                              // flex: 1,
+                            }}
+                          >
+                            <Text style={{ textAlign: "center", fontSize: 5 }}>
+                              {/* {item.start} */}
+                              {item.title ? item.title + feelingEmoji : ""}
+                            </Text>
+                          </View>
+                        );
+                      }
                     }
                   })}
                   {/* <FlatList
