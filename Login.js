@@ -11,6 +11,8 @@ import moment, { min } from "moment";
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Logo from "./assets/svg/logo.svg";
+
 
 export function Login({ navigation }) {
   const [request, response, promptAsync] =
@@ -63,6 +65,7 @@ export function Login({ navigation }) {
 
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <Logo height={302} width={234} marginBottom={30}/>
       <Button
         label={"Login with Google"}
         labelStyle={{ fontWeight: "bold", fontSize: 15 }}

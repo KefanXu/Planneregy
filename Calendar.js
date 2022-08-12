@@ -426,7 +426,7 @@ export class MonthCalendar extends React.Component {
 
                       //backgroundColor: rowIndex == 0 ? "#ddd" : "",
                       // Highlight Sundays
-                      color: colIndex == 0 ? "#a00" : "#000",
+                      color: colIndex == 0 ? "#000" : "#000",
                       // Highlight current date
                       fontWeight:
                         item == this.props.monthCalCurrDate.getDate()

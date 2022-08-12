@@ -31,6 +31,10 @@ import { Feather } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
+
+
 
 //Load interactive component libraries
 import SlidingUpPanel from "rn-sliding-up-panel";
@@ -168,7 +172,7 @@ export class PlanOnCalendar extends React.Component {
       title: <PlanActivities height={28} width={150} />,
       displayTitle: "flex",
 
-      panelHeight: 500,
+      panelHeight: 450,
       isStrategyDetailModalVis: false,
       isMonthCalendarModalVis: false,
       //Calendar event lists
@@ -636,6 +640,7 @@ export class PlanOnCalendar extends React.Component {
       });
       return;
     }
+    this._panel.hide();
     let selectedDate = this.state.selectedDate;
     // console.log("selectedDate on pressed",selectedDate);
     // let isPlanDuplicated = false;
@@ -958,7 +963,7 @@ export class PlanOnCalendar extends React.Component {
     this.setState({ mainContentSwiperDisplay: "flex" });
     this.setState({ conformationPageDisplay: "none" });
     this.mainContentSwiperRef.current.goToPage(1, true);
-    this.setState({ panelHeight: 500 });
+    this.setState({ panelHeight: 450 });
     this._panel.hide();
     this.setState({ displayCalView: "flex" });
     this.setState({ displayTitle: "flex" });
@@ -1099,7 +1104,8 @@ export class PlanOnCalendar extends React.Component {
         style={{
           alignItems: "center",
           justifyContent: "flex-start",
-          height: "100%",
+          height: 450,
+          // backgroundColor:"red"
         }}
       >
         <SlidingUpPanelTxt height={108} width={335} marginTop={15} />
@@ -1414,7 +1420,7 @@ export class PlanOnCalendar extends React.Component {
           </View>
         </View>
         <TouchableOpacity onPress={() => this.onPlanBtnPressed()}>
-          <AddActivityBtn height={32} width={202} marginTop={"5%"} />
+          <AddActivityBtn height={32} width={202} marginTop={10} />
         </TouchableOpacity>
       </View>
     );
@@ -1423,7 +1429,7 @@ export class PlanOnCalendar extends React.Component {
         style={{
           alignItems: "center",
           justifyContent: "flex-start",
-          height: "100%",
+          height: 450,
         }}
       >
         <SlidingUpPanelTxt2 height={188} width={335} marginTop={15} />
@@ -1447,7 +1453,7 @@ export class PlanOnCalendar extends React.Component {
               backgroundColor: "#1AB700",
               borderColor: "#1AB700",
             }}
-            onChangeChips={(chips) => this.onChangeChips(chips)}
+            onChangeChips={(chips) => {this.onChangeChips(chips);this._panel.hide()}}
             alertRequired={false}
           />
         </View>
@@ -1492,7 +1498,7 @@ export class PlanOnCalendar extends React.Component {
                 justifyContent: "flex-end",
                 flex: 1,
               }}
-              onPress={() => this.addKeywords()}
+              onPress={() => {this.addKeywords();setTimeout(() => {this._panel.hide()})}}
             >
               <Ionicons name="ios-add-circle" size={25} color={"black"} />
             </TouchableOpacity>
@@ -1766,16 +1772,42 @@ export class PlanOnCalendar extends React.Component {
               justifyContent: "space-between",
               alignItems: "center",
               margin: 0,
-              padding: 15,
+              paddingTop: 15,
+              paddingHorizontal: 15
             }}
           >
-            <Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}>
+            <View             style={{
+              // width: "100%",
+              flexDirection: "row",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              // margin: 0,
+              // paddingTop: 15,
+              // paddingHorizontal: 15
+            }}>
+              <MaterialIcons name="event-note" size={15} color="black" />
+
+            <Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18, marginLeft:5 }}>
               Planned Activities
             </Text>
+            </View>
             <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 13 }}>
               {this.state.accumulatedMinutes}/150 minutes remains
             </Text>
           </View>
+          <View style={{width:"100%", paddingLeft:15, marginBottom:15}}>
+          <Text
+              style={{
+                fontFamily: "RobotoBoldItalic",
+                fontSize: 14,
+                marginTop: 2,
+                color: "#676767",
+                textAlign:"left"
+              }}
+            >
+              Your planned activities will appear here
+            </Text>
+            </View>
           <View style={{ width: "100%", height: 280, paddingHorizontal: 15 }}>
             <FlatList
               data={this.state.plansBuddle}
@@ -1877,9 +1909,18 @@ export class PlanOnCalendar extends React.Component {
               padding: 15,
             }}
           >
-            <Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}>
+            <View             style={{
+              width: "100%",
+              flexDirection: "row",
+              justifyContent: "flex-start",
+              alignItems:"center"
+            }}>
+            <FontAwesome name="asterisk" size={15} color="black" />
+            <Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18, marginLeft:5 }}>
               Key Words of My Plans
+              
             </Text>
+            </View>
             <Text
               style={{
                 fontFamily: "RobotoBoldItalic",
@@ -2250,7 +2291,7 @@ export class PlanOnCalendar extends React.Component {
           {/* Swipable Body Content */}
           <View
             style={{
-              height: 470,
+              height: 430,
               width: "100%",
               display: this.state.swipeAblePanelDisplay,
             }}
@@ -2300,7 +2341,7 @@ export class PlanOnCalendar extends React.Component {
               // ref={this.mainContentSwiperRef}
               containerStyles={{ justifyContent: "flex-start" }}
               ref={this.panelSwiperRef}
-              imageContainerStyles={{ height: 550 }}
+              imageContainerStyles={{ height: this.state.panelHeight }}
               bottomBarHeight={30}
               showSkip={false}
               showNext={true}
@@ -2320,7 +2361,7 @@ export class PlanOnCalendar extends React.Component {
                   this.setState({ mainContentSwiperDisplay: "flex" });
                   this.setState({ conformationPageDisplay: "none" });
                   this.mainContentSwiperRef.current.goToPage(index, true);
-                  this.setState({ panelHeight: 500 });
+                  this.setState({ panelHeight: 450 });
                   this._panel.hide();
                   this.setState({ displayCalView: "flex" });
                   this.setState({ displayTitle: "flex" });
