@@ -137,47 +137,47 @@ export class BeforeLoginScreen extends React.Component {
           console.log("weather processed");
           await this.dataModel.updateWeatherInfo(key, weatherFullList);
         } else {
-          // navToScreen = "TrackingPage";
-          // this.setState({ dataType: "weather" });
-          // let lastMonthWeatherJSON = await SecureStore.getItemAsync(
-          //   "lastMonthWeather"
-          // );
-          // let thisMonthWeatherJSON = await SecureStore.getItemAsync(
-          //   "thisMonthWeather"
-          // );
-          // let nextMonthWeatherJSON = await SecureStore.getItemAsync(
-          //   "nextMonthWeather"
-          // );
-          // lastMonthWeather = JSON.parse(lastMonthWeatherJSON);
-          // thisMonthWeather = JSON.parse(thisMonthWeatherJSON);
-          // nextMonthWeather = JSON.parse(nextMonthWeatherJSON);
-
-
-
-          navToScreen = "PlanOnCalendar";
+          navToScreen = "TrackingPage";
           this.setState({ dataType: "weather" });
-          [lastMonthWeather, thisMonthWeather, nextMonthWeather] =
-            await this.fetchWeatherInfo(userPlans);
-          console.log("weather fetched");
-          let weatherFullList = [];
+          let lastMonthWeatherJSON = await SecureStore.getItemAsync(
+            "lastMonthWeather"
+          );
+          let thisMonthWeatherJSON = await SecureStore.getItemAsync(
+            "thisMonthWeather"
+          );
+          let nextMonthWeatherJSON = await SecureStore.getItemAsync(
+            "nextMonthWeather"
+          );
+          lastMonthWeather = JSON.parse(lastMonthWeatherJSON);
+          thisMonthWeather = JSON.parse(thisMonthWeatherJSON);
+          nextMonthWeather = JSON.parse(nextMonthWeatherJSON);
 
-          for (let weather of lastMonthWeather) {
-            let newWeather = Object.assign({}, weather);
-            newWeather.month = todayDate.getMonth() - 1;
-            weatherFullList.push(newWeather);
-          }
-          for (let weather of thisMonthWeather) {
-            let newWeather = Object.assign({}, weather);
-            newWeather.month = todayDate.getMonth();
-            weatherFullList.push(newWeather);
-          }
-          for (let weather of nextMonthWeather) {
-            let newWeather = Object.assign({}, weather);
-            newWeather.month = todayDate.getMonth() + 1;
-            weatherFullList.push(newWeather);
-          }
-          console.log("weather processed");
-          await this.dataModel.updateWeatherInfo(key, weatherFullList);
+
+
+          // navToScreen = "PlanOnCalendar";
+          // this.setState({ dataType: "weather" });
+          // [lastMonthWeather, thisMonthWeather, nextMonthWeather] =
+          //   await this.fetchWeatherInfo(userPlans);
+          // console.log("weather fetched");
+          // let weatherFullList = [];
+
+          // for (let weather of lastMonthWeather) {
+          //   let newWeather = Object.assign({}, weather);
+          //   newWeather.month = todayDate.getMonth() - 1;
+          //   weatherFullList.push(newWeather);
+          // }
+          // for (let weather of thisMonthWeather) {
+          //   let newWeather = Object.assign({}, weather);
+          //   newWeather.month = todayDate.getMonth();
+          //   weatherFullList.push(newWeather);
+          // }
+          // for (let weather of nextMonthWeather) {
+          //   let newWeather = Object.assign({}, weather);
+          //   newWeather.month = todayDate.getMonth() + 1;
+          //   weatherFullList.push(newWeather);
+          // }
+          // console.log("weather processed");
+          // await this.dataModel.updateWeatherInfo(key, weatherFullList);
         }
       } else {
         navToScreen = "PlanOnCalendar";

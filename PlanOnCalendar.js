@@ -1215,8 +1215,8 @@ export class PlanOnCalendar extends React.Component {
               paddingHorizontal: "2%",
             }}
           >
-            <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
-              Self-Defined Activity
+            <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 11, textAlign:"center" }}>
+            Add Self-Defined Activity to Activity List
             </Text>
             {/* Add New Activity Text Field */}
             <View
