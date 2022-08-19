@@ -38,6 +38,7 @@
     "react-native-animated-loader": "^0.0.9",
     "react-native-big-calendar": "^3.2.0",
     "react-native-chip": "^2.1.8",
+    "react-native-copilot": "^2.5.1",
     "react-native-expandable-chips-list": "^1.0.4",
     "react-native-flash-message": "^0.2.1",
     "react-native-gesture-handler": "~2.1.0",
