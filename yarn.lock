@@ -7195,13 +7195,6 @@ react-native-gesture-handler@~2.1.0:
     lodash "^4.17.21"
     prop-types "^15.7.2"
 
-react-native-highlight-overlay@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/react-native-highlight-overlay/-/react-native-highlight-overlay-1.3.0.tgz#065379b2133f68282049d49ec01004e385c866bd"
-  integrity sha512-htOeiICGY3AeS+kVlb3EwPBCZFkFeBfiZJZtWMDfBgJ9e6R86TyZ5xCMbxWWX9mN/4SpJuXKenl6Qic6Lgc+tg==
-  dependencies:
-    lodash.isequal "^4.5.0"
-
 react-native-iphone-x-helper@^1.3.1:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/react-native-iphone-x-helper/-/react-native-iphone-x-helper-1.3.1.tgz#20c603e9a0e765fd6f97396638bdeb0e5a60b010"
