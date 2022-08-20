@@ -62,6 +62,11 @@ import { Badge } from "react-native-ui-lib";
 //Load functional libraries
 import moment, { min } from "moment";
 import * as SecureStore from "expo-secure-store";
+import {
+	HighlightableElement,
+	HighlightableElementProvider,
+	HighlightOverlay,
+} from "react-native-highlight-overlay";
 
 //Load from other local components
 import { MonthCalendar } from "./Calendar";
@@ -415,6 +420,7 @@ export class TrackingPage extends React.Component {
 			evaluationNEXTbtnTxt: "NEXT",
 			//Guide popup vis
 			isGuideVis: false,
+			onboardingID: "important_item_1",
 		};
 		this.processUserStrategies();
 		this.processDailyReports_after();
@@ -4503,6 +4509,15 @@ export class TrackingPage extends React.Component {
 						{/* <Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}>
               My Activities
             </Text> */}
+								<HighlightableElement 
+            id="important_item_1"
+            options={{
+                // Options are useful if you want to configure the highlight, but can be left blank.
+                mode: "rectangle",
+                padding: 5,
+                borderRadius: 15,
+            }}
+        >
 						<TouchableOpacity
 							style={{
 								alignItems: "center",
@@ -4515,7 +4530,7 @@ export class TrackingPage extends React.Component {
 							}}>
 							{this.state.hideIcon}
 						</TouchableOpacity>
-
+						</HighlightableElement>
 						<View
 							style={{
 								width: "100%",
@@ -8116,439 +8131,443 @@ export class TrackingPage extends React.Component {
 				</View>
 			</View>
 		);
-    let tip_ONE = (
-      <View
-      style={{ height: "100%", width: "100%", padding: 15 }}>
-        <Text>Daily Report</Text>
-      </View>
-    )
+		let tip_ONE = (
+			<View style={{ height: "100%", width: "100%", padding: 15 }}>
+				<Text>Daily Report</Text>
+			</View>
+		);
 
 		return (
 			// <KeyboardAvoidingView
 			//   behavior={Platform.OS === "ios" ? "padding" : "height"}
 			// >
 			//   <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-			<View
-				style={{
-					backgroundColor: "white",
-					width: "100%",
-					height: "100%",
-					justifyContent: "flex-start",
-					alignItems: "center",
-				}}>
-				<FlashMessage position="bottom" />
+			<HighlightableElementProvider>
+				<View
+					style={{
+						backgroundColor: "white",
+						width: "100%",
+						height: "100%",
+						justifyContent: "flex-start",
+						alignItems: "center",
+					}}>
+					<FlashMessage position="bottom" />
 
-				{/* Guide Btn */}
-				<TouchableOpacity
-					style={{
-						position: "absolute",
-						left: 0,
-						top: "5%",
-						height: 28,
-						width: 85,
-						flexDirection: "row",
-						justifyContent: "space-between",
-						paddingHorizontal: 5,
-						alignItems: "center",
-						backgroundColor: "black",
-						borderBottomRightRadius: 20,
-						borderTopRightRadius: 20,
-					}}
-					onPress={() => this.setState({ isGuideVis: true })}>
-					<Text
+					{/* Guide Btn */}
+					<TouchableOpacity
 						style={{
-							fontFamily: "RobotoBoldItalic",
-							color: "white",
-							textAlign: "center",
-							fontSize: 18,
-						}}>
-						Guide
-					</Text>
-					<AntDesign name="questioncircle" size={18} color="white" />
-				</TouchableOpacity>
-				{/* Popover Tips */}
-				<View
-					style={{
-						position: "absolute",
-						right: 15,
-						top: "5%",
-						height: 20,
-						width: 20,
-						justifyContent: "center",
-						alignItems: "center",
-					}}>
-					<Popover
-						popoverStyle={{ borderRadius: 20 }}
-						from={
-							<TouchableOpacity style={{ marginLeft: "5%" }}>
-								<AntDesign name="infocirlce" size={18} color="black" />
-							</TouchableOpacity>
-						}>
-						<View
-							style={{
-								height: 30,
-								width: 350,
-								alignItems: "center",
-								justifyContent: "center",
-								borderRadius: 20,
-								transform: [{ scale: 0.8 }],
-							}}>
-							<Indicator height={22} width={330} />
-						</View>
-					</Popover>
-				</View>
-				{/* Title */}
-				<View
-					style={{
-						height: 28,
-						width: "50%",
-						marginTop: "10%",
-						alignItems: "center",
-						justifyContent: "center",
-						display: this.state.displayTitle,
-						flexDirection: "row",
-					}}>
-					<Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 24 }}>
-						{this.state.title}
-					</Text>
-				</View>
-				{/* {Report Popup} */}
-				<KeyboardAvoidingView>
-					<RNModal
-						animationType="slide"
-						// propagateSwipe={true}
-						visible={this.state.isReportModalVis}
-						style={{
-							justifyContent: "flex-start",
+							position: "absolute",
+							left: 0,
+							top: "5%",
+							height: 28,
+							width: 85,
+							flexDirection: "row",
+							justifyContent: "space-between",
+							paddingHorizontal: 5,
 							alignItems: "center",
-							marginTop: "75%",
+							backgroundColor: "black",
+							borderBottomRightRadius: 20,
+							borderTopRightRadius: 20,
 						}}
-						presentationStyle="overFullScreen"
-						transparent={true}
-						// hasBackdrop={true}
-						// backdropOpacity={0}
-						// onBackdropPress={() => this.setState({ isReportModalVis: false })}
-						// onSwipeComplete={() => this.setState({ isReportModalVis: false })}
-						// swipeDirection="down"
-					>
-						<View
+						onPress={() => this.setState({ isGuideVis: true })}>
+						<Text
 							style={{
-								width: "100%",
-								height: "100%",
-								justifyContent: "center",
-								alignItems: "center",
+								fontFamily: "RobotoBoldItalic",
+								color: "white",
+								textAlign: "center",
+								fontSize: 18,
 							}}>
+							Guide
+						</Text>
+						<AntDesign name="questioncircle" size={18} color="white" />
+					</TouchableOpacity>
+					{/* Popover Tips */}
+					<View
+						style={{
+							position: "absolute",
+							right: 15,
+							top: "5%",
+							height: 20,
+							width: 20,
+							justifyContent: "center",
+							alignItems: "center",
+						}}>
+						<Popover
+							popoverStyle={{ borderRadius: 20 }}
+							from={
+								<TouchableOpacity style={{ marginLeft: "5%" }}>
+									<AntDesign name="infocirlce" size={18} color="black" />
+								</TouchableOpacity>
+							}>
 							<View
-								style={[
-									generalStyles.shadowStyle,
-									{
-										width: "90%",
-										height: this.state.reportModalHeight,
-										borderRadius: 20,
-										backgroundColor: "white",
-										justifyContent: "center",
-										alignItems: "center",
-									},
-								]}>
-								<View
-									style={{
-										flexDirection: "row",
-										justifyContent: "space-between",
-										alignItems: "center",
-										marginTop: 10,
-										width: "95%",
-										marginBottom: 10,
-									}}>
-									<Text
-										style={{
-											fontFamily: "RobotoBoldItalic",
-											fontSize: 20,
-											marginLeft: 10,
-										}}>
-										Daily Report
-									</Text>
-									<TouchableOpacity
-										onPress={() => {
-											this.onDailyReportClose();
-
-											// this.reportModalSwiperRef.current.scrollBy(2, true);
-										}}>
-										<AntDesign name="closecircle" size={24} color="black" />
-									</TouchableOpacity>
-								</View>
+								style={{
+									height: 30,
+									width: 350,
+									alignItems: "center",
+									justifyContent: "center",
+									borderRadius: 20,
+									transform: [{ scale: 0.8 }],
+								}}>
+								<Indicator height={22} width={330} />
+							</View>
+						</Popover>
+					</View>
+					{/* Title */}
+					<View
+						style={{
+							height: 28,
+							width: "50%",
+							marginTop: "10%",
+							alignItems: "center",
+							justifyContent: "center",
+							display: this.state.displayTitle,
+							flexDirection: "row",
+						}}>
+						<Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 24 }}>
+							{this.state.title}
+						</Text>
+					</View>
+					{/* {Report Popup} */}
+					<KeyboardAvoidingView>
+						<RNModal
+							animationType="slide"
+							// propagateSwipe={true}
+							visible={this.state.isReportModalVis}
+							style={{
+								justifyContent: "flex-start",
+								alignItems: "center",
+								marginTop: "75%",
+							}}
+							presentationStyle="overFullScreen"
+							transparent={true}
+							// hasBackdrop={true}
+							// backdropOpacity={0}
+							// onBackdropPress={() => this.setState({ isReportModalVis: false })}
+							// onSwipeComplete={() => this.setState({ isReportModalVis: false })}
+							// swipeDirection="down"
+						>
+							<View
+								style={{
+									width: "100%",
+									height: "100%",
+									justifyContent: "center",
+									alignItems: "center",
+								}}>
 								<View
 									style={[
 										generalStyles.shadowStyle,
 										{
 											width: "90%",
-											height: 60,
+											height: this.state.reportModalHeight,
 											borderRadius: 20,
-											borderColor: "black",
-											borderWidth: 1,
-											paddingHorizontal: 6,
-											flexDirection: "row",
-											alignItems: "center",
-											justifyContent: "space-between",
-											marginTop: 15,
 											backgroundColor: "white",
-											flexDirection: "column",
-											paddingVertical: 6,
-											display: this.state.reportDetailInfoVis,
+											justifyContent: "center",
+											alignItems: "center",
 										},
 									]}>
 									<View
 										style={{
 											flexDirection: "row",
 											justifyContent: "space-between",
-											width: "100%",
+											alignItems: "center",
+											marginTop: 10,
+											width: "95%",
+											marginBottom: 10,
 										}}>
 										<Text
 											style={{
-												fontFamily: "RobotoBoldBold",
-												fontSize: 18,
-												paddingLeft: 8,
-												color: "black",
+												fontFamily: "RobotoBoldItalic",
+												fontSize: 20,
+												marginLeft: 10,
 											}}>
-											{this.state.reportTitle}
-											{" | "}
-											<Text
-												style={{
-													fontFamily: "RobotoRegular",
-													fontSize: 16,
-												}}>
-												{moment(this.onReportActivity.start)
-													.format()
-													.slice(5, 10)}
-											</Text>
+											Daily Report
 										</Text>
+										<TouchableOpacity
+											onPress={() => {
+												this.onDailyReportClose();
+
+												// this.reportModalSwiperRef.current.scrollBy(2, true);
+											}}>
+											<AntDesign name="closecircle" size={24} color="black" />
+										</TouchableOpacity>
 									</View>
-									<Text
-										style={{
-											fontFamily: "RobotoRegular",
-											fontSize: 14,
-											width: "100%",
-											paddingLeft: 8,
-										}}>
-										{
-											moment(this.state.reportStart)
-												.format("ddd")
-												.toUpperCase() +
-												" " +
-												this.state.reportStart.slice(11, 16) +
-												" - " +
-												this.state.reportEnd.slice(11, 16)
-											// +
-											// " | " +
-											// this.state.reportDuration +
-											// " MIN"
-										}
-									</Text>
-								</View>
-								<Swiper
-									activeDotColor="black"
-									index={this.state.currentSwipeIndex}
-									showsButtons={false}
-									autoplay={false}
-									loop={false}
-									keyboardShouldPersistTaps="handled"
-									scrollEnabled={false}
-									ref={this.reportModalSwiperRef}
-									nextButton={<Text style={{ fontWeight: "bold" }}>NEXT</Text>}
-									prevButton={<Text style={{ fontWeight: "bold" }}>PREV</Text>}
-									showsPagination={false}
-									buttonWrapperStyle={{
-										backgroundColor: "transparent",
-										flexDirection: "row",
-										position: "absolute",
-										// height:20,
-										// bottom: 30,
-										// left: 0,
-										flex: 1,
-										paddingBottom: 20,
-										paddingHorizontal: 20,
-										// paddingVertical: 10,
-										justifyContent: "space-between",
-										alignItems: "flex-end",
-									}}>
-									{reportScreen_ONE}
-									{reportScreen_TWO}
-									{reportScreen_THREE}
-									{reportScreen_FOUR}
-									{reportScreen_FIVE}
-									{reportScreen_SIX}
-									{reportScreen_SEVEN}
-									{reportScreen_TWO}
-									{reportScreen_EIGHT}
-								</Swiper>
-								{/* <View style={{width:"90%", height:"50%"}}> */}
-								<View
-									style={{
-										width: "80%",
-										flexDirection: "row",
-										justifyContent: "space-between",
-										position: "absolute",
-										bottom: 20,
-										borderTopWidth: 2,
-									}}>
-									<TouchableOpacity
-										disabled={this.state.isReportSwipePERVdisabled}
-										style={{ display: this.state.isReportSwipePERVvis }}
-										onPress={() => {
-											this.onReportPrevBtnPressed();
-										}}>
-										<Text style={{ fontWeight: "bold" }}>PREV</Text>
-									</TouchableOpacity>
-									<TouchableOpacity
-										onPress={() => {
-											this.onReportNextBtnPressed();
-										}}>
-										<Text style={{ fontWeight: "bold" }}>
-											{this.state.reportNEXTbtn}
-										</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</View>
-					</RNModal>
-				</KeyboardAvoidingView>
-				{/* Plan Strategy Detail Modal */}
-				<Modal
-					propagateSwipe={true}
-					isVisible={this.state.isStrategyDetailModalVis}
-					style={{
-						justifyContent: "flex-start",
-						alignItems: "center",
-						marginTop: "50%",
-					}}
-					hasBackdrop={true}
-					backdropOpacity={0}
-					onBackdropPress={() =>
-						this.setState({ isStrategyDetailModalVis: false })
-					}
-					onSwipeComplete={() =>
-						this.setState({ isStrategyDetailModalVis: false })
-					}
-					swipeDirection="down">
-					<View
-						style={[
-							generalStyles.shadowStyle,
-							{
-								width: "98%",
-								height: "50%",
-								borderRadius: 20,
-								backgroundColor: "white",
-							},
-						]}>
-						<Text
-							style={{
-								fontSize: 20,
-								fontFamily: "RobotoBoldItalic",
-								marginTop: "10%",
-								marginLeft: "10%",
-							}}>
-							{this.state.planStrategyName}
-						</Text>
-						<View style={{ backgroundColor: "white", borderRadius: 20 }}>
-							<Text
-								style={{
-									fontSize: 12,
-									fontFamily: "RobotoBoldBold",
-									marginTop: 0,
-									marginLeft: "10%",
-								}}>
-								{this.state.strategyDuration}
-							</Text>
-						</View>
-						<View
-							style={{
-								height: 5,
-								width: "80%",
-								backgroundColor: "black",
-								marginHorizontal: "10%",
-								marginTop: "2%",
-							}}></View>
-						<ScrollView style={{ marginHorizontal: "10%", marginTop: "2%" }}>
-							<View
-								style={{
-									flexDirection: "row",
-									flexWrap: "wrap",
-									alignItems: "center",
-									marginTop: "5%",
-								}}>
-								{this.state.keywordsBuddle.map((item) => {
-									return (
+									<View
+										style={[
+											generalStyles.shadowStyle,
+											{
+												width: "90%",
+												height: 60,
+												borderRadius: 20,
+												borderColor: "black",
+												borderWidth: 1,
+												paddingHorizontal: 6,
+												flexDirection: "row",
+												alignItems: "center",
+												justifyContent: "space-between",
+												marginTop: 15,
+												backgroundColor: "white",
+												flexDirection: "column",
+												paddingVertical: 6,
+												display: this.state.reportDetailInfoVis,
+											},
+										]}>
 										<View
 											style={{
-												height: 25,
-												borderRadius: 20,
-												backgroundColor: "black",
-												justifyContent: "space-between",
-												alignItems: "center",
-												alignSelf: "center",
-												marginBottom: 5,
-												marginRight: 5,
-												paddingHorizontal: 2,
 												flexDirection: "row",
+												justifyContent: "space-between",
+												width: "100%",
 											}}>
 											<Text
 												style={{
-													fontFamily: "RobotoBoldBlack",
-													color: "white",
-													paddingHorizontal: 20,
-													fontSize: 12,
+													fontFamily: "RobotoBoldBold",
+													fontSize: 18,
+													paddingLeft: 8,
+													color: "black",
 												}}>
-												{item.title}
+												{this.state.reportTitle}
+												{" | "}
+												<Text
+													style={{
+														fontFamily: "RobotoRegular",
+														fontSize: 16,
+													}}>
+													{moment(this.onReportActivity.start)
+														.format()
+														.slice(5, 10)}
+												</Text>
 											</Text>
 										</View>
-									);
-								})}
+										<Text
+											style={{
+												fontFamily: "RobotoRegular",
+												fontSize: 14,
+												width: "100%",
+												paddingLeft: 8,
+											}}>
+											{
+												moment(this.state.reportStart)
+													.format("ddd")
+													.toUpperCase() +
+													" " +
+													this.state.reportStart.slice(11, 16) +
+													" - " +
+													this.state.reportEnd.slice(11, 16)
+												// +
+												// " | " +
+												// this.state.reportDuration +
+												// " MIN"
+											}
+										</Text>
+									</View>
+									<Swiper
+										activeDotColor="black"
+										index={this.state.currentSwipeIndex}
+										showsButtons={false}
+										autoplay={false}
+										loop={false}
+										keyboardShouldPersistTaps="handled"
+										scrollEnabled={false}
+										ref={this.reportModalSwiperRef}
+										nextButton={
+											<Text style={{ fontWeight: "bold" }}>NEXT</Text>
+										}
+										prevButton={
+											<Text style={{ fontWeight: "bold" }}>PREV</Text>
+										}
+										showsPagination={false}
+										buttonWrapperStyle={{
+											backgroundColor: "transparent",
+											flexDirection: "row",
+											position: "absolute",
+											// height:20,
+											// bottom: 30,
+											// left: 0,
+											flex: 1,
+											paddingBottom: 20,
+											paddingHorizontal: 20,
+											// paddingVertical: 10,
+											justifyContent: "space-between",
+											alignItems: "flex-end",
+										}}>
+										{reportScreen_ONE}
+										{reportScreen_TWO}
+										{reportScreen_THREE}
+										{reportScreen_FOUR}
+										{reportScreen_FIVE}
+										{reportScreen_SIX}
+										{reportScreen_SEVEN}
+										{reportScreen_TWO}
+										{reportScreen_EIGHT}
+									</Swiper>
+									{/* <View style={{width:"90%", height:"50%"}}> */}
+									<View
+										style={{
+											width: "80%",
+											flexDirection: "row",
+											justifyContent: "space-between",
+											position: "absolute",
+											bottom: 20,
+											borderTopWidth: 2,
+										}}>
+										<TouchableOpacity
+											disabled={this.state.isReportSwipePERVdisabled}
+											style={{ display: this.state.isReportSwipePERVvis }}
+											onPress={() => {
+												this.onReportPrevBtnPressed();
+											}}>
+											<Text style={{ fontWeight: "bold" }}>PREV</Text>
+										</TouchableOpacity>
+										<TouchableOpacity
+											onPress={() => {
+												this.onReportNextBtnPressed();
+											}}>
+											<Text style={{ fontWeight: "bold" }}>
+												{this.state.reportNEXTbtn}
+											</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
 							</View>
-						</ScrollView>
-					</View>
-				</Modal>
-				{/* Plan Detail View */}
-				<RNModal
-					animationType="slide"
-					visible={this.state.isPlanDetailModalVis}
-					// propagateSwipe={true}
-					// isVisible={this.state.isPlanDetailModalVis}
-					style={{
-						justifyContent: "center",
-						alignItems: "center",
-
-						// marginBottom: 100,
-					}}
-					presentationStyle="overFullScreen"
-					transparent={true}
-					// hasBackdrop={true}
-					// backdropOpacity={0}
-					// onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
-					// onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
-					// swipeDirection="down"
-				>
-					<View
+						</RNModal>
+					</KeyboardAvoidingView>
+					{/* Plan Strategy Detail Modal */}
+					<Modal
+						propagateSwipe={true}
+						isVisible={this.state.isStrategyDetailModalVis}
 						style={{
+							justifyContent: "flex-start",
 							alignItems: "center",
-							justifyContent: "center",
-							width: "100%",
-							height: "100%",
-						}}>
+							marginTop: "50%",
+						}}
+						hasBackdrop={true}
+						backdropOpacity={0}
+						onBackdropPress={() =>
+							this.setState({ isStrategyDetailModalVis: false })
+						}
+						onSwipeComplete={() =>
+							this.setState({ isStrategyDetailModalVis: false })
+						}
+						swipeDirection="down">
 						<View
 							style={[
 								generalStyles.shadowStyle,
 								{
-									height: "90%",
-									width: "90%",
+									width: "98%",
+									height: "50%",
+									borderRadius: 20,
 									backgroundColor: "white",
-									// borderWidth: 2,
-									// borderColor: "black",
-									// flexDirection: "column",
-									justifyContent: "flex-start",
-									alignItems: "center",
-									borderRadius: 15,
 								},
 							]}>
-							{/* <View
+							<Text
+								style={{
+									fontSize: 20,
+									fontFamily: "RobotoBoldItalic",
+									marginTop: "10%",
+									marginLeft: "10%",
+								}}>
+								{this.state.planStrategyName}
+							</Text>
+							<View style={{ backgroundColor: "white", borderRadius: 20 }}>
+								<Text
+									style={{
+										fontSize: 12,
+										fontFamily: "RobotoBoldBold",
+										marginTop: 0,
+										marginLeft: "10%",
+									}}>
+									{this.state.strategyDuration}
+								</Text>
+							</View>
+							<View
+								style={{
+									height: 5,
+									width: "80%",
+									backgroundColor: "black",
+									marginHorizontal: "10%",
+									marginTop: "2%",
+								}}></View>
+							<ScrollView style={{ marginHorizontal: "10%", marginTop: "2%" }}>
+								<View
+									style={{
+										flexDirection: "row",
+										flexWrap: "wrap",
+										alignItems: "center",
+										marginTop: "5%",
+									}}>
+									{this.state.keywordsBuddle.map((item) => {
+										return (
+											<View
+												style={{
+													height: 25,
+													borderRadius: 20,
+													backgroundColor: "black",
+													justifyContent: "space-between",
+													alignItems: "center",
+													alignSelf: "center",
+													marginBottom: 5,
+													marginRight: 5,
+													paddingHorizontal: 2,
+													flexDirection: "row",
+												}}>
+												<Text
+													style={{
+														fontFamily: "RobotoBoldBlack",
+														color: "white",
+														paddingHorizontal: 20,
+														fontSize: 12,
+													}}>
+													{item.title}
+												</Text>
+											</View>
+										);
+									})}
+								</View>
+							</ScrollView>
+						</View>
+					</Modal>
+					{/* Plan Detail View */}
+					<RNModal
+						animationType="slide"
+						visible={this.state.isPlanDetailModalVis}
+						// propagateSwipe={true}
+						// isVisible={this.state.isPlanDetailModalVis}
+						style={{
+							justifyContent: "center",
+							alignItems: "center",
+
+							// marginBottom: 100,
+						}}
+						presentationStyle="overFullScreen"
+						transparent={true}
+						// hasBackdrop={true}
+						// backdropOpacity={0}
+						// onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
+						// onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
+						// swipeDirection="down"
+					>
+						<View
+							style={{
+								alignItems: "center",
+								justifyContent: "center",
+								width: "100%",
+								height: "100%",
+							}}>
+							<View
+								style={[
+									generalStyles.shadowStyle,
+									{
+										height: "90%",
+										width: "90%",
+										backgroundColor: "white",
+										// borderWidth: 2,
+										// borderColor: "black",
+										// flexDirection: "column",
+										justifyContent: "flex-start",
+										alignItems: "center",
+										borderRadius: 15,
+									},
+								]}>
+								{/* <View
                 style={{
                   flex: 0.06,
                   width: "100%",
@@ -8569,33 +8588,38 @@ export class TrackingPage extends React.Component {
                   </TouchableOpacity>
                 </View>
               </View> */}
-							<View style={{ height: "100%", width: "100%" }}>
-								<TouchableOpacity
-									style={{ position: "absolute", top: 3, right: 3, zIndex: 1 }}
-									onPress={() => {
-										this.setState({ isPlanDetailModalVis: false });
+								<View style={{ height: "100%", width: "100%" }}>
+									<TouchableOpacity
+										style={{
+											position: "absolute",
+											top: 3,
+											right: 3,
+											zIndex: 1,
+										}}
+										onPress={() => {
+											this.setState({ isPlanDetailModalVis: false });
 
-										// this.reportModalSwiperRef.current.scrollBy(2, true);
-									}}>
-									<AntDesign name="closecircle" size={24} color="black" />
-								</TouchableOpacity>
+											// this.reportModalSwiperRef.current.scrollBy(2, true);
+										}}>
+										<AntDesign name="closecircle" size={24} color="black" />
+									</TouchableOpacity>
 
-								<View
-									style={[
-										generalStyles.shadowStyle,
-										{
-											height: "25%",
-											width: "100%",
-											backgroundColor: "white",
-											// borderWidth: 2,
-											borderColor: "black",
-											borderRadius: 15,
-											flexDirection: "column",
-											justifyContent: "center",
-											alignItems: "center",
-										},
-									]}>
-									{/* <View
+									<View
+										style={[
+											generalStyles.shadowStyle,
+											{
+												height: "25%",
+												width: "100%",
+												backgroundColor: "white",
+												// borderWidth: 2,
+												borderColor: "black",
+												borderRadius: 15,
+												flexDirection: "column",
+												justifyContent: "center",
+												alignItems: "center",
+											},
+										]}>
+										{/* <View
                     style={{
                       flex: 0.4,
                       width: "90%",
@@ -8609,49 +8633,49 @@ export class TrackingPage extends React.Component {
                       {this.state.detailViewTop}
                     </Text>
                   </View> */}
-									<View
-										style={[
-											generalStyles.shadowStyle,
-											{
-												flex: 1,
-												width: "100%",
-												marginTop: 0,
-												marginLeft: 0,
-												justifyContent: "space-between",
-												alignItems: "center",
-												flexDirection: "row",
-												borderColor: "grey",
-												backgroundColor: "white",
-												borderRadius: 15,
-											},
-										]}>
 										<View
-											style={{
-												borderRightWidth: 2,
-												width: 100,
-												borderColor: "grey",
-												height: "50%",
-												alignItems: "center",
-												justifyContent: "center",
-											}}>
-											<Text
+											style={[
+												generalStyles.shadowStyle,
+												{
+													flex: 1,
+													width: "100%",
+													marginTop: 0,
+													marginLeft: 0,
+													justifyContent: "space-between",
+													alignItems: "center",
+													flexDirection: "row",
+													borderColor: "grey",
+													backgroundColor: "white",
+													borderRadius: 15,
+												},
+											]}>
+											<View
 												style={{
-													fontSize: 18,
-													fontFamily: "RobotoBoldBlack",
-													textAlignVertical: "center",
+													borderRightWidth: 2,
+													width: 100,
+													borderColor: "grey",
+													height: "50%",
+													alignItems: "center",
+													justifyContent: "center",
 												}}>
-												{WEEKDAY[new Date(this.selectedEventDate).getDay()]}
-											</Text>
-										</View>
-										<View
-											style={{
-												flexDirection: "row",
-												alignItems: "center",
-												justifyContent: "center",
-												height: "100%",
-												// backgroundColor: "red",
-											}}>
-											{/* <Image
+												<Text
+													style={{
+														fontSize: 18,
+														fontFamily: "RobotoBoldBlack",
+														textAlignVertical: "center",
+													}}>
+													{WEEKDAY[new Date(this.selectedEventDate).getDay()]}
+												</Text>
+											</View>
+											<View
+												style={{
+													flexDirection: "row",
+													alignItems: "center",
+													justifyContent: "center",
+													height: "100%",
+													// backgroundColor: "red",
+												}}>
+												{/* <Image
                         source={{
                           uri:
                             "http://openweathermap.org/img/wn/" +
@@ -8660,418 +8684,431 @@ export class TrackingPage extends React.Component {
                         }}
                         style={{ width: 60, height: 60 }}
                       ></Image> */}
-											<Text
-												style={{ fontSize: 32, textAlignVertical: "center" }}>
-												{ICONS[this.selectedWeatherIcon]}{" "}
-											</Text>
+												<Text
+													style={{ fontSize: 32, textAlignVertical: "center" }}>
+													{ICONS[this.selectedWeatherIcon]}{" "}
+												</Text>
+												<Text
+													style={{
+														fontSize: 18,
+														fontFamily: "RobotoBoldBlack",
+														textAlignVertical: "center",
+													}}>
+													{this.selectedWeatherTxt}
+												</Text>
+											</View>
+											<View
+												style={{
+													borderLeftWidth: 2,
+													width: 100,
+													height: "50%",
+													alignItems: "center",
+													justifyContent: "center",
+													flexDirection: "row",
+													borderColor: "grey",
+												}}>
+												<Text
+													style={{
+														fontSize: 18,
+														fontFamily: "RobotoBoldBlack",
+													}}>
+													{this.selectedTemp}°F
+												</Text>
+											</View>
+										</View>
+										<View
+											style={{
+												height: "50%",
+												paddingHorizontal: 15,
+												marginBottom: 10,
+												display: this.state.isNoActivitySignVis,
+												justifyContent: "center",
+												alignItems: "center",
+											}}>
 											<Text
 												style={{
-													fontSize: 18,
 													fontFamily: "RobotoBoldBlack",
-													textAlignVertical: "center",
+													fontSize: 22,
+													color: "grey",
+													textAlign: "center",
 												}}>
-												{this.selectedWeatherTxt}
+												No Activity Planned for This Day
 											</Text>
 										</View>
 										<View
 											style={{
-												borderLeftWidth: 2,
-												width: 100,
-												height: "50%",
-												alignItems: "center",
-												justifyContent: "center",
-												flexDirection: "row",
-												borderColor: "grey",
-											}}>
-											<Text
-												style={{ fontSize: 18, fontFamily: "RobotoBoldBlack" }}>
-												{this.selectedTemp}°F
-											</Text>
-										</View>
-									</View>
-									<View
-										style={{
-											height: "50%",
-											paddingHorizontal: 15,
-											marginBottom: 10,
-											display: this.state.isNoActivitySignVis,
-											justifyContent: "center",
-											alignItems: "center",
-										}}>
-										<Text
-											style={{
-												fontFamily: "RobotoBoldBlack",
-												fontSize: 22,
-												color: "grey",
-												textAlign: "center",
-											}}>
-											No Activity Planned for This Day
-										</Text>
-									</View>
-									<View
-										style={{
-											height: "55%",
-											paddingHorizontal: 5,
-											paddingBottom: 5,
-											marginBottom: 5,
-											display: this.state.isDetailViewActivityInfoListVis,
-											width: "100%",
-										}}>
-										<FlatList
-											data={this.detailViewCalendar}
-											contentContainerStyle={{
-												alignItems: "center",
-												justifyContent: "flex-start",
+												height: "55%",
 												paddingHorizontal: 5,
+												paddingBottom: 5,
+												marginBottom: 5,
+												display: this.state.isDetailViewActivityInfoListVis,
 												width: "100%",
-												// backgroundColor:"red"
-											}}
-											renderItem={({ item }) => {
-												if (item.title) {
-													if (!item.isDeleted) {
-														let newTiming = "";
-														let timing;
-														if (item.newStart2) {
-															timing =
-																moment(item.newStart2)
-																	.format("ddd")
-																	.toUpperCase() +
-																" " +
-																item.newStart2.slice(11, 16) +
-																" - " +
-																item.newEnd2.slice(11, 16) +
-																" | " +
-																item.duration +
-																" MIN";
-														} else {
-															timing =
-																moment(item.start).format("ddd").toUpperCase() +
-																" " +
-																item.start.slice(11, 16) +
-																" - " +
-																item.end.slice(11, 16) +
-																" | " +
-																item.duration +
-																" MIN";
-														}
-														let itemBlockStyle;
-														if (item.newStart) {
-															newTiming =
-																item.newStart.slice(11, 16) +
-																" - " +
-																item.newEnd.slice(11, 16) +
-																" | " +
-																item.newDuration +
-																" MIN";
-														}
+											}}>
+											<FlatList
+												data={this.detailViewCalendar}
+												contentContainerStyle={{
+													alignItems: "center",
+													justifyContent: "flex-start",
+													paddingHorizontal: 5,
+													width: "100%",
+													// backgroundColor:"red"
+												}}
+												renderItem={({ item }) => {
+													if (item.title) {
+														if (!item.isDeleted) {
+															let newTiming = "";
+															let timing;
+															if (item.newStart2) {
+																timing =
+																	moment(item.newStart2)
+																		.format("ddd")
+																		.toUpperCase() +
+																	" " +
+																	item.newStart2.slice(11, 16) +
+																	" - " +
+																	item.newEnd2.slice(11, 16) +
+																	" | " +
+																	item.duration +
+																	" MIN";
+															} else {
+																timing =
+																	moment(item.start)
+																		.format("ddd")
+																		.toUpperCase() +
+																	" " +
+																	item.start.slice(11, 16) +
+																	" - " +
+																	item.end.slice(11, 16) +
+																	" | " +
+																	item.duration +
+																	" MIN";
+															}
+															let itemBlockStyle;
+															if (item.newStart) {
+																newTiming =
+																	item.newStart.slice(11, 16) +
+																	" - " +
+																	item.newEnd.slice(11, 16) +
+																	" | " +
+																	item.newDuration +
+																	" MIN";
+															}
 
-														if (
-															!item.isReported &&
-															item.isPlanned != "added-activity"
-														) {
-															itemBlockStyle = this.itemUnreportedBlockStyle(
-																item,
-																timing
-															);
-														} else {
-															if (item.isActivityCompleted) {
-																itemBlockStyle = this.itemCompletedBlockStyle(
+															if (
+																!item.isReported &&
+																item.isPlanned != "added-activity"
+															) {
+																itemBlockStyle = this.itemUnreportedBlockStyle(
 																	item,
 																	timing
 																);
 															} else {
-																if (item.partialStatus) {
-																	if (item.partialStatus === "TIME") {
-																		itemBlockStyle =
-																			this.itemPartialCompleteStyle_TIME(
-																				item,
-																				timing,
-																				newTiming
-																			);
-																	} else if (
-																		item.partialStatus === "ACTIVITY"
-																	) {
-																		itemBlockStyle =
-																			this.itemPartialCompleteStyle_ACTIVITY(
-																				item,
-																				timing
-																			);
-																	} else if (item.partialStatus === "NONE") {
-																		itemBlockStyle =
-																			this.itemUnCompletedBlockStyle(
-																				item,
-																				timing
-																			);
-																	} else {
-																		itemBlockStyle =
-																			this.itemPartialCompleteStyle_TIME_ACTIVITY(
-																				item,
-																				timing,
-																				newTiming
-																			);
+																if (item.isActivityCompleted) {
+																	itemBlockStyle = this.itemCompletedBlockStyle(
+																		item,
+																		timing
+																	);
+																} else {
+																	if (item.partialStatus) {
+																		if (item.partialStatus === "TIME") {
+																			itemBlockStyle =
+																				this.itemPartialCompleteStyle_TIME(
+																					item,
+																					timing,
+																					newTiming
+																				);
+																		} else if (
+																			item.partialStatus === "ACTIVITY"
+																		) {
+																			itemBlockStyle =
+																				this.itemPartialCompleteStyle_ACTIVITY(
+																					item,
+																					timing
+																				);
+																		} else if (item.partialStatus === "NONE") {
+																			itemBlockStyle =
+																				this.itemUnCompletedBlockStyle(
+																					item,
+																					timing
+																				);
+																		} else {
+																			itemBlockStyle =
+																				this.itemPartialCompleteStyle_TIME_ACTIVITY(
+																					item,
+																					timing,
+																					newTiming
+																				);
+																		}
 																	}
 																}
 															}
+
+															return itemBlockStyle;
 														}
-
-														return itemBlockStyle;
 													}
-												}
 
-												// console.log("items in plansBuddle", item);
-											}}
+													// console.log("items in plansBuddle", item);
+												}}
+											/>
+										</View>
+									</View>
+									{/* Calendar View */}
+									<View
+										style={[
+											generalStyles.shadowStyle,
+											{
+												height: "75%",
+												backgroundColor: "white",
+												borderRadius: 20,
+												marginTop: 15,
+												marginBottom: 15,
+												paddingVertical: 5,
+											},
+										]}>
+										<Calendar
+											events={this.detailViewCalendar}
+											date={new Date(this.selectedEventDate)}
+											dayHeaderStyle={{ display: "none" }}
+											headerContentStyle={{ display: "none" }}
+											scrollOffsetMinutes={
+												this.detailViewCalendar[0]
+													? (parseInt(
+															this.detailViewCalendar[0].start.slice(11, 13)
+													  ) -
+															5) *
+													  60
+													: 0
+											}
+											swipeEnabled={false}
+											height={90}
+											mode="day"
 										/>
 									</View>
 								</View>
-								{/* Calendar View */}
-								<View
-									style={[
-										generalStyles.shadowStyle,
-										{
-											height: "75%",
-											backgroundColor: "white",
-											borderRadius: 20,
-											marginTop: 15,
-											marginBottom: 15,
-											paddingVertical: 5,
-										},
-									]}>
-									<Calendar
-										events={this.detailViewCalendar}
-										date={new Date(this.selectedEventDate)}
-										dayHeaderStyle={{ display: "none" }}
-										headerContentStyle={{ display: "none" }}
-										scrollOffsetMinutes={
-											this.detailViewCalendar[0]
-												? (parseInt(
-														this.detailViewCalendar[0].start.slice(11, 13)
-												  ) -
-														5) *
-												  60
-												: 0
-										}
-										swipeEnabled={false}
-										height={90}
-										mode="day"
-									/>
-								</View>
 							</View>
 						</View>
-					</View>
-				</RNModal>
-				{/* Calendar View & Buttons */}
-				<View
-					style={{
-						width: "100%",
-						alignItems: "center",
-						display: this.state.displayCalView,
-						marginTop: 10,
-						backgroundColor: "white",
-						marginBottom: 0,
-					}}>
-					<CalendarHeader height={15} width={"100%"} />
+					</RNModal>
+					{/* Calendar View & Buttons */}
+
 					<View
 						style={{
-							height: this.state.calendarViewHeight,
 							width: "100%",
-							padding: 4,
+							alignItems: "center",
+							display: this.state.displayCalView,
+							marginTop: 10,
 							backgroundColor: "white",
-							borderRadius: 0,
-							borderColor: "#F0F0F0",
-							borderTopWidth: 1,
-							borderBottomWidth: 1,
-							marginBottom: 5,
+							marginBottom: 0,
 						}}>
-						<ScrollView
-							style={{ width: "100%", height: "20%" }}
-							ref={this.weeklyCalendarScrollViewRef}>
-							<MonthCalendar
-								ref={this.monthCalRef}
-								thisMonthEvents={this.state.currentMonthEvents}
-								monthCalCurrDate={this.state.currentMonthDate}
-								monthCalStrategyStartDate={this.state.monthCalStrategyStartDate}
-								weatherThisMonth={this.state.currentWeatherLists}
-								onPress={(item, monthNum, month) =>
-									this.onPress(item, monthNum, month)
-								}
-							/>
-						</ScrollView>
+						<CalendarHeader height={15} width={"100%"} />
 						<View
 							style={{
-								position: "absolute",
-								right: 5,
-								bottom: "5%",
-								height: 20,
-								width: 20,
-								justifyContent: "center",
-								alignItems: "center",
-								// backgroundColor: "black",
-								width: 60,
-								height: 20,
-								borderRadius: 5,
-								flexDirection: "row",
-								opacity: 0.5,
+								height: this.state.calendarViewHeight,
+								width: "100%",
+								padding: 4,
+								backgroundColor: "white",
+								borderRadius: 0,
+								borderColor: "#F0F0F0",
+								borderTopWidth: 1,
+								borderBottomWidth: 1,
+								marginBottom: 5,
 							}}>
-							<Text
-								style={{
-									color: "black",
-									fontFamily: "RobotoBoldBlack",
-									fontSize: 18,
-								}}>
-								{this.state.currentMonthName}
-							</Text>
+							<ScrollView
+								style={{ width: "100%", height: "20%" }}
+								ref={this.weeklyCalendarScrollViewRef}>
+								<MonthCalendar
+									ref={this.monthCalRef}
+									thisMonthEvents={this.state.currentMonthEvents}
+									monthCalCurrDate={this.state.currentMonthDate}
+									monthCalStrategyStartDate={
+										this.state.monthCalStrategyStartDate
+									}
+									weatherThisMonth={this.state.currentWeatherLists}
+									onPress={(item, monthNum, month) =>
+										this.onPress(item, monthNum, month)
+									}
+								/>
+							</ScrollView>
 							<View
 								style={{
-									width: 2,
-									height: "100%",
-									backgroundColor: "black",
-								}}></View>
-						</View>
-					</View>
-
-					<View
-						style={{
-							width: "100%",
-							padding: 15,
-							flexDirection: "row",
-							justifyContent: "space-between",
-						}}>
-						<TouchableOpacity
-							style={{
-								flexDirection: "row",
-								justifyContent: "flex-start",
-								alignItems: "center",
-							}}
-							disabled={this.state.pastMonthBtnDisabled}
-							onPress={this.pastMonthBtnPressed}>
-							<AntDesign name="leftcircle" size={18} color="black" />
-
-							<Text
-								style={{
-									color: "black",
-									fontWeight: "bold",
-									fontSize: 12,
-									marginLeft: 5,
-								}}>
-								Past Month
-							</Text>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={{
-								borderColor: "black",
-								paddingHorizontal: 15,
-								borderWidth: 2,
-								borderRadius: 20,
-								padding: 5,
-							}}
-							onPress={() => {
-								this.scrollToThisWeek();
-								this.resetCalendarToCurrentMonth();
-							}}>
-							<Text
-								style={{ color: "black", fontWeight: "bold", fontSize: 12 }}>
-								Current Week
-							</Text>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={{
-								flexDirection: "row",
-								justifyContent: "flex-end",
-								alignItems: "center",
-							}}
-							disabled={this.state.nextMonthBtnDisabled}
-							onPress={this.nextMonthBtnPressed}>
-							<Text
-								style={{
-									color: "black",
-									fontWeight: "bold",
-									fontSize: 12,
-									marginRight: 5,
-								}}>
-								Next Month
-							</Text>
-							<AntDesign name="rightcircle" size={18} color="black" />
-						</TouchableOpacity>
-					</View>
-				</View>
-				{/* Guide Tip Modal */}
-				<RNModal
-					animationType="slide"
-					visible={this.state.isGuideVis}
-					// propagateSwipe={true}
-					// isVisible={this.state.isPlanDetailModalVis}
-					style={{
-						justifyContent: "center",
-						alignItems: "center",
-
-						// marginBottom: 100,
-					}}
-					presentationStyle="overFullScreen"
-					transparent={true}
-					// hasBackdrop={true}
-					// backdropOpacity={0}
-					// onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
-					// onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
-					// swipeDirection="down"
-				>
-					<View
-						style={{
-							width: "100%",
-							height: "100%",
-							justifyContent: "center",
-							alignItems: "center",
-						}}>
-						<View
-							style={[
-								generalStyles.shadowStyle,
-								{
-									width: "90%",
-									height: "90%",
-									borderRadius: 20,
-									backgroundColor: "white",
+									position: "absolute",
+									right: 5,
+									bottom: "5%",
+									height: 20,
+									width: 20,
 									justifyContent: "center",
 									alignItems: "center",
-								},
-							]}>
-							<TouchableOpacity
-								style={{ position: "absolute", top: 10, right: 10, zIndex: 1 }}
-								onPress={() => {
-									this.setState({ isGuideVis: false });
-
-									// this.reportModalSwiperRef.current.scrollBy(2, true);
+									// backgroundColor: "black",
+									width: 60,
+									height: 20,
+									borderRadius: 5,
+									flexDirection: "row",
+									opacity: 0.5,
 								}}>
-								<AntDesign name="closecircle" size={24} color="black" />
+								<Text
+									style={{
+										color: "black",
+										fontFamily: "RobotoBoldBlack",
+										fontSize: 18,
+									}}>
+									{this.state.currentMonthName}
+								</Text>
+								<View
+									style={{
+										width: 2,
+										height: "100%",
+										backgroundColor: "black",
+									}}></View>
+							</View>
+						</View>
+
+						<View
+							style={{
+								width: "100%",
+								padding: 15,
+								flexDirection: "row",
+								justifyContent: "space-between",
+							}}>
+							<TouchableOpacity
+								style={{
+									flexDirection: "row",
+									justifyContent: "flex-start",
+									alignItems: "center",
+								}}
+								disabled={this.state.pastMonthBtnDisabled}
+								onPress={this.pastMonthBtnPressed}>
+								<AntDesign name="leftcircle" size={18} color="black" />
+
+								<Text
+									style={{
+										color: "black",
+										fontWeight: "bold",
+										fontSize: 12,
+										marginLeft: 5,
+									}}>
+									Past Month
+								</Text>
 							</TouchableOpacity>
-							<Onboarding
-								bottomBarHighlight={false}
-								// ref={this.mainContentSwiperRef}
-								showSkip={false}
-								showNext={false}
-								// pageIndexCallback={(index) => {
-								// 	if (this.state.evaluatePanelDisplay === "none") {
-								// 		this.panelSwiperRef.current.goToPage(index, true);
-								// 	}
-								// }}
-								pages={[
-									{
-										title: "",
-										subtitle: "",
-										backgroundColor: "white",
-										image: tip_ONE,
-									},
-									{
-										title: "",
-										subtitle: "",
-										backgroundColor: "white",
-										image: tip_ONE,
-									},
-								]}
-							/>
+							<TouchableOpacity
+								style={{
+									borderColor: "black",
+									paddingHorizontal: 15,
+									borderWidth: 2,
+									borderRadius: 20,
+									padding: 5,
+								}}
+								onPress={() => {
+									this.scrollToThisWeek();
+									this.resetCalendarToCurrentMonth();
+								}}>
+								<Text
+									style={{ color: "black", fontWeight: "bold", fontSize: 12 }}>
+									Current Week
+								</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={{
+									flexDirection: "row",
+									justifyContent: "flex-end",
+									alignItems: "center",
+								}}
+								disabled={this.state.nextMonthBtnDisabled}
+								onPress={this.nextMonthBtnPressed}>
+								<Text
+									style={{
+										color: "black",
+										fontWeight: "bold",
+										fontSize: 12,
+										marginRight: 5,
+									}}>
+									Next Month
+								</Text>
+								<AntDesign name="rightcircle" size={18} color="black" />
+							</TouchableOpacity>
 						</View>
 					</View>
-				</RNModal>
-				{/* Confirmation Page */}
-				{/* <View
+					{/* Guide Tip Modal */}
+					<RNModal
+						animationType="slide"
+						visible={this.state.isGuideVis}
+						// propagateSwipe={true}
+						// isVisible={this.state.isPlanDetailModalVis}
+						style={{
+							justifyContent: "center",
+							alignItems: "center",
+
+							// marginBottom: 100,
+						}}
+						presentationStyle="overFullScreen"
+						transparent={true}
+						// hasBackdrop={true}
+						// backdropOpacity={0}
+						// onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
+						// onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
+						// swipeDirection="down"
+					>
+						<View
+							style={{
+								width: "100%",
+								height: "100%",
+								justifyContent: "center",
+								alignItems: "center",
+							}}>
+							<View
+								style={[
+									generalStyles.shadowStyle,
+									{
+										width: "90%",
+										height: "90%",
+										borderRadius: 20,
+										backgroundColor: "white",
+										justifyContent: "center",
+										alignItems: "center",
+									},
+								]}>
+								<TouchableOpacity
+									style={{
+										position: "absolute",
+										top: 10,
+										right: 10,
+										zIndex: 1,
+									}}
+									onPress={() => {
+										this.setState({ isGuideVis: false });
+
+										// this.reportModalSwiperRef.current.scrollBy(2, true);
+									}}>
+									<AntDesign name="closecircle" size={24} color="black" />
+								</TouchableOpacity>
+								<Onboarding
+									bottomBarHighlight={false}
+									// ref={this.mainContentSwiperRef}
+									showSkip={false}
+									showNext={false}
+									// pageIndexCallback={(index) => {
+									// 	if (this.state.evaluatePanelDisplay === "none") {
+									// 		this.panelSwiperRef.current.goToPage(index, true);
+									// 	}
+									// }}
+									pages={[
+										{
+											title: "",
+											subtitle: "",
+											backgroundColor: "white",
+											image: tip_ONE,
+										},
+										{
+											title: "",
+											subtitle: "",
+											backgroundColor: "white",
+											image: tip_ONE,
+										},
+									]}
+								/>
+							</View>
+						</View>
+					</RNModal>
+					{/* Confirmation Page */}
+					{/* <View
           style={{
             height: "100%",
             width: "100%",
@@ -9081,53 +9118,63 @@ export class TrackingPage extends React.Component {
         >
           {finalConfirmationPage}
         </View> */}
-				{/* Body info */}
-				<View
-					style={[
-						generalStyles.shadowStyle,
-						{
-							height: "100%",
-							width: "100%",
-							backgroundColor: "white",
-							borderRadius: 20,
-							paddingTop: 20,
-							display: this.state.mainContentSwiperDisplay,
-						},
-					]}>
-					{/* <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
+					{/* Body info */}
+					<View
+						style={[
+							generalStyles.shadowStyle,
+							{
+								height: "100%",
+								width: "100%",
+								backgroundColor: "white",
+								borderRadius: 20,
+								paddingTop: 20,
+								display: this.state.mainContentSwiperDisplay,
+							},
+						]}>
+						{/* <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
             {planSetUpPage}
             {summaryPage}
             {finalConfirmationPage}
           </Swiper> */}
-					<Onboarding
-						bottomBarHighlight={false}
-						ref={this.mainContentSwiperRef}
-						showSkip={false}
-						showNext={false}
-						pageIndexCallback={(index) => {
-							if (this.state.evaluatePanelDisplay === "none") {
-								this.panelSwiperRef.current.goToPage(index, true);
-							}
-						}}
-						pages={[
-							{
-								title: "",
-								subtitle: "",
-								backgroundColor: "white",
-								image: planSetUpPage,
-							},
-							{
-								title: "",
-								subtitle: "",
-								backgroundColor: "white",
-								image: summaryPage,
-							},
-						]}
-					/>
+						<Onboarding
+							bottomBarHighlight={false}
+							ref={this.mainContentSwiperRef}
+							showSkip={false}
+							showNext={false}
+							pageIndexCallback={(index) => {
+								if (this.state.evaluatePanelDisplay === "none") {
+									this.panelSwiperRef.current.goToPage(index, true);
+								}
+							}}
+							pages={[
+								{
+									title: "",
+									subtitle: "",
+									backgroundColor: "white",
+									image: planSetUpPage,
+								},
+								{
+									title: "",
+									subtitle: "",
+									backgroundColor: "white",
+									image: summaryPage,
+								},
+							]}
+						/>
+					</View>
+					{/* Slide Up Panel */}
+					{slideUpPanel}
+					<HighlightOverlay
+            // You would usually use a state variable for this :)
+            highlightedElementId={this.state.onboardingID}
+            onDismiss={() => {
+				this.setState({onboardingID:""})
+                // Called when the user clicks outside of the highlighted element.
+                // Set "highlightedElementId" to nullish to hide the overlay.
+            }}
+        />
 				</View>
-				{/* Slide Up Panel */}
-				{slideUpPanel}
-			</View>
+			</HighlightableElementProvider>
 		);
 	}
 }
