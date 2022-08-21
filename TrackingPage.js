@@ -29,6 +29,14 @@ import CalendarHeader from "./assets/svg/calendarHeader.svg";
 import Indicator from "./assets/svg/indicator.svg";
 import BottomIndicator from "./assets/svg/bottomIndicator.svg";
 import Guide from "./assets/svg/Guide.svg";
+import TipCalendar1 from "./assets/svg/tipCalendar1.svg";
+import TipCalendar2 from "./assets/svg/tipCalendar2.svg";
+import TipCalendar3 from "./assets/svg/tipCalendar3.svg";
+import TipCalendar4 from "./assets/svg/tipCalendar4.svg";
+import TipCalendar5 from "./assets/svg/tipCalendar5.svg";
+
+
+
 
 //Load icon source
 import { Feather } from "@expo/vector-icons";
@@ -206,6 +214,7 @@ export class TrackingPage extends React.Component {
 		this.panelSwiperRef = React.createRef();
 		this.weeklyCalendarScrollViewRef = React.createRef();
 		this.reportModalSwiperRef = React.createRef();
+		this.tipModalSwiperRef = React.createRef();
 		this.activityData = [];
 		this.index;
 		//Get today's date
@@ -8116,12 +8125,41 @@ export class TrackingPage extends React.Component {
 				</View>
 			</View>
 		);
-    let tip_ONE = (
-      <View
-      style={{ height: "100%", width: "100%", padding: 15 }}>
-        <Text>Daily Report</Text>
-      </View>
-    )
+		let tip_ONE = (
+			<View style={{ height: "100%", width: "100%",  }}>
+				<View style={{height: "100%", width: "100%",justifyContent:"flex-start", alignItems:"center", flexDirection:"column"}}>
+					<TipCalendar1 height={"100%"} width={"100%"} />
+				</View>
+			</View>
+		);
+		let tip_TWO = (
+			<View style={{ height: "100%", width: "100%",  }}>
+				<View style={{height: "100%", width: "100%",justifyContent:"flex-start", alignItems:"center", flexDirection:"column"}}>
+					<TipCalendar2 height={"100%"} width={"100%"} />
+				</View>
+			</View>
+		);
+		let tip_THREE = (
+			<View style={{ height: "100%", width: "100%",  }}>
+				<View style={{height: "100%", width: "100%",justifyContent:"flex-start", alignItems:"center", flexDirection:"column"}}>
+					<TipCalendar3 height={"100%"} width={"100%"} />
+				</View>
+			</View>
+		);
+		let tip_FOUR = (
+			<View style={{ height: "100%", width: "100%",  }}>
+				<View style={{height: "100%", width: "100%",justifyContent:"flex-start", alignItems:"center", flexDirection:"column"}}>
+					<TipCalendar4 height={"100%"} width={"100%"} />
+				</View>
+			</View>
+		);
+		let tip_FIVE = (
+			<View style={{ height: "100%", width: "100%",  }}>
+				<View style={{height: "100%", width: "100%",justifyContent:"flex-start", alignItems:"center", flexDirection:"column"}}>
+					<TipCalendar5 height={"100%"} width={"100%"} />
+				</View>
+			</View>
+		);
 
 		return (
 			// <KeyboardAvoidingView
@@ -9025,48 +9063,56 @@ export class TrackingPage extends React.Component {
 							style={[
 								generalStyles.shadowStyle,
 								{
-									width: "90%",
-									height: "90%",
-									borderRadius: 20,
+									width: "100%",
+									height: "100%",
+									// borderRadius: 20,
 									backgroundColor: "white",
 									justifyContent: "center",
 									alignItems: "center",
 								},
 							]}>
 							<TouchableOpacity
-								style={{ position: "absolute", top: 10, right: 10, zIndex: 1 }}
+								style={{ position: "absolute", top: "5%", right: 10, zIndex: 1 }}
 								onPress={() => {
 									this.setState({ isGuideVis: false });
 
 									// this.reportModalSwiperRef.current.scrollBy(2, true);
 								}}>
-								<AntDesign name="closecircle" size={24} color="black" />
+								{/* <AntDesign name="closecircle" size={24} color="black" /> */}
+								<Text style={{fontWeight:"bold", color:"white", fontSize:18}}>SKIP</Text>
 							</TouchableOpacity>
-							<Onboarding
-								bottomBarHighlight={false}
-								// ref={this.mainContentSwiperRef}
-								showSkip={false}
-								showNext={false}
-								// pageIndexCallback={(index) => {
-								// 	if (this.state.evaluatePanelDisplay === "none") {
-								// 		this.panelSwiperRef.current.goToPage(index, true);
-								// 	}
-								// }}
-								pages={[
-									{
-										title: "",
-										subtitle: "",
-										backgroundColor: "white",
-										image: tip_ONE,
-									},
-									{
-										title: "",
-										subtitle: "",
-										backgroundColor: "white",
-										image: tip_ONE,
-									},
-								]}
-							/>
+							<Swiper
+								activeDotColor="white"
+								// index={this.state.currentSwipeIndex}
+								showsButtons={true}
+								autoplay={false}
+								loop={false}
+								keyboardShouldPersistTaps="handled"
+								scrollEnabled={false}
+								ref={this.tipModalSwiperRef}
+								nextButton={<TouchableOpacity onPress={()=>{this.tipModalSwiperRef.current.scrollBy(1,false)}}><Text style={{ fontWeight: "bold", color:"white",fontSize:18 }}>NEXT</Text></TouchableOpacity>}
+								prevButton={<TouchableOpacity onPress={()=>{this.tipModalSwiperRef.current.scrollBy(-1,false)}}><Text style={{ fontWeight: "bold", color:"white",fontSize:18 }}>PREV</Text></TouchableOpacity>}
+								showsPagination={true}
+								buttonWrapperStyle={{
+									backgroundColor: "transparent",
+									flexDirection: "row",
+									position: "absolute",
+									// height:20,
+									// bottom: 30,
+									// left: 0,
+									flex: 1,
+									paddingBottom: 20,
+									paddingHorizontal: 20,
+									// paddingVertical: 10,
+									justifyContent: "space-between",
+									alignItems: "flex-end",
+								}}>
+								{tip_ONE}
+								{tip_TWO}
+								{tip_THREE}
+								{tip_FOUR}
+								{tip_FIVE}
+							</Swiper>
 						</View>
 					</View>
 				</RNModal>

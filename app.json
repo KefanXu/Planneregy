@@ -5,7 +5,7 @@
     "scheme": "planneregy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/svg/logo_Planneregy.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
