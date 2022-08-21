@@ -57,7 +57,6 @@ import { showMessage, hideMessage } from "react-native-flash-message";
 import { Calendar } from "react-native-big-calendar";
 import * as Progress from "react-native-progress";
 import SwitchSelector from "react-native-switch-selector";
-import RNNumberPicker from "react-native-number-selector";
 
 //Load layout component libraries
 import ChipsList from "react-native-expandable-chips-list";
