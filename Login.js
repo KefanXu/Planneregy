@@ -16,7 +16,7 @@ import Logo from "./assets/svg/logo.svg";
 
 export function Login({ navigation }) {
   const [request, response, promptAsync] =
-    Google.useAuthRequest(googleLoginConfig,{ useProxy: true });
+    Google.useAuthRequest(googleLoginConfig);
   let auth;
   let dataModel = getDataModel();
   const [requestFrom, setRequestFrom] = React.useState("");
