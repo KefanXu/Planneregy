@@ -89,6 +89,21 @@ class DataModel {
       this.plans.push(plan);
     });
   };
+  getActivityKey = async(key, onReportActivity) => {
+    let activityKey;
+    let userPlanCollection = await this.usersRef
+    .doc(key)
+    .collection("activity_plans")
+    .get();
+    userPlanCollection.forEach(async (qDocSnap) => {
+
+      if (qDocSnap.data().key === onReportActivity.key) {
+        console.log(qDocSnap.data());
+        activityKey = qDocSnap.id;
+      }
+    });
+    return activityKey;
+  }
   loadUserStrategies = async (key) => {
     this.strategies = [];
     let UserStrategyCollection = await this.usersRef

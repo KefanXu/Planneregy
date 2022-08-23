@@ -122,6 +122,7 @@ export class PlanOnCalendar extends React.Component {
     super(props);
     //Load users' basic info from BeforeLoginScreen.js
     this.userEmail = this.props.route.params.userEmail;
+    this.userInfo = this.props.route.params.userInfo;
     this.userKey = this.props.route.params.userInfo.key;
     this.userPlans = this.props.route.params.userInfo.userPlans;
     this.userStrategies = this.props.route.params.userStrategies;
@@ -198,9 +199,9 @@ export class PlanOnCalendar extends React.Component {
       //Selected activity
       selectedActivity: "",
       //Check if user selected the date
-      isDateSelected: false,
+      isDateSelected: true,
       //Selected Date
-      selectedDate: "",
+      selectedDate: new Date(moment(new Date()).subtract(1,"d")),
       selectedDateRaw: new Date(),
       //Check if user selected the start time
       isStartTimeSelected: false,
@@ -519,7 +520,7 @@ export class PlanOnCalendar extends React.Component {
     // // console.log("formattedThisMonth", formattedThisMonth);
     // // console.log("formattedSelectedMonth", formattedSelectedMonth);
 
-    if (selectedDay > today && selectedDay <= endDay) {
+    if (selectedDay >= today && selectedDay < endDay) {
       await this.setState({ selectedDateRaw: date });
       await this.setState({ selectedDate: selectedDay });
       await this.setState({ isDateSelected: true });
@@ -722,9 +723,19 @@ export class PlanOnCalendar extends React.Component {
     let durationMinutes = parseInt(duration.asMinutes()) % 60;
 
     newEvent.duration = durationMinutes;
-    newEvent.activityReminderKey = await this.dataModel.scheduleNotification(
+    try{ newEvent.activityReminderKey = await this.dataModel.scheduleNotification(
       newEvent
-    );
+    );} catch(e) {
+      
+      Alert.alert(
+        "Invalid Time",
+        "Please reselect a valid time",
+        [
+          { text: "OK", onPress: () => console.log("OK Pressed") }
+        ]
+      );
+      return;
+    }
 
     newEvent.reportReminderKey =
       await this.dataModel.scheduleReportNotification(newEvent);
@@ -998,7 +1009,7 @@ export class PlanOnCalendar extends React.Component {
       " " +
       moment(new Date()).add(7, "days").format("MMM Do YY");
 
-    let startDate = moment(new Date()).add(1, "days").format().slice(0, 10);
+    let startDate = moment(new Date()).format().slice(0, 10);
     let endDate = moment(new Date()).add(7, "days").format().slice(0, 10);
 
     let timeStamp = moment(new Date()).format();
@@ -1050,6 +1061,38 @@ export class PlanOnCalendar extends React.Component {
     // console.log("save nextMonthWeather");
     // SecureStore.setItemAsync("END_DATE", endDate);
   };
+  onStartPressed = async() => {
+                    await this.dataModel.loadUserStrategies(this.userKey);
+                this.userStrategies = this.dataModel.getUserStrategies();
+
+                await this.dataModel.loadUserPlans(this.userKey);
+                this.userInfo.userPlans = this.dataModel.getUserPlans();
+                // for (let event of this.userInfo.userPlans) {
+                //   if (event.start.slice(0,10) === "2022-08-22") {
+                //     console.log("found planned event");
+                //   }
+                // }
+                
+                
+                // console.log("this.userStrategies",this.userStrategies);
+                this.props.navigation.navigate("TrackingPage", {
+                  userEmail: this.userEmail,
+                  userInfo: this.userInfo,
+                  userStrategies: this.userStrategies,
+                  eventsLastMonth: this.eventsLastMonth,
+                  eventsThisMonth: this.eventsThisMonth,
+                  eventsNextMonth: this.eventsNextMonth,
+                  fullEventList: this.fullEventList,
+                  lastMonthWeather: this.lastMonthWeather,
+                  thisMonthWeather: this.thisMonthWeather,
+                  nextMonthWeather: this.nextMonthWeather,
+                  userActivityList: this.props.route.params.userActivityList,
+                  isFromPlanSetUp: true
+                });
+                // this.props.navigation.navigate("BeforeLoginScreen", {
+                //   // userEmail: this.userEmail,
+                // });
+  }
   onPress = (item, monthNum, month) => {
     console.log("item, monthNum, month", item, monthNum, month);
     let today = new Date();
@@ -1419,7 +1462,7 @@ export class PlanOnCalendar extends React.Component {
             </View>
           </View>
         </View>
-        <TouchableOpacity onPress={() => this.onPlanBtnPressed()}>
+        <TouchableOpacity onPress={() => {this.onPlanBtnPressed()}}>
           <AddActivityBtn height={32} width={202} marginTop={10} />
         </TouchableOpacity>
       </View>
@@ -1707,22 +1750,7 @@ export class PlanOnCalendar extends React.Component {
                 alignSelf: "center",
               }}
               onPress={async () => {
-                await this.dataModel.loadUserStrategies(this.userKey);
-                this.userStrategies = this.dataModel.getUserStrategies();
-                // console.log("this.userStrategies",this.userStrategies);
-                this.props.navigation.navigate("TrackingPage", {
-                  userEmail: this.userEmail,
-                  userInfo: this.props.route.params.userInfo,
-                  userStrategies: this.userStrategies,
-                  eventsLastMonth: this.eventsLastMonth,
-                  eventsThisMonth: this.eventsThisMonth,
-                  eventsNextMonth: this.eventsNextMonth,
-                  fullEventList: this.fullEventList,
-                  lastMonthWeather: this.lastMonthWeather,
-                  thisMonthWeather: this.thisMonthWeather,
-                  nextMonthWeather: this.nextMonthWeather,
-                  userActivityList: this.props.route.params.userActivityList,
-                });
+                this.onStartPressed();
               }}
             >
               <Text
@@ -2345,7 +2373,23 @@ export class PlanOnCalendar extends React.Component {
               bottomBarHeight={30}
               showSkip={false}
               showNext={true}
-              
+              NextButtonComponent={() => (
+								<TouchableOpacity
+									style={{ width: "100%", padding: "5%" }}
+									onPress={() => {
+											this.panelSwiperRef.current.goNext();
+										}
+									}>
+									<Text
+										style={{
+											fontFamily: "RobotoBoldBlack",
+											textAlign: "right",
+											marginRight: 10,
+										}}>
+										NEXT
+									</Text>
+								</TouchableOpacity>
+							)}
               bottomBarColor="white"
               showDone={false}
               pageIndexCallback={(index) => {

@@ -245,6 +245,7 @@ export class BeforeLoginScreen extends React.Component {
         thisMonthWeather: thisMonthWeather,
         nextMonthWeather: nextMonthWeather,
         userActivityList: userActivityList[0].activityList,
+        isFromPlanSetUp: false
       });
       this.setState({ isLoaderVis: false });
       console.log("weather updated");

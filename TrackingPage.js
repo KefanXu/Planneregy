@@ -191,6 +191,7 @@ export class TrackingPage extends React.Component {
 	constructor(props) {
 		super(props);
 		//Load users' basic info from BeforeLoginScreen.js
+		this.isFromPlanSetUp = this.props.route.params.isFromPlanSetUp;
 		this.userEmail = this.props.route.params.userEmail;
 		this.userKey = this.props.route.params.userInfo.key;
 		this.userPlans = this.props.route.params.userInfo.userPlans;
@@ -198,6 +199,8 @@ export class TrackingPage extends React.Component {
 		this.userStrategies.sort(function (a, b) {
 			return new Date(b.startDate) - new Date(a.startDate);
 		});
+		// console.log("this.userPlans",this.userPlans);
+		// console.log("this.userPlans",this.userKey);
 		//Get data model & user strategies
 		// this.dataModel = getDataModel();
 		// this.dataModel.asyncInit();
@@ -423,6 +426,8 @@ export class TrackingPage extends React.Component {
 			evaluationNEXTbtnTxt: "NEXT",
 			//Guide popup vis
 			isGuideVis: false,
+			//Value for reloading
+			valueForReload:0,
 		};
 		this.processUserStrategies();
 		this.processDailyReports_after();
@@ -487,7 +492,9 @@ export class TrackingPage extends React.Component {
 		}
 	};
 	//Get previous 5-day's daily reports
-	processDailyReports = () => {
+	processDailyReports = async() => {
+
+		// console.log("formattedStartDate",formattedStartDate);
 		this.preList = [];
 		this.reportCnt = 0;
 		let todayDate = new Date();
@@ -532,13 +539,17 @@ export class TrackingPage extends React.Component {
 		// }else {
 		//   eventList = this.userPlans;
 		// }
+		let startDate = await SecureStore.getItemAsync("START_DATE");
+		let formattedStartDate = new Date(moment(startDate).format("YYYY-MM-DD"));
+
 		for (let i = 1; i <= 5; i++) {
 			let preDate = todayDate.setDate(todayDate.getDate() - 1);
 			let report = {};
 			let date = moment(preDate).format().slice(0, 10);
 			let isReportExist = false;
 			for (let event of this.userPlans) {
-				if (event.start) {
+				let eventStartDate = new Date(moment(event.start.slice(0,10)).format("YYYY-MM-DD"));
+				if (event.start && eventStartDate>=formattedStartDate) {
 					if (
 						event.start.slice(0, 10) === date.slice(0, 10) &&
 						!event.isDeleted &&
@@ -553,7 +564,11 @@ export class TrackingPage extends React.Component {
 				report.start = date;
 				report.end = report.start;
 				report.key = report.start;
-				this.preList.push(report);
+				let reportStartDate = new Date(moment(report.start.slice(0,10)).format("YYYY-MM-DD"));
+				if (reportStartDate >= formattedStartDate) {
+					this.preList.push(report);
+				}
+
 			} else {
 				for (let event of this.userPlans) {
 					if (
@@ -580,7 +595,9 @@ export class TrackingPage extends React.Component {
 		}
 	};
 	processDailyReports_after = async () => {
+		
 		console.log("======processDailyReports_after======");
+		// console.log("this.state.plansBuddle",this.state.plansBuddle);
 		this.preList = [];
 		this.reportCnt = 0;
 		let todayDate = new Date();
@@ -612,6 +629,8 @@ export class TrackingPage extends React.Component {
 			this.preList.push(dailyReport);
 		} else {
 			if (isReportPopup) {
+				console.log("psh wrong report");
+
 				this.preList.push(dailyReportEvent);
 			}
 		}
@@ -623,13 +642,16 @@ export class TrackingPage extends React.Component {
 		// }else {
 		//   eventList = this.userPlans;
 		// }
+		let startDate = await SecureStore.getItemAsync("START_DATE");
+		let formattedStartDate = new Date(moment(startDate).format("YYYY-MM-DD"));
 		for (let i = 1; i <= 5; i++) {
 			let preDate = todayDate.setDate(todayDate.getDate() - 1);
 			let report = {};
 			let date = moment(preDate).format().slice(0, 10);
 			let isReportExist = false;
 			for (let event of this.userPlans) {
-				if (event.start) {
+				let eventStartDate = new Date(moment(event.start.slice(0,10)).format("YYYY-MM-DD"));
+				if (event.start && eventStartDate>=formattedStartDate) {
 					if (
 						event.start.slice(0, 10) === date.slice(0, 10) &&
 						!event.isDeleted &&
@@ -644,9 +666,13 @@ export class TrackingPage extends React.Component {
 				report.start = date;
 				report.end = report.start;
 				report.key = report.start;
-				this.preList.push(report);
+				let reportStartDate = new Date(moment(report.start.slice(0,10)).format("YYYY-MM-DD"));
+				if (reportStartDate >= formattedStartDate) {
+					this.preList.push(report);
+				}
+
 			} else {
-				// console.log("this.state.plansBuddle", this.state.plansBuddle);
+				console.log("this.state.plansBuddle", this.state.plansBuddle);
 				for (let event of this.state.plansBuddle) {
 					if (
 						event.start.slice(0, 10) === date &&
@@ -661,6 +687,7 @@ export class TrackingPage extends React.Component {
 		}
 		this.reportCnt = this.preList.length;
 		this.setState({ preList: this.preList });
+		console.log("preList",this.preList);
 		this.setState({ reportCnt: this.reportCnt });
 		// console.log("this.reportCnt",this.reportCnt);
 		if (this.reportCnt != 0) {
@@ -734,6 +761,7 @@ export class TrackingPage extends React.Component {
 	//Process user strategies and get the current one
 	processUserStrategies = async () => {
 		let startDate = await SecureStore.getItemAsync("START_DATE");
+		console.log("START_DATE",startDate);
 		for (let strategy of this.userStrategies) {
 			if (strategy.startDate === startDate) {
 				this.currentStrategy = strategy;
@@ -1502,7 +1530,8 @@ export class TrackingPage extends React.Component {
 		console.log("detailViewCalendar", detailViewCalendar);
 	};
 	//Report btn pressed
-	onMyActivityReportPressed = (item) => {
+	onMyActivityReportPressed = async(item) => {
+
 		if (this.isReportFromPopup) {
 			for (let event of this.state.plansBuddle) {
 				if (event.timeStamp === item.timeStamp) {
@@ -1514,6 +1543,8 @@ export class TrackingPage extends React.Component {
 			console.log("not ReportFromPopup");
 			this.onReportActivity = item;
 		}
+
+		// console.log("key",key);
 
 		this.setState({ isReportModalVis: true });
 		this.setState({ reportDetailInfoVis: "flex" });
@@ -2101,6 +2132,7 @@ export class TrackingPage extends React.Component {
 	};
 	//Submit the completed activity
 	onSubmitPressed_CompleteActivity = async () => {
+		console.log("==================onSubmitPressed_CompleteActivity==================");
 		// console.log("this.onReportActivity",this.onReportActivity);
 		this.setState({ isReportModalVis: false });
 		// await this.onSubmitPressed_UserAddedActivity();
@@ -2120,6 +2152,7 @@ export class TrackingPage extends React.Component {
 		await this.setState({ selectedDateRaw: eventDate });
 
 		let eventToUpdateToFirebaseActivities;
+		// console.log("this.combinedEventListThis",this.combinedEventListThis);
 
 		if (formattedSelectedMonth === formattedThisMonth) {
 			for (let event of this.combinedEventListThis) {
@@ -2153,7 +2186,15 @@ export class TrackingPage extends React.Component {
 		}
 
 		let strategyToUpdate = this.currentStrategy;
-		console.log("this.currentStrategy.plans", this.currentStrategy.plans);
+		// console.log("this.currentStrategy.plans", this.currentStrategy.plans);
+		// console.log("this.userKey",this.userKey);
+		if (this.isFromPlanSetUp) {
+			let key = await this.dataModel.getActivityKey(this.userKey, eventToUpdateToFirebaseActivities);
+			eventToUpdateToFirebaseActivities.key = key;
+		}
+
+		console.log("eventToUpdateToFirebaseActivities",eventToUpdateToFirebaseActivities);
+		console.log("==================onSubmitPressed_CompleteActivity==================");
 
 		await this.dataModel.updatePlan(
 			this.userKey,
@@ -2229,7 +2270,10 @@ export class TrackingPage extends React.Component {
 
 		let strategyToUpdate = this.currentStrategy;
 		// console.log("this.currentStrategy.plans", this.currentStrategy.plans);
-
+		if (this.isFromPlanSetUp) {
+			let key = await this.dataModel.getActivityKey(this.userKey, eventToUpdateToFirebaseActivities);
+			eventToUpdateToFirebaseActivities.key = key;
+		}
 		await this.dataModel.updatePlan(
 			this.userKey,
 			eventToUpdateToFirebaseActivities
@@ -2431,7 +2475,10 @@ export class TrackingPage extends React.Component {
 		}
 		let strategyToUpdate = this.currentStrategy;
 		// console.log("this.currentStrategy.plans", this.currentStrategy.plans);
-
+		if (this.isFromPlanSetUp) {
+			let key = await this.dataModel.getActivityKey(this.userKey, eventToUpdateToFirebaseActivities);
+			eventToUpdateToFirebaseActivities.key = key;
+		}
 		await this.dataModel.updatePlan(
 			this.userKey,
 			eventToUpdateToFirebaseActivities
@@ -2442,7 +2489,9 @@ export class TrackingPage extends React.Component {
 		await this.dataModel.updateStrategy(this.userKey, strategyToUpdate);
 		await this.dataModel.loadUserStrategies(this.userKey);
 		this.userStrategies = this.dataModel.getUserStrategies();
-		this.processDailyReports_after();
+		await this.processDailyReports_after();
+		let newValueForReload = this.state.valueForReload + 1;
+		await this.setState({valueForReload:newValueForReload})
 	};
 
 	lastMonthEventReported = async (date) => {
