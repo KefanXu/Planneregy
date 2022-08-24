@@ -35,9 +35,6 @@ import TipCalendar3 from "./assets/svg/tipCalendar3.svg";
 import TipCalendar4 from "./assets/svg/tipCalendar4.svg";
 import TipCalendar5 from "./assets/svg/tipCalendar5.svg";
 
-
-
-
 //Load icon source
 import { Feather } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
@@ -65,6 +62,7 @@ import RemovableChips from "react-native-chip/RemovableChips";
 import Onboarding from "react-native-onboarding-swiper";
 import Swiper from "react-native-swiper";
 import { Badge } from "react-native-ui-lib";
+// import * as Progress from 'react-native-progress';
 
 //Load functional libraries
 import moment, { min } from "moment";
@@ -427,7 +425,10 @@ export class TrackingPage extends React.Component {
 			//Guide popup vis
 			isGuideVis: false,
 			//Value for reloading
-			valueForReload:0,
+			valueForReload: 0,
+			//Popup previous strategy modal
+			isPreStrategyVis: false,
+			isPanelVis:"none"
 		};
 		this.processUserStrategies();
 		// this.processDailyReports_after();
@@ -439,6 +440,8 @@ export class TrackingPage extends React.Component {
 		this.dataModel = getDataModel();
 		this.dataModel.loadUserStrategies();
 		this.dailyReportPopup();
+		this.setState({ valueForReload: 1 });
+		// this.calculateCompletion2()
 		// this.setState({isBadgeVis:"none"})
 		// this.processDailyReports_after();
 		// console.log("componentDidMount");
@@ -494,8 +497,7 @@ export class TrackingPage extends React.Component {
 		}
 	};
 	//Get previous 5-day's daily reports
-	processDailyReports = async() => {
-
+	processDailyReports = async () => {
 		// console.log("formattedStartDate",formattedStartDate);
 		this.preList = [];
 		this.reportCnt = 0;
@@ -550,8 +552,10 @@ export class TrackingPage extends React.Component {
 			let date = moment(preDate).format().slice(0, 10);
 			let isReportExist = false;
 			for (let event of this.userPlans) {
-				let eventStartDate = new Date(moment(event.start.slice(0,10)).format("YYYY-MM-DD"));
-				if (event.start && eventStartDate>=formattedStartDate) {
+				let eventStartDate = new Date(
+					moment(event.start.slice(0, 10)).format("YYYY-MM-DD")
+				);
+				if (event.start && eventStartDate >= formattedStartDate) {
 					if (
 						event.start.slice(0, 10) === date.slice(0, 10) &&
 						!event.isDeleted &&
@@ -566,11 +570,12 @@ export class TrackingPage extends React.Component {
 				report.start = date;
 				report.end = report.start;
 				report.key = report.start;
-				let reportStartDate = new Date(moment(report.start.slice(0,10)).format("YYYY-MM-DD"));
+				let reportStartDate = new Date(
+					moment(report.start.slice(0, 10)).format("YYYY-MM-DD")
+				);
 				if (reportStartDate >= formattedStartDate) {
 					this.preList.push(report);
 				}
-
 			} else {
 				for (let event of this.userPlans) {
 					if (
@@ -587,7 +592,7 @@ export class TrackingPage extends React.Component {
 		}
 		// console.log("this.preList",this.preList);
 		this.reportCnt = this.preList.length;
-		console.log("this.preList.length",this.preList.length);
+		console.log("this.preList.length", this.preList.length);
 		this.setState({ preList: this.preList });
 		this.setState({ reportCnt: this.reportCnt });
 		if (this.reportCnt != 0) {
@@ -595,11 +600,9 @@ export class TrackingPage extends React.Component {
 		} else {
 			this.isBadgeVis = "none";
 		}
-		this.setState({isBadgeVis:this.isBadgeVis})
-
+		this.setState({ isBadgeVis: this.isBadgeVis });
 	};
 	processDailyReports_after = async () => {
-		
 		console.log("======processDailyReports_after======");
 		// console.log("this.state.plansBuddle",this.state.plansBuddle);
 		this.preList = [];
@@ -631,7 +634,7 @@ export class TrackingPage extends React.Component {
 		if (!isReportExist) {
 			// console.log("psh wrong report");
 			this.preList.push(dailyReport);
-			
+
 			console.log("push daily report1", report);
 		} else {
 			if (isReportPopup) {
@@ -648,7 +651,7 @@ export class TrackingPage extends React.Component {
 		// }else {
 		//   eventList = this.userPlans;
 		// }
-		
+
 		let startDate = await SecureStore.getItemAsync("START_DATE");
 		let formattedStartDate = new Date(moment(startDate).format("YYYY-MM-DD"));
 		for (let i = 1; i <= 5; i++) {
@@ -657,8 +660,10 @@ export class TrackingPage extends React.Component {
 			let date = moment(preDate).format().slice(0, 10);
 			let isReportExist = false;
 			for (let event of this.userPlans) {
-				let eventStartDate = new Date(moment(event.start.slice(0,10)).format("YYYY-MM-DD"));
-				if (event.start && eventStartDate>=formattedStartDate) {
+				let eventStartDate = new Date(
+					moment(event.start.slice(0, 10)).format("YYYY-MM-DD")
+				);
+				if (event.start && eventStartDate >= formattedStartDate) {
 					if (
 						event.start.slice(0, 10) === date.slice(0, 10) &&
 						!event.isDeleted &&
@@ -674,12 +679,13 @@ export class TrackingPage extends React.Component {
 				report.start = date;
 				report.end = report.start;
 				report.key = report.start;
-				let reportStartDate = new Date(moment(report.start.slice(0,10)).format("YYYY-MM-DD"));
+				let reportStartDate = new Date(
+					moment(report.start.slice(0, 10)).format("YYYY-MM-DD")
+				);
 				if (reportStartDate >= formattedStartDate) {
 					this.preList.push(report);
 					console.log("push daily report2", report);
 				}
-
 			} else {
 				console.log("this.state.plansBuddle", this.state.plansBuddle);
 				for (let event of this.state.plansBuddle) {
@@ -689,7 +695,6 @@ export class TrackingPage extends React.Component {
 						!event.isDeleted
 					) {
 						this.preList.push(event);
-						
 					}
 				}
 			}
@@ -770,6 +775,7 @@ export class TrackingPage extends React.Component {
 	//Process user strategies and get the current one
 	processUserStrategies = async () => {
 		let startDate = await SecureStore.getItemAsync("START_DATE");
+		let targetStrategy;
 		// console.log("START_DATE",startDate);
 		for (let strategy of this.userStrategies) {
 			if (strategy.startDate === startDate) {
@@ -794,7 +800,7 @@ export class TrackingPage extends React.Component {
 			monthCalStrategyStartDate: this.currentStrategy.startDate,
 		});
 		this.setState({ selectedStrategy: this.currentStrategy });
-		// console.log("this.state.selectedStrategy");
+		console.log("this.state.selectedStrategy");
 		// console.log("this.state.monthCalStrategyStartDate",this.state.monthCalStrategyStartDate);
 	};
 	//Process user defined activities
@@ -1415,7 +1421,7 @@ export class TrackingPage extends React.Component {
 		this.setState({
 			title: <SummarizePlanningStrategy height={28} width={119} />,
 		});
-		this.panelSwiperRef.current.goToPage(1, true);
+		// this.panelSwiperRef.current.goToPage(1, true);
 	};
 	//Fired when user presses the confirm btn on the last page
 	onConfirmBtnPressed = async () => {
@@ -1539,8 +1545,7 @@ export class TrackingPage extends React.Component {
 		console.log("detailViewCalendar", detailViewCalendar);
 	};
 	//Report btn pressed
-	onMyActivityReportPressed = async(item) => {
-
+	onMyActivityReportPressed = async (item) => {
 		if (this.isReportFromPopup) {
 			for (let event of this.state.plansBuddle) {
 				if (event.timeStamp === item.timeStamp) {
@@ -2141,7 +2146,9 @@ export class TrackingPage extends React.Component {
 	};
 	//Submit the completed activity
 	onSubmitPressed_CompleteActivity = async () => {
-		console.log("==================onSubmitPressed_CompleteActivity==================");
+		console.log(
+			"==================onSubmitPressed_CompleteActivity=================="
+		);
 		// console.log("this.onReportActivity",this.onReportActivity);
 		this.setState({ isReportModalVis: false });
 		// await this.onSubmitPressed_UserAddedActivity();
@@ -2198,12 +2205,20 @@ export class TrackingPage extends React.Component {
 		// console.log("this.currentStrategy.plans", this.currentStrategy.plans);
 		// console.log("this.userKey",this.userKey);
 		if (this.isFromPlanSetUp) {
-			let key = await this.dataModel.getActivityKey(this.userKey, eventToUpdateToFirebaseActivities);
+			let key = await this.dataModel.getActivityKey(
+				this.userKey,
+				eventToUpdateToFirebaseActivities
+			);
 			eventToUpdateToFirebaseActivities.key = key;
 		}
 
-		console.log("eventToUpdateToFirebaseActivities",eventToUpdateToFirebaseActivities);
-		console.log("==================onSubmitPressed_CompleteActivity==================");
+		console.log(
+			"eventToUpdateToFirebaseActivities",
+			eventToUpdateToFirebaseActivities
+		);
+		console.log(
+			"==================onSubmitPressed_CompleteActivity=================="
+		);
 
 		await this.dataModel.updatePlan(
 			this.userKey,
@@ -2280,7 +2295,10 @@ export class TrackingPage extends React.Component {
 		let strategyToUpdate = this.currentStrategy;
 		// console.log("this.currentStrategy.plans", this.currentStrategy.plans);
 		if (this.isFromPlanSetUp) {
-			let key = await this.dataModel.getActivityKey(this.userKey, eventToUpdateToFirebaseActivities);
+			let key = await this.dataModel.getActivityKey(
+				this.userKey,
+				eventToUpdateToFirebaseActivities
+			);
 			eventToUpdateToFirebaseActivities.key = key;
 		}
 		await this.dataModel.updatePlan(
@@ -2485,7 +2503,10 @@ export class TrackingPage extends React.Component {
 		let strategyToUpdate = this.currentStrategy;
 		// console.log("this.currentStrategy.plans", this.currentStrategy.plans);
 		if (this.isFromPlanSetUp) {
-			let key = await this.dataModel.getActivityKey(this.userKey, eventToUpdateToFirebaseActivities);
+			let key = await this.dataModel.getActivityKey(
+				this.userKey,
+				eventToUpdateToFirebaseActivities
+			);
 			eventToUpdateToFirebaseActivities.key = key;
 		}
 		await this.dataModel.updatePlan(
@@ -2500,7 +2521,7 @@ export class TrackingPage extends React.Component {
 		this.userStrategies = this.dataModel.getUserStrategies();
 		await this.processDailyReports_after();
 		let newValueForReload = this.state.valueForReload + 1;
-		await this.setState({valueForReload:newValueForReload})
+		await this.setState({ valueForReload: newValueForReload });
 	};
 
 	lastMonthEventReported = async (date) => {
@@ -3287,6 +3308,31 @@ export class TrackingPage extends React.Component {
 		).toFixed(2);
 		return avgCompletion;
 	};
+	calculatePercentageDuration = () => {
+		let selectedStrategyPlans;
+		// console.log("this.state.selectedStrategy", this.state.selectedStrategy);
+		if (this.currentStrategy) {
+			selectedStrategyPlans = this.currentStrategy.plans;
+		} else {
+			selectedStrategyPlans = [];
+		}
+		let accDuration = 0;
+		for (let event of selectedStrategyPlans) {
+			if (event.satisfactionScore) {
+				if (event.newDuration) {
+					accDuration = accDuration + event.newDuration;
+				} else {
+					accDuration = accDuration + event.duration;
+				}
+			}
+		}
+		let percentageDuration = (accDuration / 150).toFixed(2);
+		if (percentageDuration) {
+			return [percentageDuration,accDuration];
+		} else {
+			return [0,0];
+		}
+	};
 	calculateComplete = () => {
 		let selectedStrategyPlans;
 		if (this.state.selectedStrategy) {
@@ -3344,7 +3390,6 @@ export class TrackingPage extends React.Component {
 	};
 
 	render() {
-		// console.log("this.state.selectedKeywords", this.state.selectedKeywords);
 		let firstSlidePanelPage = (
 			<View
 				style={{
@@ -3902,7 +3947,7 @@ export class TrackingPage extends React.Component {
 							onPress={() => {
 								this.evaluatePanelPopup();
 								this.mainContentSwiperRef.current.goToPage(1, true);
-								this.panelSwiperRef.current.goToPage(0, true);
+								// this.panelSwiperRef.current.goToPage(0, true);
 							}}>
 							{/* <MaterialIcons name="all-inclusive" size={20} color={GREEN} /> */}
 							<FontAwesome5 name="flag-checkered" size={18} color={GREEN} />
@@ -4563,7 +4608,7 @@ export class TrackingPage extends React.Component {
 							flexDirection: "row",
 							justifyContent: "space-between",
 							alignItems: "center",
-							marginTop: 5,
+							marginTop: 10,
 							padding: 15,
 						}}>
 						{/* <Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}>
@@ -4589,77 +4634,286 @@ export class TrackingPage extends React.Component {
 
 								height: 20,
 								alignItems: "center",
+								justifyContent: "center",
 								flexDirection: "row",
 							}}>
-							<SwitchSelector
-								options={REPORT_OPTIONS}
-								height={20}
-								buttonColor="black"
-								style={{
-									borderWidth: 2,
-									borderRadius: 40,
-									padding: 1,
-									borderColor: "black",
-								}}
-								textStyle={{
-									fontSize: 10,
-									fontFamily: "RobotoRegular",
-									color: "black",
-								}}
-								selectedTextStyle={{
-									fontSize: 10,
-									fontWeight: "bold",
-									color: "white",
-								}}
-								borderWidth={0}
-								initial={0}
-								onPress={(value) => {
-									if (value == "daily") {
-										this.setState({ isDailyReportVis: "flex" });
-										this.setState({ isActivityRecordsVis: "none" });
-										this.isReportFromPopup = true;
-									} else {
-										this.setState({ isDailyReportVis: "none" });
-										this.setState({ isActivityRecordsVis: "flex" });
-
-										this.isReportFromPopup = false;
-									}
-								}}
-							/>
 							<View
 								style={{
-									position: "absolute",
-									top: -5,
-									right: -5,
-									display: this.state.isBadgeVis,
+									flexDirection: "row",
+									alignItems: "center",
+									justifyContent: "space-between",
+									width: "100%",
 								}}>
-								<Badge
-									label={this.state.reportCnt}
-									size={16}
-									backgroundColor={"red"}
-								/>
+								<Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}>
+									Current Strategy
+								</Text>
+								<View
+									style={{
+										flexDirection: "column",
+										width: 120,
+										justifyContent: "center",
+										alignItems: "flex-end",
+										marginTop: 5,
+									}}>
+									<Progress.Bar
+										progress={this.calculatePercentageDuration()[0]}
+										width={120}
+										color={"black"}
+									/>
+									<Text
+										style={{
+											fontWeight: "bold",
+											fontSize: 8,
+											position: "absolute",
+											top: 10,
+										}}>
+										{this.calculatePercentageDuration()[1]}/150 min
+									</Text>
+								</View>
 							</View>
 						</View>
 						{/* <Text style={{ fontFamily: "RobotoBoldBold", fontSize: 13 }}>
               {this.state.accumulatedMinutes}/150 minutes remains
             </Text> */}
+					</View>
+					{/* Current Planning Strategy */}
+					<View
+						style={[
+							generalStyles.shadowStyle,
+							{
+								height: 81,
+								width: 335,
+								borderColor: GREEN,
+								borderWidth: 2,
+								borderRadius: 20,
+								marginTop: "2%",
+								flexDirection: "row",
+								backgroundColor: "white",
+							},
+						]}>
+						<TouchableOpacity
+							style={{
+								height: "100%",
+								width: "100%",
+
+								// borderRightColor: "black",
+								// borderRightWidth: 2,
+								paddingLeft: 0,
+								paddingVertical: 0,
+								justifyContent: "space-between",
+								alignItems: "flex-start",
+								flexDirection: "column",
+							}}
+							onPress={() => this.setState({ isStrategyDetailModalVis: true })}>
+							<View
+								style={{
+									flexDirection: "row",
+									alignItems: "center",
+									justifyContent: "flex-start",
+									width: "100%",
+									height: "50%",
+									borderTopLeftRadius: 18,
+									borderTopRightRadius: 18,
+									backgroundColor: GREEN,
+								}}>
+								<View
+									style={{
+										flexDirection: "row",
+										alignItems: "center",
+										justifyContent: "center",
+									}}>
+									{/* <View
+                    style={{
+                      height: 9,
+                      width: 9,
+                      borderRadius: 4.5,
+                      backgroundColor: GREEN,
+                      marginRight: 10,
+                    }}
+                  /> */}
+									<Text
+										style={{
+											fontFamily: "RobotoBoldBlack",
+											fontSize: 18,
+											marginBottom: 0,
+											marginRight: 10,
+											alignItems: "center",
+											justifyContent: "center",
+											marginLeft: "10%",
+											color: "white",
+											alignSelf: "center",
+											textAlign: "center",
+										}}>
+										{this.state.planStrategyName}
+									</Text>
+								</View>
+								<View
+									style={{
+										flexDirection: "column",
+										justifyContent: "center",
+										// backgroundColor: "red",
+										alignItems: "center",
+										backgroundColor: "white",
+										borderRadius: 20,
+										paddingHorizontal: 10,
+									}}>
+									<Text
+										style={{
+											fontSize: 12,
+											fontFamily: "RobotoBoldBold",
+											textAlign: "center",
+											marginTop: 0,
+											color: GREEN,
+										}}>
+										{this.state.strategyDuration}
+									</Text>
+								</View>
+								<View style={{ position: "absolute", right: 5 }}>
+									<FontAwesome5 name="play-circle" size={18} color="white" />
+								</View>
+							</View>
+							<ScrollView
+								horizontal={true}
+								style={{
+									width: "100%",
+									height: "50%",
+									flexDirection: "row",
+								}}
+								contentContainerStyle={{
+									alignItems: "center",
+									paddingLeft: "5%",
+									paddingRight: "5%",
+								}}>
+								{this.state.keywordsBuddle.map((item) => {
+									return (
+										<View
+											style={{
+												borderRadius: 20,
+												height: 32,
+												// backgroundColor: "#E7E7E7",
+												marginRight: 2,
+												padding: 5,
+											}}>
+											<Text
+												style={{
+													color: "black",
+													fontWeight: "bold",
+													color: "#1AB700",
+													fontSize: 13,
+												}}>
+												# {item.title}
+											</Text>
+										</View>
+									);
+								})}
+								{/* <FlatList
+                  horizontal={true}
+                  contentContainerStyle={{
+                    flexDirection: "row",
+                    width: "100%",
+                    backgroundColor: "red",
+                  }}
+                  data={this.state.keywordsBuddle}
+                  renderItem={({ item }) => {
+                    return (
+                      <View
+                        style={{
+                          borderRadius: 20,
+                          backgroundColor: "#E7E7E7",
+                          marginRight: 2,
+                          padding: 5,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "black",
+                            fontWeight: "bold",
+                            color: "#1AB700",
+                            fontSize: 8,
+                          }}
+                        >
+                          # {item.title}
+                        </Text>
+                      </View>
+                    );
+                  }}
+                /> */}
+							</ScrollView>
+						</TouchableOpacity>
+					</View>
+					<View
+						style={{
+							width: "90%",
+							marginTop: 15,
+							flexDirection: "row",
+							justifyContent: "space-between",
+						}}>
 						<TouchableOpacity
 							style={{
 								alignItems: "center",
 								justifyContent: "center",
-								marginLeft: 10,
-								flex: 1,
+								marginLeft: 0,
 							}}
 							onPress={() => {
 								this.onAddActivityPressed();
 							}}>
 							<Ionicons
 								name="ios-add-circle"
-								size={25}
+								size={27}
 								color={"black"}
 								// style={{flex:0.1}}
 							/>
 						</TouchableOpacity>
+						<View
+							style={{
+								position: "absolute",
+								top: -5,
+								right: -5,
+								display: this.state.isBadgeVis,
+								zIndex: 1,
+							}}>
+							<Badge
+								label={this.state.reportCnt}
+								size={16}
+								backgroundColor={"red"}
+							/>
+						</View>
+						<SwitchSelector
+							options={REPORT_OPTIONS}
+							height={23}
+							buttonColor="black"
+							style={{
+								borderWidth: 2,
+								borderRadius: 40,
+								padding: 1,
+								borderColor: "black",
+								width: "90%",
+							}}
+							textStyle={{
+								fontSize: 10,
+								fontFamily: "RobotoRegular",
+								color: "black",
+							}}
+							selectedTextStyle={{
+								fontSize: 10,
+								fontWeight: "bold",
+								color: "white",
+							}}
+							borderWidth={0}
+							initial={0}
+							onPress={(value) => {
+								if (value == "daily") {
+									this.setState({ isDailyReportVis: "flex" });
+									this.setState({ isActivityRecordsVis: "none" });
+									this.isReportFromPopup = true;
+								} else {
+									this.setState({ isDailyReportVis: "none" });
+									this.setState({ isActivityRecordsVis: "flex" });
+
+									this.isReportFromPopup = false;
+								}
+							}}
+						/>
 					</View>
 					{/* Planned Activity records  */}
 					<View
@@ -4895,11 +5149,11 @@ export class TrackingPage extends React.Component {
 						style={{
 							width: "100%",
 							flexDirection: "row",
-							justifyContent: "flex-start",
+							justifyContent: "space-between",
 							alignItems: "center",
 							padding: 15,
 							paddingBottom: 0,
-							marginTop: 0,
+							marginTop: 5,
 						}}>
 						<TouchableOpacity
 							style={{
@@ -4923,7 +5177,7 @@ export class TrackingPage extends React.Component {
 								style={{
 									fontFamily: "RobotoBoldItalic",
 									fontSize: 18,
-									marginRight: 10,
+									marginRight: 5,
 								}}>
 								{this.state.selectedStrategy.title}
 							</Text>
@@ -4950,8 +5204,12 @@ export class TrackingPage extends React.Component {
 								</Text>
 							</View>
 						</View>
+						<TouchableOpacity
+							onPress={() => this.setState({ isPreStrategyVis: true })}>
+							<Ionicons name="list-circle" size={26} color="black" />
+						</TouchableOpacity>
 					</View>
-					<View style={{ height: 300 }}>
+					<View style={{ height: 400 }}>
 						<ScrollView
 							style={{ width: "100%", zIndex: 1 }}
 							contentContainerStyle={{
@@ -6754,6 +7012,7 @@ export class TrackingPage extends React.Component {
 							alignItems: "center",
 							borderRadius: 20,
 							backgroundColor: "white",
+							display:this.state.isPanelVis
 						},
 					]}>
 					<TouchableOpacity
@@ -6839,7 +7098,7 @@ export class TrackingPage extends React.Component {
 							width: "100%",
 							display: this.state.swipeAblePanelDisplay,
 						}}>
-						<Onboarding
+						{/* <Onboarding
 							// bottomBarHighlight={false}
 							// ref={this.mainContentSwiperRef}
 							containerStyles={{ justifyContent: "flex-start" }}
@@ -6933,7 +7192,7 @@ export class TrackingPage extends React.Component {
 									image: secondSlidePanelPageUpdated,
 								},
 							]}
-						/>
+						/> */}
 					</View>
 					{/* Swipable Evaluation Content */}
 					<View
@@ -8183,36 +8442,71 @@ export class TrackingPage extends React.Component {
 			</View>
 		);
 		let tip_ONE = (
-			<View style={{ height: "100%", width: "100%",  }}>
-				<View style={{height: "100%", width: "100%",justifyContent:"flex-start", alignItems:"center", flexDirection:"column"}}>
+			<View style={{ height: "100%", width: "100%" }}>
+				<View
+					style={{
+						height: "100%",
+						width: "100%",
+						justifyContent: "flex-start",
+						alignItems: "center",
+						flexDirection: "column",
+					}}>
 					<TipCalendar1 height={"100%"} width={"100%"} />
 				</View>
 			</View>
 		);
 		let tip_TWO = (
-			<View style={{ height: "100%", width: "100%",  }}>
-				<View style={{height: "100%", width: "100%",justifyContent:"flex-start", alignItems:"center", flexDirection:"column"}}>
+			<View style={{ height: "100%", width: "100%" }}>
+				<View
+					style={{
+						height: "100%",
+						width: "100%",
+						justifyContent: "flex-start",
+						alignItems: "center",
+						flexDirection: "column",
+					}}>
 					<TipCalendar2 height={"100%"} width={"100%"} />
 				</View>
 			</View>
 		);
 		let tip_THREE = (
-			<View style={{ height: "100%", width: "100%",  }}>
-				<View style={{height: "100%", width: "100%",justifyContent:"flex-start", alignItems:"center", flexDirection:"column"}}>
+			<View style={{ height: "100%", width: "100%" }}>
+				<View
+					style={{
+						height: "100%",
+						width: "100%",
+						justifyContent: "flex-start",
+						alignItems: "center",
+						flexDirection: "column",
+					}}>
 					<TipCalendar3 height={"100%"} width={"100%"} />
 				</View>
 			</View>
 		);
 		let tip_FOUR = (
-			<View style={{ height: "100%", width: "100%",  }}>
-				<View style={{height: "100%", width: "100%",justifyContent:"flex-start", alignItems:"center", flexDirection:"column"}}>
+			<View style={{ height: "100%", width: "100%" }}>
+				<View
+					style={{
+						height: "100%",
+						width: "100%",
+						justifyContent: "flex-start",
+						alignItems: "center",
+						flexDirection: "column",
+					}}>
 					<TipCalendar4 height={"100%"} width={"100%"} />
 				</View>
 			</View>
 		);
 		let tip_FIVE = (
-			<View style={{ height: "100%", width: "100%",  }}>
-				<View style={{height: "100%", width: "100%",justifyContent:"flex-start", alignItems:"center", flexDirection:"column"}}>
+			<View style={{ height: "100%", width: "100%" }}>
+				<View
+					style={{
+						height: "100%",
+						width: "100%",
+						justifyContent: "flex-start",
+						alignItems: "center",
+						flexDirection: "column",
+					}}>
 					<TipCalendar5 height={"100%"} width={"100%"} />
 				</View>
 			</View>
@@ -8954,6 +9248,495 @@ export class TrackingPage extends React.Component {
 						</View>
 					</View>
 				</RNModal>
+				{/* Previous Strategy Selection Popup */}
+				<RNModal
+					animationType="slide"
+					visible={this.state.isPreStrategyVis}
+					// propagateSwipe={true}
+					// isVisible={this.state.isPlanDetailModalVis}
+					style={{
+						justifyContent: "center",
+						alignItems: "center",
+
+						// marginBottom: 100,
+					}}
+					presentationStyle="overFullScreen"
+					transparent={true}
+					// hasBackdrop={true}
+					// backdropOpacity={0}
+					// onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
+					// onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
+					// swipeDirection="down"
+				>
+					<View
+						style={{
+							alignItems: "center",
+							justifyContent: "center",
+							width: "100%",
+							height: "100%",
+						}}>
+						<View
+							style={[
+								generalStyles.shadowStyle,
+								{
+									height: "90%",
+									width: "95%",
+									backgroundColor: "white",
+									// borderWidth: 2,
+									// borderColor: "black",
+									// flexDirection: "column",
+									justifyContent: "flex-start",
+									alignItems: "center",
+									borderRadius: 15,
+								},
+							]}>
+							<View style={{ height: "100%", width: "100%", flexDirection:"column", justifyContent:"space-between", paddingVertical:15 }}>
+								<TouchableOpacity
+									style={{ position: "absolute", top: 3, right: 3, zIndex: 1 }}
+									onPress={() => {
+										this.setState({ isPreStrategyVis: false });
+
+										// this.reportModalSwiperRef.current.scrollBy(2, true);
+									}}>
+									<AntDesign name="closecircle" size={24} color="black" />
+								</TouchableOpacity>
+								<View style={{justifyContent:"flex-start",flexDirection:"column"}}>
+								<Text
+									style={{
+										fontFamily: "RobotoBoldItalic",
+										fontSize: 18,
+										textAlign: "left",
+										marginLeft: "5%",
+									}}>
+									My Strategies Records
+								</Text>
+								<Text
+									style={{
+										fontFamily: "RobotoBoldBold",
+										fontSize: 12,
+										textAlign: "left",
+										marginLeft: "5%",
+									}}>
+									Select one to see details 
+								</Text>
+								</View>
+								<ScrollView
+									style={{
+										width: "100%",
+									}}
+									contentContainerStyle={{
+										alignItems: "center",
+										justifyContent: "flex-start",
+									}}>
+									{this.userStrategies.map((item) => {
+										let startDate = new Date(item.startDate);
+										let endDate = new Date(item.endDate);
+										let isTodayInBetween;
+										let isSelected;
+										let today = new Date();
+
+										if (today > startDate && today < endDate) {
+											isTodayInBetween = true;
+										} else {
+											isTodayInBetween = false;
+										}
+										isSelected =
+											item.startDate === this.state.selectedStrategyDate;
+
+										let completionRate;
+										let completionCnt = 0;
+
+										for (let event of item.plans) {
+											if (event.isActivityCompleted) {
+												completionCnt++;
+											}
+										}
+										completionRate = (
+											(completionCnt / item.plans.length) *
+											100
+										).toFixed(2);
+
+										let satisfaction = 0;
+										let satisfactionCnt = 0;
+										let accDuration = 0;
+										for (let event of item.plans) {
+											if (event.satisfactionScore) {
+												satisfaction =
+													satisfaction + parseInt(event.satisfactionScore);
+												satisfactionCnt++;
+												accDuration += event.duration;
+											}
+										}
+										let avgSatisfaction = (
+											satisfaction / satisfactionCnt
+										).toFixed(2);
+										// console.log("isTodayInBetween", item.title, isTodayInBetween);
+
+										return (
+											<View
+												style={[
+													// generalStyles.shadowStyle,
+													{
+														height: 90,
+														width: 335,
+														borderColor: isSelected
+															? GREEN
+															: isTodayInBetween
+															? GREEN
+															: "black",
+														borderWidth: 2,
+														borderRadius: 15,
+														marginTop: "5%",
+														flexDirection: "row",
+														backgroundColor: "white",
+													},
+												]}>
+												<TouchableOpacity
+													style={{
+														height: "100%",
+														width: "100%",
+
+														// borderRightColor: "black",
+														// borderRightWidth: 2,
+														paddingLeft: 0,
+														paddingVertical: 0,
+														justifyContent: "space-between",
+														alignItems: "flex-start",
+														flexDirection: "column",
+													}}
+													onPress={async () =>
+														// this.setState({ isStrategyDetailModalVis: true })
+														{
+															this.setState({ isPreStrategyVis: false })
+															setTimeout(() => {
+																this._panel.hide();
+															});
+															this.setState({
+																hideIcon2: (
+																	<Ionicons
+																		name="chevron-up-circle"
+																		size={25}
+																		color="black"
+																	/>
+																),
+															});
+															this.setState({ isPanelHided: true });
+
+															let thisMonthNum = parseInt(
+																moment(new Date()).format().slice(5, 7)
+															);
+															let selectedMonthNum = parseInt(
+																item.startDate.slice(5, 7)
+															);
+															console.log("selectedMonthNum", selectedMonthNum);
+															console.log("thisMonthNum", thisMonthNum);
+															this.setState({ selectedStrategy: item });
+															this.setState({
+																selectedKeywords: item.keywords,
+															});
+															this.setState({
+																selectedStrategyPlans: item.plans,
+															});
+															if (thisMonthNum > selectedMonthNum) {
+																this.pastMonthBtnPressed();
+																this.setState({
+																	selectedStrategyDate: item.startDate,
+																});
+																this.setState({
+																	monthCalStrategyStartDate: item.startDate,
+																});
+																if (thisMonthNum != selectedMonthNum + 2) {
+																	let eventDate = new Date(item.startDate);
+																	await this.setState({
+																		selectedDateRaw: eventDate,
+																	});
+																	await this.setState({
+																		currentMonthDate:
+																			this.state.selectedDateRaw,
+																	});
+																	this.scrollToThisWeek();
+																}
+															} else if (thisMonthNum < selectedMonthNum) {
+																this.nextMonthBtnPressed();
+																this.setState({
+																	selectedStrategyDate: item.startDate,
+																});
+																this.setState({
+																	monthCalStrategyStartDate: item.startDate,
+																});
+																let eventDate = new Date(item.startDate);
+																await this.setState({
+																	selectedDateRaw: eventDate,
+																});
+																await this.setState({
+																	currentMonthDate: this.state.selectedDateRaw,
+																});
+																this.scrollToThisWeek();
+															} else {
+																if (this.state.currentMonth != "THIS_MONTH") {
+																	this.resetCalendarToCurrentMonth();
+																}
+															}
+
+															this.setState({
+																selectedStrategyDate: item.startDate,
+															});
+															this.setState({
+																monthCalStrategyStartDate: item.startDate,
+															});
+															if (thisMonthNum != selectedMonthNum + 2) {
+																let eventDate = new Date(item.startDate);
+																await this.setState({
+																	selectedDateRaw: eventDate,
+																});
+																await this.setState({
+																	currentMonthDate: this.state.selectedDateRaw,
+																});
+																this.scrollToThisWeek();
+															}
+														}
+													}>
+													<View
+														style={{
+															flexDirection: "column",
+															justifyContent: "flex-start",
+															width: "100%",
+															height: "70%",
+															borderTopLeftRadius: 13,
+															borderTopRightRadius: 13,
+															backgroundColor: isSelected ? GREEN : "black",
+														}}>
+														<View
+															style={{
+																flexDirection: "row",
+																alignItems: "center",
+																justifyContent: "flex-start",
+																marginTop: 10,
+															}}>
+															<View
+																style={{
+																	flexDirection: "row",
+																	alignItems: "center",
+																	justifyContent: "center",
+																}}>
+																{/* <View
+                    style={{
+                      height: 9,
+                      width: 9,
+                      borderRadius: 4.5,
+                      backgroundColor: GREEN,
+                      marginRight: 10,
+                    }}
+                  /> */}
+																<Text
+																	style={{
+																		fontFamily: "RobotoBoldBlack",
+																		fontSize: 18,
+																		marginBottom: 0,
+																		marginRight: 10,
+
+																		alignItems: "center",
+																		justifyContent: "center",
+																		marginLeft: "10%",
+																		color: "white",
+																		alignSelf: "center",
+																		textAlign: "center",
+																	}}>
+																	{item.title}
+																</Text>
+															</View>
+															<View
+																style={{
+																	flexDirection: "column",
+																	justifyContent: "center",
+																	// backgroundColor: "red",
+																	alignItems: "center",
+																	backgroundColor: "white",
+																	borderRadius: 20,
+																	paddingHorizontal: 10,
+																}}>
+																<Text
+																	style={{
+																		fontSize: 12,
+																		fontFamily: "RobotoBoldBold",
+																		textAlign: "center",
+																		marginTop: 0,
+																		color: isSelected ? GREEN : "black",
+																	}}>
+																	{item.startDate.slice(5)} →{" "}
+																	{item.endDate.slice(5)}
+																</Text>
+															</View>
+															<View style={{ position: "absolute", right: 5 }}>
+																{isTodayInBetween ? (
+																	<FontAwesome5
+																		name="play-circle"
+																		size={18}
+																		color="white"
+																	/>
+																) : (
+																	<MaterialIcons
+																		name="motion-photos-paused"
+																		size={20}
+																		color="white"
+																	/>
+																)}
+															</View>
+														</View>
+														<View
+															style={{
+																width: "100%",
+																flexDirection: "row",
+																paddingLeft: "6%",
+																alignItems: "center",
+																justifyContent: "flex-start",
+																paddingHorizontal: 25,
+																marginTop: 5,
+																// backgroundColor:"red"
+															}}>
+															<View
+																style={{
+																	flexDirection: "row",
+																	alignItems: "center",
+																	marginRight: 10,
+																}}>
+																<Ionicons
+																	name="checkmark-circle"
+																	size={15}
+																	color="white"
+																/>
+																<Text
+																	style={{
+																		fontWeight: "bold",
+																		fontSize: 11,
+																		color: "white",
+																		marginLeft: 5,
+																	}}>
+																	{completionRate}%
+																</Text>
+															</View>
+															<View
+																style={{
+																	flexDirection: "row",
+																	alignItems: "center",
+																	marginRight: 10,
+																}}>
+																<Ionicons
+																	name="heart-circle"
+																	size={15}
+																	color="white"
+																/>
+																<Text
+																	style={{
+																		fontWeight: "bold",
+																		fontSize: 11,
+																		color: "white",
+																		marginLeft: 5,
+																	}}>
+																	{avgSatisfaction}
+																</Text>
+															</View>
+															<View
+																style={{
+																	flexDirection: "row",
+																	alignItems: "center",
+																	marginRight: 10,
+																}}>
+																<Ionicons
+																	name="timer"
+																	size={15}
+																	color="white"
+																/>
+																<Text
+																	style={{
+																		fontWeight: "bold",
+																		fontSize: 11,
+																		color: "white",
+																		marginLeft: 5,
+																	}}>
+																	{accDuration} min
+																</Text>
+															</View>
+														</View>
+													</View>
+
+													<ScrollView
+														horizontal={true}
+														style={{
+															width: "100%",
+															height: "30%",
+															flexDirection: "row",
+														}}
+														contentContainerStyle={{
+															paddingLeft: "5%",
+															paddingRight: "5%",
+															alignItems: "center",
+														}}>
+														{item.keywords.map((item) => {
+															return (
+																<View
+																	style={{
+																		borderRadius: 20,
+																		height: 32,
+																		// backgroundColor: "#E7E7E7",
+																		marginRight: 2,
+																		padding: 5,
+																		alignItems: "center",
+																		justifyContent: "center",
+																	}}>
+																	<Text
+																		style={{
+																			color: "black",
+																			fontWeight: "bold",
+																			fontSize: 13,
+																		}}>
+																		# {item.title}
+																	</Text>
+																</View>
+															);
+														})}
+														{/* <FlatList
+                  horizontal={true}
+                  contentContainerStyle={{
+                    flexDirection: "row",
+                    width: "100%",
+                    backgroundColor: "red",
+                  }}
+                  data={this.state.keywordsBuddle}
+                  renderItem={({ item }) => {
+                    return (
+                      <View
+                        style={{
+                          borderRadius: 20,
+                          backgroundColor: "#E7E7E7",
+                          marginRight: 2,
+                          padding: 5,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "black",
+                            fontWeight: "bold",
+                            color: "#1AB700",
+                            fontSize: 8,
+                          }}
+                        >
+                          # {item.title}
+                        </Text>
+                      </View>
+                    );
+                  }}
+                /> */}
+													</ScrollView>
+												</TouchableOpacity>
+											</View>
+										);
+									})}
+								</ScrollView>
+							</View>
+						</View>
+					</View>
+				</RNModal>
 				{/* Calendar View & Buttons */}
 				<View
 					style={{
@@ -9129,14 +9912,22 @@ export class TrackingPage extends React.Component {
 								},
 							]}>
 							<TouchableOpacity
-								style={{ position: "absolute", top: "5%", right: 10, zIndex: 1 }}
+								style={{
+									position: "absolute",
+									top: "5%",
+									right: 10,
+									zIndex: 1,
+								}}
 								onPress={() => {
 									this.setState({ isGuideVis: false });
 
 									// this.reportModalSwiperRef.current.scrollBy(2, true);
 								}}>
 								{/* <AntDesign name="closecircle" size={24} color="black" /> */}
-								<Text style={{fontWeight:"bold", color:"white", fontSize:18}}>SKIP</Text>
+								<Text
+									style={{ fontWeight: "bold", color: "white", fontSize: 18 }}>
+									SKIP
+								</Text>
 							</TouchableOpacity>
 							<Swiper
 								activeDotColor="white"
@@ -9147,8 +9938,36 @@ export class TrackingPage extends React.Component {
 								keyboardShouldPersistTaps="handled"
 								scrollEnabled={false}
 								ref={this.tipModalSwiperRef}
-								nextButton={<TouchableOpacity onPress={()=>{this.tipModalSwiperRef.current.scrollBy(1,false)}}><Text style={{ fontWeight: "bold", color:"white",fontSize:18 }}>NEXT</Text></TouchableOpacity>}
-								prevButton={<TouchableOpacity onPress={()=>{this.tipModalSwiperRef.current.scrollBy(-1,false)}}><Text style={{ fontWeight: "bold", color:"white",fontSize:18 }}>PREV</Text></TouchableOpacity>}
+								nextButton={
+									<TouchableOpacity
+										onPress={() => {
+											this.tipModalSwiperRef.current.scrollBy(1, false);
+										}}>
+										<Text
+											style={{
+												fontWeight: "bold",
+												color: "white",
+												fontSize: 18,
+											}}>
+											NEXT
+										</Text>
+									</TouchableOpacity>
+								}
+								prevButton={
+									<TouchableOpacity
+										onPress={() => {
+											this.tipModalSwiperRef.current.scrollBy(-1, false);
+										}}>
+										<Text
+											style={{
+												fontWeight: "bold",
+												color: "white",
+												fontSize: 18,
+											}}>
+											PREV
+										</Text>
+									</TouchableOpacity>
+								}
 								showsPagination={true}
 								buttonWrapperStyle={{
 									backgroundColor: "transparent",
@@ -9189,10 +10008,11 @@ export class TrackingPage extends React.Component {
 					style={[
 						generalStyles.shadowStyle,
 						{
-							height: "100%",
+							height: 530,
 							width: "100%",
 							backgroundColor: "white",
 							borderRadius: 20,
+							paddingBottom: 20,
 							paddingTop: 20,
 							display: this.state.mainContentSwiperDisplay,
 						},
@@ -9204,14 +10024,17 @@ export class TrackingPage extends React.Component {
           </Swiper> */}
 					<Onboarding
 						bottomBarHighlight={false}
+						bottomBarHeight={30}
 						ref={this.mainContentSwiperRef}
+						imageContainerStyles={{height:"100%"}}
 						showSkip={false}
 						showNext={false}
-						pageIndexCallback={(index) => {
-							if (this.state.evaluatePanelDisplay === "none") {
-								this.panelSwiperRef.current.goToPage(index, true);
-							}
-						}}
+						showDone={false}
+						// pageIndexCallback={(index) => {
+						// 	if (this.state.evaluatePanelDisplay === "none") {
+						// 		this.panelSwiperRef.current.goToPage(index, true);
+						// 	}
+						// }}
 						pages={[
 							{
 								title: "",
