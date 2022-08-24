@@ -430,7 +430,7 @@ export class TrackingPage extends React.Component {
 			valueForReload:0,
 		};
 		this.processUserStrategies();
-		this.processDailyReports_after();
+		// this.processDailyReports_after();
 		this.dailyReportPopup();
 		// console.log("this.state.activityData", this.state.activityData);
 	}
@@ -439,6 +439,8 @@ export class TrackingPage extends React.Component {
 		this.dataModel = getDataModel();
 		this.dataModel.loadUserStrategies();
 		this.dailyReportPopup();
+		// this.setState({isBadgeVis:"none"})
+		// this.processDailyReports_after();
 		// console.log("componentDidMount");
 	}
 	evaluatePanelPopup = async () => {
@@ -585,7 +587,7 @@ export class TrackingPage extends React.Component {
 		}
 		// console.log("this.preList",this.preList);
 		this.reportCnt = this.preList.length;
-		// console.log("this.preList.length",this.preList.length);
+		console.log("this.preList.length",this.preList.length);
 		this.setState({ preList: this.preList });
 		this.setState({ reportCnt: this.reportCnt });
 		if (this.reportCnt != 0) {
@@ -593,6 +595,8 @@ export class TrackingPage extends React.Component {
 		} else {
 			this.isBadgeVis = "none";
 		}
+		this.setState({isBadgeVis:this.isBadgeVis})
+
 	};
 	processDailyReports_after = async () => {
 		
@@ -627,6 +631,8 @@ export class TrackingPage extends React.Component {
 		if (!isReportExist) {
 			// console.log("psh wrong report");
 			this.preList.push(dailyReport);
+			
+			console.log("push daily report1", report);
 		} else {
 			if (isReportPopup) {
 				console.log("psh wrong report");
@@ -642,6 +648,7 @@ export class TrackingPage extends React.Component {
 		// }else {
 		//   eventList = this.userPlans;
 		// }
+		
 		let startDate = await SecureStore.getItemAsync("START_DATE");
 		let formattedStartDate = new Date(moment(startDate).format("YYYY-MM-DD"));
 		for (let i = 1; i <= 5; i++) {
@@ -662,6 +669,7 @@ export class TrackingPage extends React.Component {
 				}
 			}
 			if (!isReportExist) {
+				// console.log("this.preList",this.preList);
 				report.title = "Daily Report";
 				report.start = date;
 				report.end = report.start;
@@ -669,6 +677,7 @@ export class TrackingPage extends React.Component {
 				let reportStartDate = new Date(moment(report.start.slice(0,10)).format("YYYY-MM-DD"));
 				if (reportStartDate >= formattedStartDate) {
 					this.preList.push(report);
+					console.log("push daily report2", report);
 				}
 
 			} else {
@@ -680,14 +689,14 @@ export class TrackingPage extends React.Component {
 						!event.isDeleted
 					) {
 						this.preList.push(event);
-						console.log("push event2", event.title);
+						
 					}
 				}
 			}
 		}
 		this.reportCnt = this.preList.length;
 		this.setState({ preList: this.preList });
-		console.log("preList",this.preList);
+		// console.log("preList",this.preList);
 		this.setState({ reportCnt: this.reportCnt });
 		// console.log("this.reportCnt",this.reportCnt);
 		if (this.reportCnt != 0) {
@@ -761,7 +770,7 @@ export class TrackingPage extends React.Component {
 	//Process user strategies and get the current one
 	processUserStrategies = async () => {
 		let startDate = await SecureStore.getItemAsync("START_DATE");
-		console.log("START_DATE",startDate);
+		// console.log("START_DATE",startDate);
 		for (let strategy of this.userStrategies) {
 			if (strategy.startDate === startDate) {
 				this.currentStrategy = strategy;
