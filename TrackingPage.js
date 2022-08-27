@@ -3466,7 +3466,6 @@ export class TrackingPage extends React.Component {
 		// console.log("strategyToUpdate",strategyToUpdate);
 		this.dataModel.updateStrategy(this.userKey, strategyToUpdate);
 	}
-	con
 
 	render() {
 		let firstSlidePanelPage = (
@@ -5447,10 +5446,10 @@ export class TrackingPage extends React.Component {
 										<Text
 											style={{
 												fontFamily: "RobotoBoldBold",
-												fontSize: 18,
+												fontSize: 32,
 												fontFamily: "RobotoBoldItalic",
 											}}>
-											{this.calculateSatisfaction()}
+											{this.state.selectedStrategy.rating ? this.state.selectedStrategy.rating : "--"}
 										</Text>
 									</View>
 								</View>

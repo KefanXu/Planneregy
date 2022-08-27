@@ -14,6 +14,8 @@ import {
   Image,
   Alert,
 } from "react-native";
+import { Modal as RNModal } from "react-native";
+
 import * as Font from "expo-font";
 
 //Load svg files
@@ -43,7 +45,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import Popover from "react-native-popover-view";
 import Modal from "react-native-modal";
 import FlashMessage from "react-native-flash-message";
-import { showMessage, hideMessage } from "react-native-flash-message";
+import { showMessage, hideMessage,FlashMessageManager } from "react-native-flash-message";
 import { Calendar } from "react-native-big-calendar";
 
 //Load layout component libraries
@@ -128,15 +130,19 @@ export class PlanOnCalendar extends React.Component {
     this.userStrategies = this.props.route.params.userStrategies;
 
     //Check if receive data from tracking screen
-    this.plansBuddle = [];
+    // this.plansBuddle = [];
+    this.keywordsBuddle = [];
+    this.planStrategyName = "";
     this.isDataFromTracking = false;
     if (this.props.route.params.keywords){
-      let keywords = this.props.route.params.keywords;
-      let plans = this.props.route.params.plans;
+      let keywords = this.processKeywords(this.props.route.params.keywords);
+      let plans = this.processEventsFromTracking(this.props.route.params.plans);
       let title = this.props.route.params.title;
-      
+
       this.isDataFromTracking = true;
       this.plansBuddle = plans
+      this.keywordsBuddle = keywords;
+      this.planStrategyName = title + " ↩︎ ";
     }
     
     //Get data model
@@ -178,6 +184,9 @@ export class PlanOnCalendar extends React.Component {
     this.selectedTemp;
     this.selectedEventDate;
     this.detailViewCalendar = [];
+
+    this.onReportActivity = { title: "", start: "", end: "", duration: "" };
+
 
     this.state = {
       date: new Date(),
@@ -242,9 +251,9 @@ export class PlanOnCalendar extends React.Component {
       //Keywords added from user inout
       keywordsListFromInput: [],
       //User defined keywords:
-      keywordsBuddle: [],
+      keywordsBuddle: this.keywordsBuddle,
       //User defined plan strategy name
-      planStrategyName: "",
+      planStrategyName: this.planStrategyName,
       //Confirm page icon:
       confirmPageIcon: (
         <FontAwesome5 name="angle-double-right" size={32} color="black" />
@@ -261,11 +270,27 @@ export class PlanOnCalendar extends React.Component {
       thirdSlidePanelPageUpdatedDisplay: "none",
       //Event detail modal visibility
       isPlanDetailModalVis: false,
+      //visibility of changing plan popup
+      isChangePlanModalVis:false,
+      //Fields of the activity to change,
+      reportTitle:"",
+      reportStart:"",
+      reportEnd:"",
+      reportDuration:"",
+
+      // dateTimePickerDate:""
     };
+    if (this.isDataFromTracking) {
+      for (let event of this.plansBuddle) {
+        this.onPlanBtnPressed(event);
+      }
+    }
+
     // console.log("this.state.activityData", this.state.activityData);
   }
   componentDidMount() {
     this.scrollToThisWeek();
+    FlashMessageManager.setDisabled(false);
     // console.log("componentDidMount");
   }
   //Click the "Current Week" and scroll to the current week
@@ -280,6 +305,34 @@ export class PlanOnCalendar extends React.Component {
         1000;
     });
   };
+  processEventsFromTracking = (prePlans) => {
+    let plans = prePlans
+    for (let event of plans) {
+      event.isReported = false;
+    }    
+    let todayDate = new Date();
+    for (let i = 0; i < 7; i++) {
+       let datesAhead = todayDate.setDate(todayDate.getDate() + 1);
+       let weekDayAhead = moment(datesAhead).day();
+       
+       for (let event of plans) {
+        if (moment(event.start).day() === weekDayAhead) {
+          let newStart = moment(datesAhead).format().slice(0,10) + event.start.slice(10,);
+          let newEnd = moment(datesAhead).format().slice(0,10) + event.end.slice(10,)
+          event.start = newStart;
+          event.end = newEnd;
+        }
+       }
+    }
+    return plans;
+  }
+  processKeywords(keywords) {
+    let newKeywordsList = keywords;
+    for (let keyword of newKeywordsList) {
+      keyword.color = "UNDEFINED"
+    }
+    return newKeywordsList;
+  }
   processUserEvents = () => {
     for (let event of this.userPlans) {
       if (event.title && !event.isDeleted) {
@@ -616,7 +669,7 @@ export class PlanOnCalendar extends React.Component {
     // console.log("this.state.startTime",this.state.startTime);
   };
   //Plan the activity and show it on the calendar and the list view, update the new activity on Firebase
-  onPlanBtnPressed = async () => {
+  onPlanBtnPressed = async (preEvent) => {
     // if (!(this.state.isStartTimeSelected && this.state.isEndTimeSelected)) {
     //   showMessage({
     //     message: "Please specify the time",
@@ -626,34 +679,38 @@ export class PlanOnCalendar extends React.Component {
     //   });
     //   return;
     // }
-    if (!this.state.isDateSelected) {
-      showMessage({
-        message: "Please specify the date",
-        description: "The date field is empty",
-        type: "warning",
-        icon: "warning",
-      });
-      return;
+    if (!this.isDataFromTracking) {
+      if (!this.state.isDateSelected) {
+        showMessage({
+          message: "Please specify the date",
+          description: "The date field is empty",
+          type: "warning",
+          icon: "warning",
+        });
+        return;
+      }
+      if (!this.state.isActivityTypeSelected) {
+        showMessage({
+          message: "Please specify the activity first",
+          description: "The activity type field is empty",
+          type: "warning",
+          icon: "warning",
+        });
+        return;
+      }
+      if (!(this.state.isEndTimeValid && this.state.isStartTimeValid)) {
+        showMessage({
+          message: "Time range is not valid",
+          description: "Please reset the time range",
+          type: "warning",
+          icon: "warning",
+        });
+        return;
+      }
+      this._panel.hide();
     }
-    if (!this.state.isActivityTypeSelected) {
-      showMessage({
-        message: "Please specify the activity first",
-        description: "The activity type field is empty",
-        type: "warning",
-        icon: "warning",
-      });
-      return;
-    }
-    if (!(this.state.isEndTimeValid && this.state.isStartTimeValid)) {
-      showMessage({
-        message: "Time range is not valid",
-        description: "Please reset the time range",
-        type: "warning",
-        icon: "warning",
-      });
-      return;
-    }
-    this._panel.hide();
+
+    
     let selectedDate = this.state.selectedDate;
     // console.log("selectedDate on pressed",selectedDate);
     // let isPlanDuplicated = false;
@@ -706,11 +763,20 @@ export class PlanOnCalendar extends React.Component {
       color: "white",
       title: activityName,
     };
+    console.log("preEvent",preEvent);
+    if (preEvent) {
+      newEvent = preEvent;
+    }
 
     let timeStamp = moment(new Date()).format();
     newEvent.timeStamp = timeStamp;
-    newEvent.key = timeStamp;
+    if (preEvent) {
+      newEvent.key = timeStamp + preEvent.key;
+    } else {
+      newEvent.key = timeStamp;
+    }
 
+    console.log("newEvent",newEvent);
     let weatherList = [];
     // console.log("moment.getMonth(selectedDate)",moment(selectedDate).month());
     // console.log("moment.getMonth(new Date())",moment(new Date()).month());
@@ -756,7 +822,7 @@ export class PlanOnCalendar extends React.Component {
 
     let formattedThisMonth = parseInt(moment(new Date()).format().slice(5, 7));
     let formattedSelectedMonth = parseInt(
-      moment(this.state.selectedDateRaw).format().slice(5, 7)
+      moment(newEvent.start).format().slice(5, 7)
     );
     if (formattedSelectedMonth === formattedThisMonth) {
       this.combinedEventListThis.push(newEvent);
@@ -1864,7 +1930,7 @@ export class PlanOnCalendar extends React.Component {
                     " MIN";
 
                   return (
-                    <View
+                    <TouchableOpacity
                       style={[
                         {
                           width: "100%",
@@ -1879,6 +1945,21 @@ export class PlanOnCalendar extends React.Component {
                           marginTop: 5,
                         },
                       ]}
+                      onPress = {() => {
+                        console.log("pressed on activity list",item);
+                        this.setState({isChangePlanModalVis:true});
+                        this.onReportActivity = item;
+
+                        this.setState({ reportTitle: item.title });
+                        this.setState({ reportStart: item.start });
+                        this.setState({ reportEnd: item.end });
+                        this.setState({ reportDuration: item.duration });
+                        let selectedDay = new Date(
+                          moment(item.start).add(1, "d").format("YYYY-MM-DD")
+                        );
+                        this.setState({ selectedDate: selectedDay });
+                        this.setState({ dateTimePickerDate: selectedDay });
+                      }}
                     >
                       <Text
                         style={{
@@ -1908,7 +1989,7 @@ export class PlanOnCalendar extends React.Component {
                           color="black"
                         />
                       </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
                   );
                 }
                 // console.log("items in plansBuddle", item);
@@ -2285,6 +2366,271 @@ export class PlanOnCalendar extends React.Component {
         </View>
       </View>
     );
+    let reportScreen_FIVE = (
+			<View
+				style={{ height: "100%", width: "100%", padding: 15, marginTop: 20 }}>
+				<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 16 }}>
+					Modify the activity as below:
+				</Text>
+				<View
+					style={{
+						width: "100%",
+						height: 5,
+						backgroundColor: "black",
+						borderRadius: 10,
+						marginTop: 10,
+						marginBottom: 30,
+					}}></View>
+				{/* First Row of Activity Selection */}
+				<View
+					style={{
+						flexDirection: "row",
+						justifyContent: "space-between",
+						alignItems: "center",
+						paddingHorizontal: "5%",
+						paddingVertical: "2%",
+						height: 90,
+						width: "100%",
+						borderColor: "#DADADA",
+						borderWidth: 2,
+						borderRadius: 20,
+						marginTop: "2%",
+					}}>
+					<View
+						style={{
+							justifyContent: "space-between",
+							alignItems: "center",
+							height: "100%",
+							width: "50%",
+							paddingVertical: "2%",
+							paddingHorizontal: "2%",
+						}}>
+						<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 12 }}>
+							Activity
+						</Text>
+						<View
+							style={{
+								backgroundColor: "black",
+								borderRadius: 40,
+								height: "50%",
+								width: "100%",
+								justifyContent: "center",
+								alignItems: "center",
+							}}>
+							<ModalSelector
+								style={{ borderWidth: 0, borderRadius: 20 }}
+								// touchableStyle={{ color: "white" }}
+								optionContainerStyle={[
+									generalStyles.shadowStyle,
+									{
+										borderWidth: 0,
+										backgroundColor: "white",
+										borderColor: "grey",
+										// borderWidth: 2,
+										borderRadius: 15,
+									},
+								]}
+								selectStyle={{ borderWidth: 0 }}
+								selectTextStyle={{
+									textAlign: "center",
+									color: "white",
+									fontWeight: "bold",
+									borderRadius: 20,
+									fontSize: 12,
+								}}
+								initValueTextStyle={{
+									textAlign: "center",
+									color: "white",
+									fontWeight: "bold",
+									backgroundColor: "black",
+									borderRadius: 20,
+									fontSize: 12,
+								}}
+								backdropPressToClose={true}
+								overlayStyle={{
+									flex: 1,
+									padding: "5%",
+									justifyContent: "center",
+									backgroundColor: "rgba(0,0,0,0)",
+									borderRadius: 20,
+								}}
+								optionTextStyle={{
+									fontWeight: "bold",
+									fontFamily: "RobotoBoldBlack",
+								}}
+								sectionTextStyle={{
+									fontWeight: "bold",
+									fontFamily: "RobotoBoldItalic",
+								}}
+								cancelStyle={{
+									backgroundColor: "black",
+									borderRadius: 15,
+								}}
+								cancelTextStyle={{ fontWeight: "bold", color: "white" }}
+								data={this.state.activityData}
+								initValue={this.onReportActivity.title}
+								onChange={async (item) => {
+									this.setState({ isActivityTypeSelected: true });
+									this.setState({ selectedActivity: item.label });
+									this.setState({ reportTitle: item.label });
+									// await this.activityFilter(item);
+								}}
+							/>
+						</View>
+					</View>
+					<View
+						style={{
+							justifyContent: "space-between",
+							alignItems: "center",
+							height: "100%",
+							width: "50%",
+							paddingVertical: "2%",
+							paddingHorizontal: "2%",
+						}}>
+						<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 12 }}>
+							Self-Defined Activity
+						</Text>
+						{/* Add New Activity Text Field */}
+						<View
+							style={{
+								backgroundColor: "white",
+								height: "50%",
+								borderRadius: 20,
+								borderWidth: 2,
+								borderColor: "black",
+								marginRight: 0,
+								flexDirection: "row",
+								alignItems: "center",
+								justifyContent: "space-between",
+							}}>
+							<TextInput
+								style={{
+									fontSize: 16,
+									marginLeft: 5,
+									width: "100%",
+									textAlign: "center",
+									fontFamily: "RobotoBoldItalic",
+								}}
+								ref={(input) => {
+									this.textInput = input;
+								}}
+								placeholder="new activity"
+								value={this.state.userDefinedActivityText}
+								onChangeText={(text) =>
+									this.setState({ userDefinedActivityText: text })
+								}></TextInput>
+							<View
+								style={{
+									margin: 1,
+									justifyContent: "center",
+									position: "absolute",
+									marginRight: 1,
+								}}>
+								<TouchableOpacity
+									style={{ alignItems: "center", justifyContent: "center" }}
+									onPress={this.addNewActivityBtnPressed}>
+									<Ionicons
+										name="ios-add-circle"
+										size={25}
+										color={"black"}
+										// style={{flex:0.1}}
+									/>
+								</TouchableOpacity>
+							</View>
+						</View>
+					</View>
+				</View>
+				{/* Time Picker */}
+				<View
+					style={{
+						flexDirection: "row",
+						justifyContent: "space-between",
+						alignItems: "center",
+						// paddingHorizontal: "5%",
+
+						height: 80,
+						width: "100%",
+						borderColor: "#DADADA",
+						backgroundColor: "#F0F0F0",
+						borderWidth: 2,
+						borderRadius: 20,
+						marginTop: "2%",
+					}}>
+					<View
+						style={{
+							flex: 1,
+							height: "100%",
+							alignItems: "center",
+							justifyContent: "space-between",
+							paddingVertical: "4%",
+						}}>
+						<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
+							From
+						</Text>
+						<View
+							style={{
+								justifyContent: "center",
+								alignItems: "center",
+								height: 40,
+								width: "100%",
+								backgroundColor: "#F0F0F0",
+								borderTopLeftRadius: 5,
+								borderBottomLeftRadius: 5,
+							}}>
+							<DateTimePicker
+								value={new Date()}
+								mode="spinner"
+								minuteInterval={10}
+								is24Hour={true}
+								display="default"
+								onChange={async (e, date) => this.pickStartTime(date)}
+								style={{
+									width: 90,
+									height: 40,
+									flex: 1,
+								}}
+							/>
+						</View>
+					</View>
+					<View
+						style={{
+							flex: 1,
+							height: "100%",
+							alignItems: "center",
+							justifyContent: "space-between",
+							paddingVertical: "4%",
+						}}>
+						<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
+							To
+						</Text>
+						<View
+							style={{
+								justifyContent: "center",
+								alignItems: "center",
+								height: 40,
+								width: "100%",
+								backgroundColor: "#F0F0F0",
+								borderTopRightRadius: 5,
+								borderBottomRightRadius: 5,
+							}}>
+							<DateTimePicker
+								value={new Date()}
+								mode="spinner"
+								minuteInterval={10}
+								is24Hour={true}
+								display="default"
+								onChange={async (e, date) => this.pickEndTime(date)}
+								style={{
+									width: 90,
+									height: 40,
+									flex: 1,
+								}}
+							/>
+						</View>
+					</View>
+				</View>
+			</View>
+		);
     let slideUpPanel = (
       // <KeyboardAvoidingView
       //   behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -2660,6 +3006,138 @@ export class PlanOnCalendar extends React.Component {
               </ScrollView>
             </View>
           </Modal>
+          {/* Change plan popup modal */}
+					<RNModal
+						animationType="slide"
+						// propagateSwipe={true}
+						visible={this.state.isChangePlanModalVis}
+						style={{
+							justifyContent: "flex-start",
+							alignItems: "center",
+							marginTop: "75%",
+						}}
+						presentationStyle="overFullScreen"
+						transparent={true}
+					>
+						<View
+							style={{
+								width: "100%",
+								height: "100%",
+								justifyContent: "center",
+								alignItems: "center",
+							}}>
+							<View
+								style={[
+									generalStyles.shadowStyle,
+									{
+										width: "90%",
+										height: "50%",
+										borderRadius: 20,
+										backgroundColor: "white",
+										justifyContent: "flex-start",
+										alignItems: "center",
+                    flexDirection:"column"
+									},
+								]}>
+								<View
+									style={{
+										flexDirection: "row",
+										justifyContent: "space-between",
+										alignItems: "center",
+										marginTop: 10,
+										width: "95%",
+										// marginBottom: 10,
+									}}>
+                    									<Text
+										style={{
+											fontFamily: "RobotoBoldItalic",
+											fontSize: 20,
+											marginLeft: 10,
+										}}>
+										Modify Activity
+									</Text>
+									<TouchableOpacity
+										onPress={() => {
+											// this.onDailyReportClose();
+                      this.setState({isChangePlanModalVis:false})
+											// this.reportModalSwiperRef.current.scrollBy(2, true);
+										}}>
+										<AntDesign name="closecircle" size={24} color="black" />
+									</TouchableOpacity>
+								</View>
+								<View
+									style={[
+										generalStyles.shadowStyle,
+										{
+											width: "90%",
+											height: 60,
+											borderRadius: 20,
+											borderColor: "black",
+											borderWidth: 1,
+											paddingHorizontal: 6,
+											flexDirection: "row",
+											alignItems: "center",
+											justifyContent: "space-between",
+											marginTop: 15,
+											backgroundColor: "white",
+											flexDirection: "column",
+											paddingVertical: 6,
+											display: this.state.reportDetailInfoVis,
+										},
+									]}>
+									<View
+										style={{
+											flexDirection: "row",
+											justifyContent: "space-between",
+											width: "100%",
+										}}>
+										<Text
+											style={{
+												fontFamily: "RobotoBoldBold",
+												fontSize: 18,
+												paddingLeft: 8,
+												color: "black",
+											}}>
+											{this.state.reportTitle}
+											{" | "}
+											<Text
+												style={{
+													fontFamily: "RobotoRegular",
+													fontSize: 16,
+												}}>
+												{moment(this.onReportActivity.start)
+													.format()
+													.slice(5, 10)}
+											</Text>
+										</Text>
+									</View>
+									<Text
+										style={{
+											fontFamily: "RobotoRegular",
+											fontSize: 14,
+											width: "100%",
+											paddingLeft: 8,
+										}}>
+										{
+											moment(this.state.reportStart)
+												.format("ddd")
+												.toUpperCase() +
+												" " +
+												this.state.reportStart.slice(11, 16) +
+												" - " +
+												this.state.reportEnd.slice(11, 16)
+											// +
+											// " | " +
+											// this.state.reportDuration +
+											// " MIN"
+										}
+									</Text>
+								</View>			
+									{reportScreen_FIVE}
+								{/* <View style={{width:"90%", height:"50%"}}> */}
+							</View>
+						</View>
+					</RNModal>
           {/* Plan Detail View */}
           <Modal
             propagateSwipe={true}
