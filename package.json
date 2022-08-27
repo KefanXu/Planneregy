@@ -20,6 +20,7 @@
     "expo": "~44.0.0",
     "expo-application": "^4.0.2",
     "expo-auth-session": "~3.5.0",
+    "expo-blur": "~11.0.0",
     "expo-font": "~10.0.4",
     "expo-location": "~14.0.1",
     "expo-notifications": "~0.14.0",

@@ -42,6 +42,8 @@ import { AntDesign } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
+import { Entypo } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from '@expo/vector-icons'; 
 
 //Load interactive component libraries
 import SlidingUpPanel from "rn-sliding-up-panel";
@@ -62,6 +64,8 @@ import RemovableChips from "react-native-chip/RemovableChips";
 import Onboarding from "react-native-onboarding-swiper";
 import Swiper from "react-native-swiper";
 import { Badge } from "react-native-ui-lib";
+import { BlurView } from "expo-blur";
+
 // import * as Progress from 'react-native-progress';
 
 //Load functional libraries
@@ -88,6 +92,11 @@ let TEST_DATA = [
 	"Outdoor",
 	"Gym",
 ];
+let COLORS = {
+	"YELLOW":"#FFB800",
+	"GREEN":"#1AB700",
+	"UNDEFINED":"black"
+}
 
 let TEST_DATA2 = [
 	{ title: "Light Exercise", id: 1 },
@@ -176,7 +185,7 @@ const EVALUATIONSCREEN_FOUR = [
 ];
 const EVALUATIONSCREEN_FIVE = [
 	{ label: "Yes, I'll retry a previous strategy", value: "Yes" },
-	{ label: "No, I'll reset all plans", value: "No" },
+	{ label: "No, I'll start from scratch", value: "No" },
 ];
 
 const GREEN = "#1AB700";
@@ -191,6 +200,7 @@ export class TrackingPage extends React.Component {
 		//Load users' basic info from BeforeLoginScreen.js
 		this.isFromPlanSetUp = this.props.route.params.isFromPlanSetUp;
 		this.userEmail = this.props.route.params.userEmail;
+		this.userInfo = this.props.route.params.userInfo;
 		this.userKey = this.props.route.params.userInfo.key;
 		this.userPlans = this.props.route.params.userInfo.userPlans;
 		this.userStrategies = this.props.route.params.userStrategies;
@@ -376,9 +386,9 @@ export class TrackingPage extends React.Component {
 			//Daily report collections
 			preList: this.preList,
 			//Daily report collection visibility
-			isDailyReportVis: "none",
+			isDailyReportVis: "flex",
 			//Activity records collection visibility
-			isActivityRecordsVis: "flex",
+			isActivityRecordsVis: "none",
 			//report status: check the type of the report user submit
 			reportStatus: "default",
 			//calendar view height
@@ -428,7 +438,13 @@ export class TrackingPage extends React.Component {
 			valueForReload: 0,
 			//Popup previous strategy modal
 			isPreStrategyVis: false,
-			isPanelVis:"none"
+			isPanelVis: "none",
+			//Review popup vis
+			isReviewPopVis: false,
+			//is SelectStrategy popup disabled
+			isSelectStrategyDisable:false,
+			//is Review button disabled
+			isReviewBtnDisabled:false
 		};
 		this.processUserStrategies();
 		// this.processDailyReports_after();
@@ -447,6 +463,8 @@ export class TrackingPage extends React.Component {
 		// console.log("componentDidMount");
 	}
 	evaluatePanelPopup = async () => {
+		this.setState({isSelectStrategyDisable:true});
+		this.setState({isReviewBtnDisabled:true})
 		if (this.state.evaluatePanelDisplay === "none") {
 			this.setState({ evaluatePanelDisplay: "flex" });
 			this.setState({ swipeAblePanelDisplay: "none" });
@@ -635,7 +653,6 @@ export class TrackingPage extends React.Component {
 			// console.log("psh wrong report");
 			this.preList.push(dailyReport);
 
-			console.log("push daily report1", report);
 		} else {
 			if (isReportPopup) {
 				console.log("psh wrong report");
@@ -3328,9 +3345,9 @@ export class TrackingPage extends React.Component {
 		}
 		let percentageDuration = (accDuration / 150).toFixed(2);
 		if (percentageDuration) {
-			return [percentageDuration,accDuration];
+			return [percentageDuration, accDuration];
 		} else {
-			return [0,0];
+			return [0, 0];
 		}
 	};
 	calculateComplete = () => {
@@ -3388,6 +3405,68 @@ export class TrackingPage extends React.Component {
 		}
 		return accDuration;
 	};
+	onNextButtonPressedReviewScreen = () => {
+		if (this.state.evaluationPage_Index === 2) {
+			// this.submitStrategyEvaluation();
+			this.evaluationSwipeRef.current.goNext();
+		} else if (this.state.evaluationPage_Index === 3) {
+			if (this.state.evaluationPage_FOUR_value === "Yes") {
+				this.evaluationSwipeRef.current.goNext();
+			} else {
+				// "Direct to new tracking page with same plans"
+				this.submitStrategyEvaluation();
+				this.props.navigation.navigate("PlanOnCalendar", {
+					userEmail: this.userEmail,
+					userInfo: this.userInfo,
+					userStrategies: this.userStrategies,
+					eventsLastMonth: this.eventsLastMonth,
+					eventsThisMonth: this.eventsThisMonth,
+					eventsNextMonth: this.eventsNextMonth,
+					fullEventList: this.fullEventList,
+					lastMonthWeather: this.lastMonthWeather,
+					thisMonthWeather: this.thisMonthWeather,
+					nextMonthWeather: this.nextMonthWeather,
+					userActivityList: this.props.route.params.userActivityList,
+					keywords:this.currentStrategy.keywords,
+					plans:this.currentStrategy.plans,
+					title:this.currentStrategy.title,
+					// isFromPlanSetUp: false
+				  });
+
+			}
+		} else if (this.state.evaluationPage_Index === 4) {
+			if (this.state.evaluationPage_FIVE_value === "Yes") {
+				this.evaluationSwipeRef.current.goNext();
+			} else {
+				//Start from scratch
+				this.submitStrategyEvaluation();
+				this.props.navigation.navigate("PlanOnCalendar", {
+					userEmail: this.userEmail,
+					userInfo: this.userInfo,
+					userStrategies: this.userStrategies,
+					eventsLastMonth: this.eventsLastMonth,
+					eventsThisMonth: this.eventsThisMonth,
+					eventsNextMonth: this.eventsNextMonth,
+					fullEventList: this.fullEventList,
+					lastMonthWeather: this.lastMonthWeather,
+					thisMonthWeather: this.thisMonthWeather,
+					nextMonthWeather: this.nextMonthWeather,
+					userActivityList: this.props.route.params.userActivityList,
+					// isFromPlanSetUp: false
+				  });
+			}
+		} else {
+			this.evaluationSwipeRef.current.goNext();
+		}
+	}
+	submitStrategyEvaluation = () => {
+		let strategyToUpdate = this.currentStrategy;
+		strategyToUpdate.keywords = this.state.keywordsBuddle;
+		strategyToUpdate.rating = this.state.satisfactionScoreEV;
+		// console.log("strategyToUpdate",strategyToUpdate);
+		this.dataModel.updateStrategy(this.userKey, strategyToUpdate);
+	}
+	con
 
 	render() {
 		let firstSlidePanelPage = (
@@ -3944,8 +4023,10 @@ export class TrackingPage extends React.Component {
 									paddingHorizontal: 10,
 								},
 							]}
+						
 							onPress={() => {
 								this.evaluatePanelPopup();
+								// this.setState({isReviewBtnDisabled:true})
 								this.mainContentSwiperRef.current.goToPage(1, true);
 								// this.panelSwiperRef.current.goToPage(0, true);
 							}}>
@@ -4840,11 +4921,40 @@ export class TrackingPage extends React.Component {
                 /> */}
 							</ScrollView>
 						</TouchableOpacity>
+						<TouchableOpacity
+							style={{
+								position: "absolute",
+								borderBottomRightRadius: 18,
+								borderTopRightRadius: 18,
+								left: 250,
+								top: 0,
+								bottom: 0,
+								right: 0,
+								backgroundColor: "white",
+								borderColor: GREEN,
+								borderLeftWidth: 2,
+								justifyContent:"space-between",
+								alignItems:"center",
+								paddingVertical:15
+							}}
+							disabled={this.state.isReviewBtnDisabled}
+
+							onPress={() => {
+								this.setState({ isPanelVis: "flex" });
+								this.evaluatePanelPopup();
+								this.mainContentSwiperRef.current.goToPage(1, true);
+								// this.setState({isReviewPopVis:true})
+								// this.panelSwiperRef.current.goToPage(0, true);
+							}}
+							>
+								<FontAwesome5 name="flag-checkered" size={18} color={GREEN} />
+								<Text style={{fontFamily:"RobotoBoldItalic", color:GREEN, fontSize:18}}>Review</Text>
+							</TouchableOpacity>
 					</View>
 					<View
 						style={{
 							width: "90%",
-							marginTop: 15,
+							marginTop: 30,
 							flexDirection: "row",
 							justifyContent: "space-between",
 						}}>
@@ -4900,7 +5010,7 @@ export class TrackingPage extends React.Component {
 								color: "white",
 							}}
 							borderWidth={0}
-							initial={0}
+							initial={1}
 							onPress={(value) => {
 								if (value == "daily") {
 									this.setState({ isDailyReportVis: "flex" });
@@ -5205,7 +5315,9 @@ export class TrackingPage extends React.Component {
 							</View>
 						</View>
 						<TouchableOpacity
-							onPress={() => this.setState({ isPreStrategyVis: true })}>
+							onPress={() => this.setState({ isPreStrategyVis: true })}
+							disabled={this.state.isSelectStrategyDisable}
+							>
 							<Ionicons name="list-circle" size={26} color="black" />
 						</TouchableOpacity>
 					</View>
@@ -5314,15 +5426,14 @@ export class TrackingPage extends React.Component {
 											height: "20%",
 											flexDirection: "row",
 										}}>
-										<Ionicons name="heart-circle" size={15} color="black" />
-
+											<AntDesign name="like1" size={15} color="black" />
 										<Text
 											style={{
 												fontFamily: "RobotoBoldBold",
 												fontSize: 12,
 												marginLeft: 2,
 											}}>
-											Satisfaction
+											Rating
 										</Text>
 									</View>
 									<View
@@ -5433,7 +5544,7 @@ export class TrackingPage extends React.Component {
 												style={{
 													height: 25,
 													borderRadius: 20,
-													backgroundColor: "black",
+													backgroundColor: item.color?COLORS[item.color]:"black",
 													justifyContent: "space-between",
 													alignItems: "center",
 													alignSelf: "center",
@@ -5465,6 +5576,7 @@ export class TrackingPage extends React.Component {
 									}}>
 									<View style={{ flexDirection: "row" }}>
 										<MaterialIcons name="event-note" size={15} color="black" />
+										<View style={{flexDirection:"column"}}>
 										<Text
 											style={{
 												fontWeight: "bold",
@@ -5473,6 +5585,15 @@ export class TrackingPage extends React.Component {
 											}}>
 											Activity Plan Records
 										</Text>
+										<Text
+											style={{
+												// fontWeight: "bold",
+												fontSize: 10,
+												marginLeft: "5%",
+											}}>
+											Average Satisfaction: {this.calculateSatisfaction()}
+										</Text>
+										</View>
 									</View>
 								</View>
 								<FlatList
@@ -5838,10 +5959,13 @@ export class TrackingPage extends React.Component {
 					<View
 						style={{
 							flexDirection: "row",
+							width:"100%",
+
 							flexWrap: "wrap",
 							alignItems: "center",
-							marginTop: "5%",
+							marginTop: "20%",
 							paddingHorizontal: "1%",
+							// backgroundColor:"red"
 						}}>
 						{this.state.keywordsBuddle.map((item) => {
 							let isColored = false;
@@ -5937,7 +6061,7 @@ export class TrackingPage extends React.Component {
 							flexDirection: "row",
 							flexWrap: "wrap",
 							alignItems: "center",
-							marginTop: "5%",
+							marginTop: "20%",
 							paddingHorizontal: "5%",
 						}}>
 						{this.state.keywordsBuddle.map((item) => {
@@ -6007,7 +6131,7 @@ export class TrackingPage extends React.Component {
 				}}>
 				<View style={{ marginTop: "10%" }}>
 					<Text style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}>
-						How satisfied are you with this planning strategy?
+						How would you rate this planning strategy (see details above)?
 					</Text>
 				</View>
 				<View
@@ -7012,7 +7136,7 @@ export class TrackingPage extends React.Component {
 							alignItems: "center",
 							borderRadius: 20,
 							backgroundColor: "white",
-							display:this.state.isPanelVis
+							display: this.state.isPanelVis,
 						},
 					]}>
 					<TouchableOpacity
@@ -7241,23 +7365,7 @@ export class TrackingPage extends React.Component {
 								<TouchableOpacity
 									style={{ width: "100%", padding: "5%" }}
 									onPress={() => {
-										if (this.state.evaluationPage_Index === 3) {
-											if (this.state.evaluationPage_FOUR_value === "Yes") {
-												this.evaluationSwipeRef.current.goNext();
-											} else {
-												console.log(
-													"Direct to new tracking page with same plans"
-												);
-											}
-										} else if (this.state.evaluationPage_Index === 4) {
-											if (this.state.evaluationPage_FIVE_value === "Yes") {
-												this.evaluationSwipeRef.current.goNext();
-											} else {
-												console.log("Direct to plan set up");
-											}
-										} else {
-											this.evaluationSwipeRef.current.goNext();
-										}
+										this.onNextButtonPressedReviewScreen();
 									}}>
 									<Text
 										style={{
@@ -7272,7 +7380,7 @@ export class TrackingPage extends React.Component {
 							DoneButtonComponent={() => (
 								<TouchableOpacity
 									style={{ width: "100%", padding: "5%" }}
-									onPress={() => {}}>
+									onPress={() => {console.log("selected previous strategy to go");}}>
 									<Text
 										style={{
 											fontFamily: "RobotoBoldBlack",
@@ -9290,7 +9398,14 @@ export class TrackingPage extends React.Component {
 									borderRadius: 15,
 								},
 							]}>
-							<View style={{ height: "100%", width: "100%", flexDirection:"column", justifyContent:"space-between", paddingVertical:15 }}>
+							<View
+								style={{
+									height: "100%",
+									width: "100%",
+									flexDirection: "column",
+									justifyContent: "space-between",
+									paddingVertical: 15,
+								}}>
 								<TouchableOpacity
 									style={{ position: "absolute", top: 3, right: 3, zIndex: 1 }}
 									onPress={() => {
@@ -9300,25 +9415,29 @@ export class TrackingPage extends React.Component {
 									}}>
 									<AntDesign name="closecircle" size={24} color="black" />
 								</TouchableOpacity>
-								<View style={{justifyContent:"flex-start",flexDirection:"column"}}>
-								<Text
+								<View
 									style={{
-										fontFamily: "RobotoBoldItalic",
-										fontSize: 18,
-										textAlign: "left",
-										marginLeft: "5%",
+										justifyContent: "flex-start",
+										flexDirection: "column",
 									}}>
-									My Strategies Records
-								</Text>
-								<Text
-									style={{
-										fontFamily: "RobotoBoldBold",
-										fontSize: 12,
-										textAlign: "left",
-										marginLeft: "5%",
-									}}>
-									Select one to see details 
-								</Text>
+									<Text
+										style={{
+											fontFamily: "RobotoBoldItalic",
+											fontSize: 18,
+											textAlign: "left",
+											marginLeft: "5%",
+										}}>
+										My Strategies Records
+									</Text>
+									<Text
+										style={{
+											fontFamily: "RobotoBoldBold",
+											fontSize: 12,
+											textAlign: "left",
+											marginLeft: "5%",
+										}}>
+										Select one to see details
+									</Text>
 								</View>
 								<ScrollView
 									style={{
@@ -9407,7 +9526,7 @@ export class TrackingPage extends React.Component {
 													onPress={async () =>
 														// this.setState({ isStrategyDetailModalVis: true })
 														{
-															this.setState({ isPreStrategyVis: false })
+															this.setState({ isPreStrategyVis: false });
 															setTimeout(() => {
 																this._panel.hide();
 															});
@@ -9992,6 +10111,39 @@ export class TrackingPage extends React.Component {
 						</View>
 					</View>
 				</RNModal>
+				{/* Review Popup */}
+				<RNModal
+					animationType="slide"
+					visible={this.state.isReviewPopVis}
+					// propagateSwipe={true}
+					// isVisible={this.state.isPlanDetailModalVis}
+					style={{
+						justifyContent: "center",
+						alignItems: "center",
+
+						// marginBottom: 100,
+					}}
+					presentationStyle="overFullScreen"
+					transparent={true}
+					// hasBackdrop={true}
+					// backdropOpacity={0}
+					// onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
+					// onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
+					// swipeDirection="down"
+				>
+					<BlurView
+						intensity={30}
+						style={{
+							position: "absolute",
+							top: 0,
+							left: 0,
+							right: 0,
+							bottom: 0,
+						}}>
+						<Text>Blue</Text>
+					</BlurView>
+				</RNModal>
+
 				{/* Confirmation Page */}
 				{/* <View
           style={{
@@ -10022,19 +10174,190 @@ export class TrackingPage extends React.Component {
             {summaryPage}
             {finalConfirmationPage}
           </Swiper> */}
+					<View
+						style={[
+							{
+								width: "100%",
+								height: 30,
+								position: "absolute",
+								bottom: 30,
+								backgroundColor: "transparent",
+								zIndex: 1,
+								justifyContent: "space-between",
+								alignItems: "center",
+								flexDirection: "row",
+								paddingHorizontal: "5%",
+							},
+						]}>
+						<TouchableOpacity
+							style={[
+								// generalStyles.shadowStyle,
+								{
+									backgroundColor: "white",
+									justifyContent: "center",
+									alignItems: "center",
+									borderRadius: 20,
+									height: 30,
+									width: 100,
+								},
+							]}
+							onPress={async () => {
+								this.mainContentSwiperRef.current.goToPage(0, true);
+								this.setState({ selectedStrategy: this.currentStrategy });
+								this.setState({
+									selectedKeywords: this.currentStrategy.keywords,
+								});
+								this.setState({
+									selectedStrategyPlans: this.currentStrategy.plans,
+								});
+								this.setState({
+									title: "Tracking",
+								});
+								this.setState({ selectedStrategyDate: "" });
+								if (this.state.currentMonth != "THIS_MONTH") {
+									this.resetCalendarToCurrentMonth();
+								}
+
+								this.setState({
+									selectedStrategyDate: this.currentStrategy.startDate,
+								});
+								this.setState({
+									monthCalStrategyStartDate: this.currentStrategy.startDate,
+								});
+								let eventDate = new Date(this.currentStrategy.startDate);
+								await this.setState({ selectedDateRaw: eventDate });
+								await this.setState({
+									currentMonthDate: this.state.selectedDateRaw,
+								});
+								this.scrollToThisWeek();
+							}}>
+							<Entypo name="home" size={24} color="black" />
+						</TouchableOpacity>
+						{/* <TouchableOpacity
+							style={[
+								generalStyles.shadowStyle,
+								{
+									width: 100,
+									height: 40,
+									backgroundColor: "white",
+									borderRadius: 20,
+									flexDirection: "row",
+									justifyContent: "space-between",
+									alignItems: "center",
+									paddingHorizontal: 15,
+									marginBottom: 30,
+								},
+							]}
+							onPress={() => {
+								this.setState({ isPanelVis: "flex" });
+								this.evaluatePanelPopup();
+								this.mainContentSwiperRef.current.goToPage(1, true);
+							}}>
+							<FontAwesome5 name="flag-checkered" size={18} color={GREEN} />
+							<Text
+								style={{
+									fontFamily: "RobotoBoldItalic",
+									fontSize: 14,
+									color: GREEN,
+								}}>
+								Review
+							</Text>
+						</TouchableOpacity> */}
+						<TouchableOpacity
+							style={[
+								// generalStyles.shadowStyle,
+								{
+									backgroundColor: "white",
+									justifyContent: "center",
+									alignItems: "center",
+									borderRadius: 20,
+									height: 30,
+									width: 100,
+								},
+							]}
+							onPress={() =>
+								this.mainContentSwiperRef.current.goToPage(1, true)
+							}>
+							<Entypo name="archive" size={24} color="black" />
+						</TouchableOpacity>
+					</View>
 					<Onboarding
 						bottomBarHighlight={false}
 						bottomBarHeight={30}
 						ref={this.mainContentSwiperRef}
-						imageContainerStyles={{height:"100%"}}
+						imageContainerStyles={{ height: "100%" }}
 						showSkip={false}
 						showNext={false}
 						showDone={false}
-						// pageIndexCallback={(index) => {
-						// 	if (this.state.evaluatePanelDisplay === "none") {
-						// 		this.panelSwiperRef.current.goToPage(index, true);
-						// 	}
-						// }}
+						pageIndexCallback={async (index) => {
+							this.setState({ mainContentSwiperDisplay: "flex" });
+							this.setState({ conformationPageDisplay: "none" });
+							this.mainContentSwiperRef.current.goToPage(index, true);
+
+							//
+							this.setState({ displayCalView: "flex" });
+							this.setState({ displayTitle: "flex" });
+							if (index === 1) {
+								this.setState({ panelHeight: 300 });
+								this._panel.hide();
+								this.setState({
+									hideIcon2: (
+										<Ionicons
+											name="chevron-up-circle"
+											size={25}
+											color="black"
+										/>
+									),
+								});
+								this.setState({ isPanelHided: true });
+								this.setState({
+									title: "Strategies",
+								});
+							} else if (index === 0) {
+								this._panel.show();
+								this.setState({
+									hideIcon2: (
+										<Ionicons
+											name="chevron-down-circle"
+											size={25}
+											color="black"
+										/>
+									),
+								});
+								this.setState({ isPanelHided: false });
+								this.onHideDetailPressed2();
+								// this.onHideDetailPressed2();
+								this.setState({ selectedStrategy: this.currentStrategy });
+								this.setState({
+									selectedKeywords: this.currentStrategy.keywords,
+								});
+								this.setState({
+									selectedStrategyPlans: this.currentStrategy.plans,
+								});
+								this.setState({ panelHeight: 250 });
+								this.setState({
+									title: "Tracking",
+								});
+								this.setState({ selectedStrategyDate: "" });
+								// this._panel.hide();
+								if (this.state.currentMonth != "THIS_MONTH") {
+									this.resetCalendarToCurrentMonth();
+								}
+
+								this.setState({
+									selectedStrategyDate: this.currentStrategy.startDate,
+								});
+								this.setState({
+									monthCalStrategyStartDate: this.currentStrategy.startDate,
+								});
+								let eventDate = new Date(this.currentStrategy.startDate);
+								await this.setState({ selectedDateRaw: eventDate });
+								await this.setState({
+									currentMonthDate: this.state.selectedDateRaw,
+								});
+								this.scrollToThisWeek();
+							}
+						}}
 						pages={[
 							{
 								title: "",

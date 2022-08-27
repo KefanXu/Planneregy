@@ -126,7 +126,19 @@ export class PlanOnCalendar extends React.Component {
     this.userKey = this.props.route.params.userInfo.key;
     this.userPlans = this.props.route.params.userInfo.userPlans;
     this.userStrategies = this.props.route.params.userStrategies;
-    // console.log("this.userStrategies",new Date(this.userStrategies));
+
+    //Check if receive data from tracking screen
+    this.plansBuddle = [];
+    this.isDataFromTracking = false;
+    if (this.props.route.params.keywords){
+      let keywords = this.props.route.params.keywords;
+      let plans = this.props.route.params.plans;
+      let title = this.props.route.params.title;
+      
+      this.isDataFromTracking = true;
+      this.plansBuddle = plans
+    }
+    
     //Get data model
     this.dataModel = getDataModel();
 
