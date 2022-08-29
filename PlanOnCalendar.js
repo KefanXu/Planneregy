@@ -2625,7 +2625,7 @@ export class PlanOnCalendar extends React.Component {
 
               let planBuddleToUpdate = this.state.plansBuddle;
               planBuddleToUpdate.sort(function (a, b) {
-                return new Date(b.start) - new Date(a.start);
+                return new Date(a.start) - new Date(b.start);
               });
               await this.setState({plansBuddle:planBuddleToUpdate});
               console.log("this.state.plansBuddle",this.state.plansBuddle);

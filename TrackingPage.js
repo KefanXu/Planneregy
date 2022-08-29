@@ -43,7 +43,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from '@expo/vector-icons'; 
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 //Load interactive component libraries
 import SlidingUpPanel from "rn-sliding-up-panel";
@@ -93,10 +93,10 @@ let TEST_DATA = [
 	"Gym",
 ];
 let COLORS = {
-	"YELLOW":"#FFB800",
-	"GREEN":"#1AB700",
-	"UNDEFINED":"black"
-}
+	YELLOW: "#FFB800",
+	GREEN: "#1AB700",
+	UNDEFINED: "black",
+};
 
 let TEST_DATA2 = [
 	{ title: "Light Exercise", id: 1 },
@@ -174,8 +174,10 @@ const REPORTSCREEN_SEVEN = [
 	{ label: "No", value: "No" },
 ];
 const REPORT_OPTIONS = [
-	{ label: "Records", value: "activity" },
-	{ label: "Reports", value: "daily" },
+	{ label: "Reports", value: "report" },
+	{ label: "Records", value: "records" },
+	{ label: "Overview", value: "overview" },
+
 	// { label: "Both", value: "both" },
 ];
 
@@ -389,6 +391,8 @@ export class TrackingPage extends React.Component {
 			isDailyReportVis: "flex",
 			//Activity records collection visibility
 			isActivityRecordsVis: "none",
+			//Overview visibility
+			isOverviewVis: "none",
 			//report status: check the type of the report user submit
 			reportStatus: "default",
 			//calendar view height
@@ -442,9 +446,12 @@ export class TrackingPage extends React.Component {
 			//Review popup vis
 			isReviewPopVis: false,
 			//is SelectStrategy popup disabled
-			isSelectStrategyDisable:false,
+			isSelectStrategyDisable: false,
 			//is Review button disabled
-			isReviewBtnDisabled:false
+			isReviewBtnDisabled: false,
+			//Color of the bottom icons
+			archiveIconColor:"grey",
+			homeIconColor:"black"
 		};
 		this.processUserStrategies();
 		// this.processDailyReports_after();
@@ -463,8 +470,8 @@ export class TrackingPage extends React.Component {
 		// console.log("componentDidMount");
 	}
 	evaluatePanelPopup = async () => {
-		this.setState({isSelectStrategyDisable:true});
-		this.setState({isReviewBtnDisabled:true})
+		this.setState({ isSelectStrategyDisable: true });
+		this.setState({ isReviewBtnDisabled: true });
 		if (this.state.evaluatePanelDisplay === "none") {
 			this.setState({ evaluatePanelDisplay: "flex" });
 			this.setState({ swipeAblePanelDisplay: "none" });
@@ -652,7 +659,6 @@ export class TrackingPage extends React.Component {
 		if (!isReportExist) {
 			// console.log("psh wrong report");
 			this.preList.push(dailyReport);
-
 		} else {
 			if (isReportPopup) {
 				console.log("psh wrong report");
@@ -3427,12 +3433,11 @@ export class TrackingPage extends React.Component {
 					thisMonthWeather: this.thisMonthWeather,
 					nextMonthWeather: this.nextMonthWeather,
 					userActivityList: this.props.route.params.userActivityList,
-					keywords:this.currentStrategy.keywords,
-					plans:this.currentStrategy.plans,
-					title:this.currentStrategy.title,
+					keywords: this.currentStrategy.keywords,
+					plans: this.currentStrategy.plans,
+					title: this.currentStrategy.title,
 					// isFromPlanSetUp: false
-				  });
-
+				});
 			}
 		} else if (this.state.evaluationPage_Index === 4) {
 			if (this.state.evaluationPage_FIVE_value === "Yes") {
@@ -3453,19 +3458,19 @@ export class TrackingPage extends React.Component {
 					nextMonthWeather: this.nextMonthWeather,
 					userActivityList: this.props.route.params.userActivityList,
 					// isFromPlanSetUp: false
-				  });
+				});
 			}
 		} else {
 			this.evaluationSwipeRef.current.goNext();
 		}
-	}
+	};
 	submitStrategyEvaluation = () => {
 		let strategyToUpdate = this.currentStrategy;
 		strategyToUpdate.keywords = this.state.keywordsBuddle;
 		strategyToUpdate.rating = this.state.satisfactionScoreEV;
 		// console.log("strategyToUpdate",strategyToUpdate);
 		this.dataModel.updateStrategy(this.userKey, strategyToUpdate);
-	}
+	};
 
 	render() {
 		let firstSlidePanelPage = (
@@ -4022,7 +4027,6 @@ export class TrackingPage extends React.Component {
 									paddingHorizontal: 10,
 								},
 							]}
-						
 							onPress={() => {
 								this.evaluatePanelPopup();
 								// this.setState({isReviewBtnDisabled:true})
@@ -4932,23 +4936,28 @@ export class TrackingPage extends React.Component {
 								backgroundColor: "white",
 								borderColor: GREEN,
 								borderLeftWidth: 2,
-								justifyContent:"space-between",
-								alignItems:"center",
-								paddingVertical:15
+								justifyContent: "space-between",
+								alignItems: "center",
+								paddingVertical: 15,
 							}}
 							disabled={this.state.isReviewBtnDisabled}
-
 							onPress={() => {
 								this.setState({ isPanelVis: "flex" });
 								this.evaluatePanelPopup();
 								this.mainContentSwiperRef.current.goToPage(1, true);
 								// this.setState({isReviewPopVis:true})
 								// this.panelSwiperRef.current.goToPage(0, true);
-							}}
-							>
-								<FontAwesome5 name="flag-checkered" size={18} color={GREEN} />
-								<Text style={{fontFamily:"RobotoBoldItalic", color:GREEN, fontSize:18}}>Review</Text>
-							</TouchableOpacity>
+							}}>
+							<FontAwesome5 name="flag-checkered" size={18} color={GREEN} />
+							<Text
+								style={{
+									fontFamily: "RobotoBoldItalic",
+									color: GREEN,
+									fontSize: 18,
+								}}>
+								Review
+							</Text>
+						</TouchableOpacity>
 					</View>
 					<View
 						style={{
@@ -4977,7 +4986,7 @@ export class TrackingPage extends React.Component {
 							style={{
 								position: "absolute",
 								top: -5,
-								right: -5,
+								left: 110,
 								display: this.state.isBadgeVis,
 								zIndex: 1,
 							}}>
@@ -4990,35 +4999,41 @@ export class TrackingPage extends React.Component {
 						<SwitchSelector
 							options={REPORT_OPTIONS}
 							height={23}
-							buttonColor="black"
+							buttonColor="white"
 							style={{
-								borderWidth: 2,
+								// borderWidth: 2,
 								borderRadius: 40,
 								padding: 1,
 								borderColor: "black",
 								width: "90%",
 							}}
 							textStyle={{
-								fontSize: 10,
-								fontFamily: "RobotoRegular",
-								color: "black",
+								fontSize: 16,
+								fontFamily: "RobotoBoldItalic",
+								color: "grey",
 							}}
 							selectedTextStyle={{
-								fontSize: 10,
-								fontWeight: "bold",
-								color: "white",
+								fontSize: 16,
+								fontFamily: "RobotoBoldItalic",
+								color: "black",
 							}}
 							borderWidth={0}
-							initial={1}
+							initial={0}
 							onPress={(value) => {
-								if (value == "daily") {
+								if (value === "report") {
 									this.setState({ isDailyReportVis: "flex" });
 									this.setState({ isActivityRecordsVis: "none" });
+									this.setState({ isOverviewVis: "none" });
 									this.isReportFromPopup = true;
-								} else {
+								} else if (value === "records") {
 									this.setState({ isDailyReportVis: "none" });
 									this.setState({ isActivityRecordsVis: "flex" });
-
+									this.setState({ isOverviewVis: "none" });
+									this.isReportFromPopup = false;
+								} else {
+									this.setState({ isDailyReportVis: "none" });
+									this.setState({ isActivityRecordsVis: "none" });
+									this.setState({ isOverviewVis: "flex" });
 									this.isReportFromPopup = false;
 								}
 							}}
@@ -5227,106 +5242,21 @@ export class TrackingPage extends React.Component {
 							}
 						/>
 					</View>
-				</View>
-			</View>
-		);
-		let summaryPage = (
-			<View
-				style={{
-					backgroundColor: "white",
-					width: "100%",
-					height: "100%",
-					justifyContent: "flex-start",
-					alignItems: "center",
-				}}>
-				{/* Body */}
-				<View
-					style={[
-						// generalStyles.shadowStyle,
-						{
-							width: "98%",
-							height: "90%",
-							backgroundColor: "white",
-							marginTop: 0,
-							borderRadius: 20,
-							justifyContent: "flex-start",
-							alignItems: "center",
-							flexDirection: "column",
-						},
-					]}>
+					{/* Strategy Overview */}
 					<View
 						style={{
 							width: "100%",
-							flexDirection: "row",
-							justifyContent: "space-between",
-							alignItems: "center",
-							padding: 15,
-							paddingBottom: 0,
-							marginTop: 5,
+							height: 280,
+							paddingHorizontal: 15,
+							display: this.state.isOverviewVis,
 						}}>
-						<TouchableOpacity
-							style={{
-								alignItems: "flex-start",
-								justifyContent: "center",
-								marginRight: 10,
-							}}
-							onPress={() => {
-								this.onHideDetailPressed();
-							}}>
-							{this.state.hideIcon}
-						</TouchableOpacity>
-						<View
-							style={{
-								flexDirection: "row",
-								justifyContent: "space-between",
-								alignItems: "center",
-								height: 45,
-							}}>
-							<Text
-								style={{
-									fontFamily: "RobotoBoldItalic",
-									fontSize: 18,
-									marginRight: 5,
-								}}>
-								{this.state.selectedStrategy.title}
-							</Text>
-							<View
-								style={{
-									flexDirection: "column",
-									justifyContent: "center",
-									// backgroundColor: "red",
-									alignItems: "center",
-									backgroundColor: "black",
-									borderRadius: 20,
-									paddingHorizontal: 10,
-								}}>
-								<Text
-									style={{
-										fontSize: 12,
-										fontFamily: "RobotoBoldBold",
-										textAlign: "center",
-										marginTop: 0,
-										color: "white",
-									}}>
-									{this.state.selectedStrategy.startDate} →{" "}
-									{this.state.selectedStrategy.endDate}
-								</Text>
-							</View>
-						</View>
-						<TouchableOpacity
-							onPress={() => this.setState({ isPreStrategyVis: true })}
-							disabled={this.state.isSelectStrategyDisable}
-							>
-							<Ionicons name="list-circle" size={26} color="black" />
-						</TouchableOpacity>
-					</View>
-					<View style={{ height: 400 }}>
 						<ScrollView
 							style={{ width: "100%", zIndex: 1 }}
 							contentContainerStyle={{
 								justifyContent: "flex-start",
 								alignItems: "center",
 							}}>
+							{/* Strategy summaryPage */}
 							<View
 								style={[
 									generalStyles.shadowStyle,
@@ -5425,7 +5355,7 @@ export class TrackingPage extends React.Component {
 											height: "20%",
 											flexDirection: "row",
 										}}>
-											<AntDesign name="like1" size={15} color="black" />
+										<AntDesign name="like1" size={15} color="black" />
 										<Text
 											style={{
 												fontFamily: "RobotoBoldBold",
@@ -5449,7 +5379,9 @@ export class TrackingPage extends React.Component {
 												fontSize: 32,
 												fontFamily: "RobotoBoldItalic",
 											}}>
-											{this.state.selectedStrategy.rating ? this.state.selectedStrategy.rating : "--"}
+											{this.state.selectedStrategy.rating
+												? this.state.selectedStrategy.rating
+												: "--"}
 										</Text>
 									</View>
 								</View>
@@ -5509,6 +5441,7 @@ export class TrackingPage extends React.Component {
 										marginTop: 10,
 									},
 								]}>
+								{/* Keywords title */}
 								<View
 									style={{
 										width: "100%",
@@ -5529,6 +5462,7 @@ export class TrackingPage extends React.Component {
 										</Text>
 									</View>
 								</View>
+								{/* Keywords list */}
 								<View
 									style={{
 										flexDirection: "row",
@@ -5543,7 +5477,356 @@ export class TrackingPage extends React.Component {
 												style={{
 													height: 25,
 													borderRadius: 20,
-													backgroundColor: item.color?COLORS[item.color]:"black",
+													backgroundColor: item.color
+														? COLORS[item.color]
+														: "black",
+													justifyContent: "space-between",
+													alignItems: "center",
+													alignSelf: "center",
+													marginBottom: 5,
+													marginRight: 5,
+													paddingHorizontal: 2,
+													flexDirection: "row",
+												}}>
+												<Text
+													style={{
+														fontFamily: "RobotoBoldBlack",
+														color: "white",
+														paddingHorizontal: 20,
+														fontSize: 12,
+													}}>
+													# {item.title}
+												</Text>
+											</View>
+										);
+									})}
+								</View>
+							</View>
+						</ScrollView>
+					</View>
+				</View>
+			</View>
+		);
+		let summaryPage = (
+			<View
+				style={{
+					backgroundColor: "white",
+					width: "100%",
+					height: "100%",
+					justifyContent: "flex-start",
+					alignItems: "center",
+				}}>
+				{/* Body */}
+				<View
+					style={[
+						// generalStyles.shadowStyle,
+						{
+							width: "98%",
+							height: "90%",
+							backgroundColor: "white",
+							marginTop: 0,
+							borderRadius: 20,
+							justifyContent: "flex-start",
+							alignItems: "center",
+							flexDirection: "column",
+						},
+					]}>
+					<View
+						style={{
+							width: "100%",
+							flexDirection: "row",
+							justifyContent: "space-between",
+							alignItems: "center",
+							padding: 15,
+							paddingBottom: 0,
+							marginTop: 5,
+						}}>
+						<TouchableOpacity
+							style={{
+								alignItems: "flex-start",
+								justifyContent: "center",
+								marginRight: 10,
+							}}
+							onPress={() => {
+								this.onHideDetailPressed();
+							}}>
+							{this.state.hideIcon}
+						</TouchableOpacity>
+						<View
+							style={{
+								flexDirection: "row",
+								justifyContent: "space-between",
+								alignItems: "center",
+								height: 45,
+							}}>
+							<Text
+								style={{
+									fontFamily: "RobotoBoldItalic",
+									fontSize: 18,
+									marginRight: 5,
+								}}>
+								{this.state.selectedStrategy.title}
+							</Text>
+							<View
+								style={{
+									flexDirection: "column",
+									justifyContent: "center",
+									// backgroundColor: "red",
+									alignItems: "center",
+									backgroundColor: "black",
+									borderRadius: 20,
+									paddingHorizontal: 10,
+								}}>
+								<Text
+									style={{
+										fontSize: 12,
+										fontFamily: "RobotoBoldBold",
+										textAlign: "center",
+										marginTop: 0,
+										color: "white",
+									}}>
+									{this.state.selectedStrategy.startDate} →{" "}
+									{this.state.selectedStrategy.endDate}
+								</Text>
+							</View>
+						</View>
+						<TouchableOpacity
+							onPress={() => this.setState({ isPreStrategyVis: true })}
+							disabled={this.state.isSelectStrategyDisable}>
+							<Ionicons name="list-circle" size={26} color="black" />
+						</TouchableOpacity>
+					</View>
+					<View style={{ height: 400 }}>
+						<ScrollView
+							style={{ width: "100%", zIndex: 1 }}
+							contentContainerStyle={{
+								justifyContent: "flex-start",
+								alignItems: "center",
+							}}>
+							{/* Strategy summaryPage */}
+							<View
+								style={[
+									generalStyles.shadowStyle,
+									{
+										width: "90%",
+										height: 100,
+										flexDirection: "row",
+										backgroundColor: "white",
+										flexDirection: "row",
+										justifyContent: "space-between",
+										marginTop: 10,
+										borderRadius: 20,
+										paddingVertical: 10,
+										zIndex: 1,
+									},
+								]}>
+								<View
+									style={[
+										{
+											height: "100%",
+											width: "33%",
+											backgroundColor: "white",
+											borderTopLeftRadius: 20,
+											borderBottomLeftRadius: 20,
+											flexDirection: "column",
+											borderRightWidth: 2,
+											borderColor: "#D8D8D8",
+										},
+									]}>
+									<View
+										style={{
+											width: "100%",
+											justifyContent: "center",
+											alignItems: "center",
+											height: "20%",
+											flexDirection: "row",
+										}}>
+										<Ionicons name="checkmark-circle" size={15} color="black" />
+										<Text
+											style={{
+												fontFamily: "RobotoBoldBold",
+												fontSize: 12,
+												marginLeft: 2,
+											}}>
+											Completion
+										</Text>
+									</View>
+									<View
+										style={{
+											width: "100%",
+											justifyContent: "space-between",
+											alignItems: "center",
+											height: "80%",
+											paddingVertical: 8,
+										}}>
+										<Text
+											style={{
+												fontFamily: "RobotoBoldBold",
+												fontSize: 15,
+												fontFamily: "RobotoBoldItalic",
+											}}>
+											{this.calculateCompletion()}%
+										</Text>
+										<View
+											style={{
+												height: 2,
+												width: "30%",
+												backgroundColor: "black",
+											}}></View>
+										<Text
+											style={{
+												fontFamily: "RobotoBoldBold",
+												fontSize: 15,
+												fontFamily: "RobotoBoldItalic",
+											}}>
+											{this.calculateComplete()[0]} /{" "}
+											{this.calculateComplete()[1]}
+										</Text>
+									</View>
+								</View>
+								<View
+									style={[
+										{
+											height: "100%",
+											width: "33%",
+											backgroundColor: "white",
+											borderRightWidth: 2,
+											borderColor: "#D8D8D8",
+										},
+									]}>
+									<View
+										style={{
+											width: "100%",
+											justifyContent: "center",
+											alignItems: "center",
+											height: "20%",
+											flexDirection: "row",
+										}}>
+										<AntDesign name="like1" size={15} color="black" />
+										<Text
+											style={{
+												fontFamily: "RobotoBoldBold",
+												fontSize: 12,
+												marginLeft: 2,
+											}}>
+											Rating
+										</Text>
+									</View>
+									<View
+										style={{
+											width: "100%",
+											justifyContent: "center",
+											alignItems: "center",
+											height: "80%",
+											paddingVertical: 10,
+										}}>
+										<Text
+											style={{
+												fontFamily: "RobotoBoldBold",
+												fontSize: 32,
+												fontFamily: "RobotoBoldItalic",
+											}}>
+											{this.state.selectedStrategy.rating
+												? this.state.selectedStrategy.rating
+												: "--"}
+										</Text>
+									</View>
+								</View>
+								<View
+									style={[
+										{
+											height: "100%",
+											width: "33%",
+											backgroundColor: "white",
+											borderRadius: 20,
+										},
+									]}>
+									<View
+										style={{
+											width: "100%",
+											justifyContent: "center",
+											alignItems: "center",
+											height: "20%",
+											flexDirection: "row",
+										}}>
+										<Ionicons name="timer" size={15} color="black" />
+
+										<Text
+											style={{
+												fontFamily: "RobotoBoldBold",
+												fontSize: 12,
+												marginLeft: 2,
+											}}>
+											Activity Level
+										</Text>
+									</View>
+									<View
+										style={{
+											width: "100%",
+											justifyContent: "center",
+											alignItems: "center",
+											height: "80%",
+											paddingVertical: 10,
+										}}>
+										<Text
+											style={{
+												fontSize: 18,
+												fontFamily: "RobotoBoldItalic",
+											}}>
+											{this.calculateTotalDuration()} min
+										</Text>
+									</View>
+								</View>
+							</View>
+							<View
+								style={[
+									// generalStyles.shadowStyle,
+									{
+										width: "95%",
+										backgroundColor: "white",
+										borderRadius: 20,
+										marginTop: 10,
+									},
+								]}>
+								{/* Keywords title */}
+								<View
+									style={{
+										width: "100%",
+										justifyContent: "flex-start",
+										flexDirection: "row",
+										marginTop: 10,
+										marginLeft: "5%",
+									}}>
+									<View style={{ flexDirection: "row" }}>
+										<FontAwesome name="asterisk" size={15} color="black" />
+										<Text
+											style={{
+												fontWeight: "bold",
+												fontSize: 12,
+												marginLeft: "5%",
+											}}>
+											Keywords
+										</Text>
+									</View>
+								</View>
+								{/* Keywords list */}
+								<View
+									style={{
+										flexDirection: "row",
+										flexWrap: "wrap",
+										alignItems: "center",
+										marginTop: "2%",
+										paddingHorizontal: "5%",
+									}}>
+									{this.state.selectedKeywords.map((item) => {
+										return (
+											<View
+												style={{
+													height: 25,
+													borderRadius: 20,
+													backgroundColor: item.color
+														? COLORS[item.color]
+														: "black",
 													justifyContent: "space-between",
 													alignItems: "center",
 													alignSelf: "center",
@@ -5575,23 +5858,23 @@ export class TrackingPage extends React.Component {
 									}}>
 									<View style={{ flexDirection: "row" }}>
 										<MaterialIcons name="event-note" size={15} color="black" />
-										<View style={{flexDirection:"column"}}>
-										<Text
-											style={{
-												fontWeight: "bold",
-												fontSize: 12,
-												marginLeft: "5%",
-											}}>
-											Activity Plan Records
-										</Text>
-										<Text
-											style={{
-												// fontWeight: "bold",
-												fontSize: 10,
-												marginLeft: "5%",
-											}}>
-											Average Satisfaction: {this.calculateSatisfaction()}
-										</Text>
+										<View style={{ flexDirection: "column" }}>
+											<Text
+												style={{
+													fontWeight: "bold",
+													fontSize: 12,
+													marginLeft: "5%",
+												}}>
+												Activity Plan Records
+											</Text>
+											<Text
+												style={{
+													// fontWeight: "bold",
+													fontSize: 10,
+													marginLeft: "5%",
+												}}>
+												Average Satisfaction: {this.calculateSatisfaction()}
+											</Text>
 										</View>
 									</View>
 								</View>
@@ -5958,7 +6241,7 @@ export class TrackingPage extends React.Component {
 					<View
 						style={{
 							flexDirection: "row",
-							width:"100%",
+							width: "100%",
 
 							flexWrap: "wrap",
 							alignItems: "center",
@@ -7379,7 +7662,9 @@ export class TrackingPage extends React.Component {
 							DoneButtonComponent={() => (
 								<TouchableOpacity
 									style={{ width: "100%", padding: "5%" }}
-									onPress={() => {console.log("selected previous strategy to go");}}>
+									onPress={() => {
+										console.log("selected previous strategy to go");
+									}}>
 									<Text
 										style={{
 											fontFamily: "RobotoBoldBlack",
@@ -10201,6 +10486,8 @@ export class TrackingPage extends React.Component {
 								},
 							]}
 							onPress={async () => {
+								this.setState({archiveIconColor:"grey"});
+								this.setState({homeIconColor:"black"})
 								this.mainContentSwiperRef.current.goToPage(0, true);
 								this.setState({ selectedStrategy: this.currentStrategy });
 								this.setState({
@@ -10230,7 +10517,7 @@ export class TrackingPage extends React.Component {
 								});
 								this.scrollToThisWeek();
 							}}>
-							<Entypo name="home" size={24} color="black" />
+							<Entypo name="home" size={24} color={this.state.homeIconColor} />
 						</TouchableOpacity>
 						{/* <TouchableOpacity
 							style={[
@@ -10274,10 +10561,15 @@ export class TrackingPage extends React.Component {
 									width: 100,
 								},
 							]}
-							onPress={() =>
-								this.mainContentSwiperRef.current.goToPage(1, true)
+							onPress={() => {
+								this.mainContentSwiperRef.current.goToPage(1, true);
+								this.setState({archiveIconColor:"black"});
+								this.setState({homeIconColor:"grey"})
+							}
+
+
 							}>
-							<Entypo name="archive" size={24} color="black" />
+							<Entypo name="archive" size={24} color={this.state.archiveIconColor} />
 						</TouchableOpacity>
 					</View>
 					<Onboarding
