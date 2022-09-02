@@ -206,6 +206,7 @@ export class TrackingPage extends React.Component {
 		this.userKey = this.props.route.params.userInfo.key;
 		this.userPlans = this.props.route.params.userInfo.userPlans;
 		this.userStrategies = this.props.route.params.userStrategies;
+		this.isEvaluationDate = this.props.route.params.isEvaluationDate;
 		this.userStrategies.sort(function (a, b) {
 			return new Date(b.startDate) - new Date(a.startDate);
 		});
@@ -450,13 +451,21 @@ export class TrackingPage extends React.Component {
 			//is Review button disabled
 			isReviewBtnDisabled: false,
 			//Color of the bottom icons
-			archiveIconColor:"grey",
-			homeIconColor:"black"
+			archiveIconColor: "grey",
+			homeIconColor: "black",
+			//if the review btn is displayed
+			isReviewBtnVis:"none",
+			isReportBtnDisabled: true,
+			reportBtnColor:"black"
 		};
 		this.processUserStrategies();
 		// this.processDailyReports_after();
 		this.dailyReportPopup();
-		// console.log("this.state.activityData", this.state.activityData);
+		if (this.isEvaluationDate) {
+			this.setState({ isReportModalVis: false });
+			this.setState({ isReviewPopVis: true });
+			this.setState({ isReviewBtnVis:"flex"})
+		}
 	}
 	componentDidMount() {
 		this.scrollToThisWeek();
@@ -1507,7 +1516,13 @@ export class TrackingPage extends React.Component {
 		let formattedSelectedEventDate = moment(selectedEventDate)
 			.format()
 			.slice(0, 10);
-
+		if (selectedEventDate > today) {
+			this.setState({reportBtnColor:"grey"});
+			this.setState({ isReportBtnDisabled: true})
+		} else {
+			this.setState({reportBtnColor:"black"});
+			this.setState({ isReportBtnDisabled: false})
+		}
 		if (monthNum === today.getMonth()) {
 			weatherList = this.thisMonthWeather;
 			// console.log("this.combinedEventListThis",this.combinedEventListThis);
@@ -2865,10 +2880,12 @@ export class TrackingPage extends React.Component {
 						borderTopRightRadius: 12,
 						borderWidth: 3,
 						height: "100%",
-						backgroundColor: "black",
+						backgroundColor: this.state.reportBtnColor,
+						borderColor:this.state.reportBtnColor,
 						justifyContent: "center",
 						alignItems: "center",
 					}}
+					disabled={this.state.isReportBtnDisabled}
 					onPress={() => {
 						// item.isReported = true;
 						// console.log(
@@ -2888,7 +2905,7 @@ export class TrackingPage extends React.Component {
 							color: "white",
 							paddingHorizontal: 10,
 							alignSelf: "center",
-							backgroundColor: "black",
+							backgroundColor: this.state.reportBtnColor,
 						}}>
 						Report
 					</Text>
@@ -4939,13 +4956,14 @@ export class TrackingPage extends React.Component {
 								justifyContent: "space-between",
 								alignItems: "center",
 								paddingVertical: 15,
+								display:this.state.isReviewBtnVis
 							}}
 							disabled={this.state.isReviewBtnDisabled}
 							onPress={() => {
 								this.setState({ isPanelVis: "flex" });
 								this.evaluatePanelPopup();
 								this.mainContentSwiperRef.current.goToPage(1, true);
-								// this.setState({isReviewPopVis:true})
+								this.setState({ isReviewPopVis: false });
 								// this.panelSwiperRef.current.goToPage(0, true);
 							}}>
 							<FontAwesome5 name="flag-checkered" size={18} color={GREEN} />
@@ -9355,7 +9373,8 @@ export class TrackingPage extends React.Component {
 									style={{ position: "absolute", top: 3, right: 3, zIndex: 1 }}
 									onPress={() => {
 										this.setState({ isPlanDetailModalVis: false });
-
+										this.setState({ isReportBtnDisabled: false });
+										this.setState({ reportBtnColor: "black"})
 										// this.reportModalSwiperRef.current.scrollBy(2, true);
 									}}>
 									<AntDesign name="closecircle" size={24} color="black" />
@@ -10423,8 +10442,244 @@ export class TrackingPage extends React.Component {
 							left: 0,
 							right: 0,
 							bottom: 0,
+							height: "100%",
+							width: "100%",
+							justifyContent: "center",
+							alignItems: "center",
 						}}>
-						<Text>Blue</Text>
+						<View
+							style={[
+								{
+									width: "90%",
+									height: "70%",
+									borderRadius: 20,
+									// backgroundColor: "white",
+									justifyContent: "space-between",
+									alignItems: "center",
+								},
+							]}>
+							<View
+								style={{
+									flexDirection: "row",
+									justifyContent: "space-between",
+									alignItems: "center",
+									marginTop: 10,
+									width: "100%",
+									flexDirection: "column",
+								}}>
+								<Text
+									style={{
+										fontFamily: "RobotoBoldItalic",
+										fontSize: 23,
+										marginBottom: 20,
+
+									}}>
+									Tell us how you think this current strategy is working so far:{" "}
+								</Text>
+								{/* Current Planning Strategy */}
+								<View>
+									<View
+										style={[
+											generalStyles.shadowStyle,
+											{
+												height: 81,
+												width: 335,
+												borderColor: GREEN,
+												borderWidth: 2,
+												borderRadius: 20,
+												marginTop: "2%",
+												flexDirection: "row",
+												backgroundColor: "white",
+											},
+										]}>
+										<TouchableOpacity
+											style={{
+												height: "100%",
+												width: "100%",
+
+												// borderRightColor: "black",
+												// borderRightWidth: 2,
+												paddingLeft: 0,
+												paddingVertical: 0,
+												justifyContent: "space-between",
+												alignItems: "flex-start",
+												flexDirection: "column",
+											}}
+											onPress={() =>
+												this.setState({ isStrategyDetailModalVis: true })
+											}>
+											<View
+												style={{
+													flexDirection: "row",
+													alignItems: "center",
+													justifyContent: "flex-start",
+													width: "100%",
+													height: "50%",
+													borderTopLeftRadius: 18,
+													borderTopRightRadius: 18,
+													backgroundColor: GREEN,
+												}}>
+												<View
+													style={{
+														flexDirection: "row",
+														alignItems: "center",
+														justifyContent: "center",
+													}}>
+													<Text
+														style={{
+															fontFamily: "RobotoBoldBlack",
+															fontSize: 18,
+															marginBottom: 0,
+															marginRight: 10,
+															alignItems: "center",
+															justifyContent: "center",
+															marginLeft: "10%",
+															color: "white",
+															alignSelf: "center",
+															textAlign: "center",
+														}}>
+														{this.state.planStrategyName}
+													</Text>
+												</View>
+												<View
+													style={{
+														flexDirection: "column",
+														justifyContent: "center",
+														// backgroundColor: "red",
+														alignItems: "center",
+														backgroundColor: "white",
+														borderRadius: 20,
+														paddingHorizontal: 10,
+													}}>
+													<Text
+														style={{
+															fontSize: 12,
+															fontFamily: "RobotoBoldBold",
+															textAlign: "center",
+															marginTop: 0,
+															color: GREEN,
+														}}>
+														{this.state.strategyDuration}
+													</Text>
+												</View>
+												<View style={{ position: "absolute", right: 5 }}>
+													<FontAwesome5
+														name="play-circle"
+														size={18}
+														color="white"
+													/>
+												</View>
+											</View>
+											<ScrollView
+												horizontal={true}
+												style={{
+													width: "100%",
+													height: "50%",
+													flexDirection: "row",
+												}}
+												contentContainerStyle={{
+													alignItems: "center",
+													paddingLeft: "5%",
+													paddingRight: "5%",
+												}}>
+												{this.state.keywordsBuddle.map((item) => {
+													return (
+														<View
+															style={{
+																borderRadius: 20,
+																height: 32,
+																// backgroundColor: "#E7E7E7",
+																marginRight: 2,
+																padding: 5,
+															}}>
+															<Text
+																style={{
+																	color: "black",
+																	fontWeight: "bold",
+																	color: "#1AB700",
+																	fontSize: 13,
+																}}>
+																# {item.title}
+															</Text>
+														</View>
+													);
+												})}
+											</ScrollView>
+										</TouchableOpacity>
+										<TouchableOpacity
+											style={{
+												position: "absolute",
+												borderBottomRightRadius: 18,
+												borderTopRightRadius: 18,
+												left: 250,
+												top: 0,
+												bottom: 0,
+												right: 0,
+												backgroundColor: "white",
+												borderColor: GREEN,
+												borderLeftWidth: 2,
+												justifyContent: "space-between",
+												alignItems: "center",
+												paddingVertical: 15,
+											}}
+											disabled={this.state.isReviewBtnDisabled}
+											onPress={() => {
+												this.setState({ isPanelVis: "flex" });
+												this.evaluatePanelPopup();
+												this.mainContentSwiperRef.current.goToPage(1, true);
+												this.setState({ isReviewPopVis: false });
+												// this.panelSwiperRef.current.goToPage(0, true);
+											}}>
+											<FontAwesome5
+												name="flag-checkered"
+												size={18}
+												color={GREEN}
+											/>
+											<Text
+												style={{
+													fontFamily: "RobotoBoldItalic",
+													color: GREEN,
+													fontSize: 18,
+												}}>
+												Review
+											</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+								<Text
+										style={{
+											fontFamily: "RobotoBoldItalic",
+											fontSize: 18,
+											marginTop: 40,
+											width:"90%"
+										}}>
+										Click the <Text style={{ color: GREEN }}>Review</Text>{" "}
+										button above to start your weekly reviewing process
+									</Text>
+							</View>
+
+							<TouchableOpacity
+								style={{
+									justifyContent: "center",
+									alignItems: "center",
+									flexDirection: "row",
+								}}
+								onPress={() => {
+									this.setState({ isReviewPopVis: false });
+
+									// this.reportModalSwiperRef.current.scrollBy(2, true);
+								}}>
+								<AntDesign name="closecircle" size={24} color="black" />
+								<Text
+									style={{
+										fontFamily: "RobotoBoldItalic",
+										fontSize: 12,
+										marginLeft: 10,
+									}}>
+									Skip for now
+								</Text>
+							</TouchableOpacity>
+						</View>
 					</BlurView>
 				</RNModal>
 
@@ -10486,8 +10741,8 @@ export class TrackingPage extends React.Component {
 								},
 							]}
 							onPress={async () => {
-								this.setState({archiveIconColor:"grey"});
-								this.setState({homeIconColor:"black"})
+								this.setState({ archiveIconColor: "grey" });
+								this.setState({ homeIconColor: "black" });
 								this.mainContentSwiperRef.current.goToPage(0, true);
 								this.setState({ selectedStrategy: this.currentStrategy });
 								this.setState({
@@ -10563,13 +10818,14 @@ export class TrackingPage extends React.Component {
 							]}
 							onPress={() => {
 								this.mainContentSwiperRef.current.goToPage(1, true);
-								this.setState({archiveIconColor:"black"});
-								this.setState({homeIconColor:"grey"})
-							}
-
-
-							}>
-							<Entypo name="archive" size={24} color={this.state.archiveIconColor} />
+								this.setState({ archiveIconColor: "black" });
+								this.setState({ homeIconColor: "grey" });
+							}}>
+							<Entypo
+								name="archive"
+								size={24}
+								color={this.state.archiveIconColor}
+							/>
 						</TouchableOpacity>
 					</View>
 					<Onboarding

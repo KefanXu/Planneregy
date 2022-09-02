@@ -35,7 +35,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from '@expo/vector-icons'; 
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 //Load interactive component libraries
 import SlidingUpPanel from "rn-sliding-up-panel";
@@ -121,6 +121,9 @@ const ICONS = {
 	arrow: "",
 	unknown: "",
 };
+const GREEN = "#1AB700";
+const BLACK = "#393939";
+const YELLOW = "#FFB800";
 
 export class PlanOnCalendar extends React.Component {
 	constructor(props) {
@@ -279,8 +282,10 @@ export class PlanOnCalendar extends React.Component {
 			reportStart: this.onReportActivity.start,
 			reportEnd: this.onReportActivity.end,
 			reportDuration: this.onReportActivity.duration,
-
-			// dateTimePickerDate:""
+			//Display "No activity" on the detail popup  when there is no planned activity
+			isNoActivitySignVis: "none",
+			//Text on report btn
+			reportBtnColor:"Report"
 		};
 		if (this.isDataFromTracking) {
 			for (let event of this.plansBuddle) {
@@ -1184,11 +1189,19 @@ export class PlanOnCalendar extends React.Component {
 		// });
 	};
 	onPress = (item, monthNum, month) => {
+		this.isReportFromPopup = true;
+		this.setState({ isDetailViewActivityInfoListVis: "flex" });
+		this.setState({ isNoActivitySignVis: "none" });
 		console.log("item, monthNum, month", item, monthNum, month);
 		let today = new Date();
 		let weatherList = [];
 		let detailViewCalendar = [];
 		let selectedEventDate = new Date(this.today.getFullYear(), monthNum, item);
+		if (selectedEventDate > today) {
+			this.setState({reportBtnColor:"grey"})
+		} else {
+			this.setState({reportBtnColor:"black"})
+		}
 		this.selectedEventDate = selectedEventDate;
 		let formattedSelectedEventDate = moment(selectedEventDate)
 			.format()
@@ -1196,22 +1209,35 @@ export class PlanOnCalendar extends React.Component {
 
 		if (monthNum === today.getMonth()) {
 			weatherList = this.thisMonthWeather;
+			// console.log("this.combinedEventListThis",this.combinedEventListThis);
 			for (let event of this.combinedEventListThis) {
-				if (event.start.slice(0, 10) === formattedSelectedEventDate) {
+				if (
+					event.start &&
+					event.timeStamp &&
+					event.start.slice(0, 10) === formattedSelectedEventDate
+				) {
 					detailViewCalendar.push(event);
 				}
 			}
 		} else if (monthNum < today.getMonth()) {
 			weatherList = this.lastMonthWeather;
 			for (let event of this.combinedEventListLast) {
-				if (event.start.slice(0, 10) === formattedSelectedEventDate) {
+				if (
+					event.start &&
+					event.timeStamp &&
+					event.start.slice(0, 10) === formattedSelectedEventDate
+				) {
 					detailViewCalendar.push(event);
 				}
 			}
 		} else {
 			weatherList = this.nextMonthWeather;
 			for (let event of this.combinedEventListNext) {
-				if (event.start.slice(0, 10) === formattedSelectedEventDate) {
+				if (
+					event.start &&
+					event.timeStamp &&
+					event.start.slice(0, 10) === formattedSelectedEventDate
+				) {
 					detailViewCalendar.push(event);
 				}
 			}
@@ -1228,7 +1254,703 @@ export class PlanOnCalendar extends React.Component {
 
 		this.detailViewCalendar = detailViewCalendar;
 		this.setState({ isPlanDetailModalVis: true });
+		let cnt = 0;
+		for (let event of this.detailViewCalendar) {
+			if (event.title && event.isPlanned != "added-activity") {
+				cnt++;
+			}
+		}
+		if (cnt === 0) {
+			this.setState({ isDetailViewActivityInfoListVis: "none" });
+			this.setState({ isNoActivitySignVis: "flex" });
+		}
 		console.log("detailViewCalendar", detailViewCalendar);
+	};
+	//Styling for records
+	itemCompletedBlockStyle = (item, timing) => {
+		return (
+			<View
+				style={[
+					{
+						width: "100%",
+						height: 60,
+						borderRadius: 15,
+						borderColor: "#F0F0F0",
+						borderWidth: 0,
+						paddingHorizontal: 18,
+						flexDirection: "column",
+						alignItems: "flex-start",
+						justifyContent: "space-between",
+						marginTop: this.state.isPlanDetailModalVis ? 20 : 15,
+						backgroundColor: GREEN,
+						paddingVertical: 0,
+					},
+				]}>
+				<View
+					style={{
+						position: "absolute",
+						left: 5,
+						height: 50,
+						marginVertical: 5,
+						width: 24,
+						backgroundColor: "white",
+						borderRadius: 24,
+						paddingVertical: 6,
+						flexDirection: "column",
+						justifyContent: "space-between",
+						alignItems: "center",
+					}}>
+					<Text style={{ color: GREEN, textAlign: "center", fontSize: 14 }}>
+						♥︎
+					</Text>
+					<Text style={{ fontFamily: "RobotoBoldBold", color: GREEN }}>
+						{item.satisfactionScore}
+					</Text>
+				</View>
+				<View
+					style={{
+						flexDirection: "row",
+						alignItems: "center",
+						marginTop: 10,
+						justifyContent: "flex-start",
+						width: "100%",
+					}}>
+					<Text
+						ellipsizeMode="tail"
+						numberOfLines={1}
+						style={{
+							fontFamily: "RobotoBoldBold",
+							fontSize: 14,
+							paddingLeft: 18,
+							color: "white",
+							width: "100%",
+						}}>
+						{item.title}
+					</Text>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							color: "white",
+						}}></Text>
+				</View>
+				<View
+					style={{
+						flexDirection: "row",
+						alignItems: "center",
+						marginBottom: 10,
+					}}>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							color: "white",
+							paddingLeft: 18,
+							width: "100%",
+						}}>
+						{moment(item.start).format().slice(5, 10)} {"| "}
+						{timing}
+					</Text>
+				</View>
+			</View>
+		);
+	};
+	itemUnCompletedBlockStyle = (item, timing) => {
+		return (
+			<View
+				style={[
+					{
+						width: "100%",
+						height: 60,
+						borderRadius: 15,
+						borderColor: "#F0F0F0",
+						borderWidth: 0,
+						flexDirection: "column",
+						alignItems: "center",
+						justifyContent: "space-between",
+						marginTop: 15,
+						backgroundColor: BLACK,
+						// paddingVertical: 10,
+					},
+				]}>
+				<View
+					style={{
+						// marginTop:10,
+						flexDirection: "row",
+						width: "100%",
+						height: 32,
+						// paddingHorizontal: 25,
+						// backgroundColor:"red",
+						justifyContent: "center",
+						alignItems: "center",
+					}}>
+					{/* <View style={{ position: "absolute", left: 5, height:24, width:24, backgroundColor:"white", borderRadius:24, justifyContent:"center", alignItems:"center" }}>
+				<Text style={{fontFamily:"RobotoBoldBold"}}>{item.satisfactionScore}</Text>
+			  </View> */}
+					<Text
+						ellipsizeMode="tail"
+						numberOfLines={1}
+						style={{
+							fontFamily: "RobotoBoldBold",
+							fontSize: 14,
+							paddingLeft: 25,
+							color: "white",
+							width: 100,
+						}}>
+						{item.title}
+					</Text>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							color: "white",
+						}}>
+						{moment(item.start).format().slice(5, 10)} {"| "}
+					</Text>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							color: "white",
+						}}>
+						{timing}
+					</Text>
+				</View>
+				<View
+					style={{
+						justifyContent: "flex-start",
+						flexDirection: "row",
+						backgroundColor: "white",
+						borderColor: BLACK,
+						alignItems: "center",
+						flex: 1,
+						borderBottomLeftRadius: 15,
+						borderBottomRightRadius: 15,
+						borderWidth: 2,
+					}}>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							textAlignVertical: "center",
+							color: "white",
+							flex: 1,
+							marginLeft: 35,
+							color: BLACK,
+						}}>
+						{item.reason}
+					</Text>
+				</View>
+			</View>
+		);
+	};
+	itemUnreportedBlockStyle = (item, timing) => {
+		let itemUnreportedBlockStyle = (
+			<View
+				style={[
+					{
+						width: "100%",
+						height: 60,
+						borderRadius: 15,
+						borderColor: "black",
+						borderWidth: 2,
+						flexDirection: "row",
+						alignItems: "center",
+						justifyContent: "space-between",
+						marginTop: 15,
+						backgroundColor: "white",
+						// flexDirection: "column",
+					},
+				]}>
+				<View
+					style={{
+						flexDirection: "column",
+						justifyContent: "space-between",
+						width: "80%",
+						paddingVertical: 0,
+						paddingHorizontal: 6,
+						height: "70%",
+					}}>
+					<Text
+						style={{
+							fontFamily: "RobotoBoldBold",
+							fontSize: 14,
+							paddingLeft: 8,
+							color: "black",
+						}}>
+						{item.title}
+						{" | "}
+						<Text
+							style={{
+								fontFamily: "RobotoRegular",
+								fontSize: 14,
+							}}>
+							{moment(item.start).format().slice(5, 10)}
+						</Text>
+					</Text>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							width: "100%",
+							paddingLeft: 8,
+						}}>
+						{timing}
+					</Text>
+				</View>
+				<TouchableOpacity
+					style={{
+						borderBottomRightRadius: 12,
+						borderTopRightRadius: 12,
+						borderWidth: 3,
+						height: "100%",
+						backgroundColor: this.state.reportBtnColor,
+						borderColor:this.state.reportBtnColor,
+						justifyContent: "center",
+						alignItems: "center",
+					}}
+					disabled={true}
+					onPress={() => {
+						// item.isReported = true;
+						// console.log(
+						//   "this.state.plansBuddle",
+						//   this.state.plansBuddle
+						// );
+
+						setTimeout(() => {
+							this.onMyActivityReportPressed(item), 1000;
+						});
+						this.setState({ isPlanDetailModalVis: false });
+					}}>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							color: "white",
+							paddingHorizontal: 10,
+							alignSelf: "center",
+							backgroundColor: this.state.reportBtnColor,
+						}}>
+						Report
+					</Text>
+				</TouchableOpacity>
+			</View>
+		);
+		return itemUnreportedBlockStyle;
+	};
+	itemPartialCompleteStyle_TIME = (item, timing, newTiming) => {
+		let itemPartialCompleteStyle_TIME = (
+			<View
+				style={[
+					{
+						width: "100%",
+						height: 85,
+						borderRadius: 15,
+						borderColor: "#F0F0F0",
+						borderWidth: 0,
+						flexDirection: "column",
+						alignItems: "flex-start",
+						justifyContent: "space-between",
+						marginTop: this.state.isPlanDetailModalVis ? 7 : 15,
+						backgroundColor: YELLOW,
+						paddingVertical: 0,
+					},
+				]}>
+				<View
+					style={{
+						position: "absolute",
+						left: 5,
+						top: 0,
+						height: 45,
+						marginVertical: 5,
+						width: 24,
+						backgroundColor: "white",
+						borderRadius: 24,
+						paddingVertical: 6,
+						flexDirection: "column",
+						justifyContent: "space-between",
+						alignItems: "center",
+					}}>
+					<Text style={{ color: YELLOW, textAlign: "center", fontSize: 14 }}>
+						♥︎
+					</Text>
+					<Text style={{ fontFamily: "RobotoBoldBold", color: YELLOW }}>
+						{item.satisfactionScore}
+					</Text>
+				</View>
+				<View
+					style={{
+						flexDirection: "row",
+						width: "100%",
+						paddingHorizontal: 20,
+						justifyContent: "flex-start",
+						alignItems: "center",
+						marginTop: 10,
+					}}>
+					{/* <View
+				style={{
+				  position: "absolute",
+				  left: 5,
+				  height: 24,
+				  width: 24,
+				  backgroundColor: "white",
+				  borderRadius: 24,
+				  justifyContent: "center",
+				  alignItems: "center",
+				}}
+			  >
+				<Text style={{ fontFamily: "RobotoBoldBold" }}>
+				  {item.satisfactionScore}
+				</Text>
+			  </View> */}
+					<Text
+						ellipsizeMode="tail"
+						numberOfLines={1}
+						style={{
+							fontFamily: "RobotoBoldBold",
+							fontSize: 14,
+							paddingLeft: 18,
+							color: "white",
+							marginRight: 10,
+							// width: 100,
+						}}>
+						{item.title}
+					</Text>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							color: "white",
+						}}>
+						{moment(item.start).format().slice(5, 10)} {"|"}{" "}
+						{moment(item.start).format("ddd").toUpperCase()}
+					</Text>
+				</View>
+				<View
+					style={{
+						justifyContent: "flex-start",
+						flexDirection: "row",
+						// backgroundColor:"white",
+						borderRadius: 20,
+						marginTop: 2,
+						marginRight: 5,
+						marginLeft: 28,
+						// borderColor: "white",
+						alignItems: "center",
+						flex: 1,
+					}}>
+					<Text
+						style={{
+							fontFamily: "RobotoBoldBold",
+							fontSize: 12,
+							flex: 1,
+							color: "black",
+							marginLeft: 10,
+						}}>
+						{timing.slice(4)} → {newTiming}
+					</Text>
+				</View>
+				<View
+					style={{
+						justifyContent: "flex-start",
+						flexDirection: "row",
+						// borderTopWidth: 1,
+						borderColor: "white",
+						alignItems: "center",
+						backgroundColor: "white",
+						flex: 1,
+						borderBottomLeftRadius: 15,
+						borderBottomRightRadius: 15,
+						borderWidth: 2,
+						borderColor: YELLOW,
+					}}>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							color: YELLOW,
+							marginLeft: 35,
+							flex: 1,
+						}}>
+						{item.reason}
+					</Text>
+				</View>
+			</View>
+		);
+		return itemPartialCompleteStyle_TIME;
+	};
+	itemPartialCompleteStyle_ACTIVITY = (item, timing) => {
+		let itemPartialCompleteStyle_ACTIVITY = (
+			<View
+				style={[
+					{
+						width: "100%",
+						height: 85,
+						borderRadius: 15,
+						borderColor: "#F0F0F0",
+						borderWidth: 0,
+						flexDirection: "column",
+						alignItems: "center",
+						justifyContent: "space-between",
+						marginTop: this.state.isPlanDetailModalVis ? 7 : 15,
+						backgroundColor: YELLOW,
+						paddingVertical: 0,
+					},
+				]}>
+				<View
+					style={{
+						position: "absolute",
+						left: 5,
+						top: 0,
+						height: 45,
+						marginVertical: 5,
+						width: 24,
+						backgroundColor: "white",
+						borderRadius: 24,
+						paddingVertical: 6,
+						flexDirection: "column",
+						justifyContent: "space-between",
+						alignItems: "center",
+					}}>
+					<Text style={{ color: YELLOW, textAlign: "center", fontSize: 14 }}>
+						♥︎
+					</Text>
+					<Text style={{ fontFamily: "RobotoBoldBold", color: YELLOW }}>
+						{item.satisfactionScore}
+					</Text>
+				</View>
+				<View
+					style={{
+						flexDirection: "row",
+						width: "100%",
+						paddingHorizontal: 20,
+						justifyContent: "flex-start",
+						alignItems: "center",
+						marginTop: 10,
+					}}>
+					{/* <View
+				style={{
+				  position: "absolute",
+				  left: 5,
+				  height: 24,
+				  width: 24,
+				  backgroundColor: "white",
+				  borderRadius: 24,
+				  justifyContent: "center",
+				  alignItems: "center",
+				}}
+			  >
+				<Text style={{ fontFamily: "RobotoBoldBold" }}>
+				  {item.satisfactionScore}
+				</Text>
+			  </View> */}
+
+					<View style={{ borderRadius: 20, width: "100%" }}>
+						<Text
+							ellipsizeMode="tail"
+							numberOfLines={1}
+							style={{
+								fontFamily: "RobotoBoldBold",
+								fontSize: 14,
+								paddingLeft: 18,
+								width: "100%",
+								color: "black",
+							}}>
+							{item.oldTitle} → {item.title}{" "}
+							<Text style={{ fontFamily: "RobotoRegular", color: "white" }}>
+								{item.start.slice(5, 10)} | {timing.slice(0, 3)}
+							</Text>
+						</Text>
+					</View>
+				</View>
+				<View
+					style={{
+						justifyContent: "flex-start",
+						flexDirection: "row",
+						// borderTopWidth: 1,
+						borderColor: "white",
+						alignItems: "center",
+						flex: 1,
+					}}>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							flex: 1,
+							color: "white",
+							marginLeft: 38,
+						}}>
+						{timing.slice(4)}
+					</Text>
+				</View>
+				<View
+					style={{
+						justifyContent: "flex-start",
+						flexDirection: "row",
+						borderColor: YELLOW,
+						alignItems: "center",
+						backgroundColor: "white",
+						flex: 1,
+						width: "100%",
+						borderWidth: 2,
+						borderBottomLeftRadius: 15,
+						borderBottomRightRadius: 15,
+					}}>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							color: YELLOW,
+							marginLeft: 35,
+							flex: 1,
+						}}>
+						{item.reason}
+					</Text>
+				</View>
+			</View>
+		);
+		return itemPartialCompleteStyle_ACTIVITY;
+	};
+	itemPartialCompleteStyle_TIME_ACTIVITY = (item, timing, newTiming) => {
+		let itemPartialCompleteStyle_TIME = (
+			<View
+				style={[
+					{
+						width: "100%",
+						height: 85,
+						borderRadius: 15,
+						borderColor: "#F0F0F0",
+						borderWidth: 0,
+						flexDirection: "column",
+						alignItems: "flex-start",
+						justifyContent: "space-between",
+						marginTop: this.state.isPlanDetailModalVis ? 7 : 15,
+						backgroundColor: YELLOW,
+						paddingVertical: 0,
+					},
+				]}>
+				<View
+					style={{
+						position: "absolute",
+						left: 5,
+						top: 0,
+						height: 45,
+						marginVertical: 5,
+						width: 24,
+						backgroundColor: "white",
+						borderRadius: 24,
+						paddingVertical: 6,
+						flexDirection: "column",
+						justifyContent: "space-between",
+						alignItems: "center",
+					}}>
+					<Text style={{ color: YELLOW, textAlign: "center", fontSize: 14 }}>
+						♥︎
+					</Text>
+					<Text style={{ fontFamily: "RobotoBoldBold", color: YELLOW }}>
+						{item.satisfactionScore}
+					</Text>
+				</View>
+				<View
+					style={{
+						flexDirection: "row",
+						width: "100%",
+						paddingHorizontal: 20,
+						justifyContent: "flex-start",
+						alignItems: "center",
+						marginTop: 10,
+					}}>
+					{/* <View
+				style={{
+				  position: "absolute",
+				  left: 5,
+				  height: 24,
+				  width: 24,
+				  backgroundColor: "white",
+				  borderRadius: 24,
+				  justifyContent: "center",
+				  alignItems: "center",
+				}}
+			  >
+				<Text style={{ fontFamily: "RobotoBoldBold" }}>
+				  {item.satisfactionScore}
+				</Text>
+			  </View> */}
+					<Text
+						ellipsizeMode="tail"
+						numberOfLines={1}
+						style={{
+							fontFamily: "RobotoBoldBold",
+							fontSize: 14,
+							paddingLeft: 18,
+							color: "black",
+							marginRight: 10,
+							// width: 100,
+						}}>
+						{item.oldTitle} → {item.title}
+					</Text>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							color: "white",
+						}}>
+						{moment(item.start).format().slice(5, 10)} {"|"}{" "}
+						{moment(item.start).format("ddd").toUpperCase()}
+					</Text>
+				</View>
+				<View
+					style={{
+						justifyContent: "flex-start",
+						flexDirection: "row",
+						// backgroundColor:"white",
+						borderRadius: 20,
+						marginTop: 2,
+						marginRight: 5,
+						marginLeft: 28,
+						// borderColor: "white",
+						alignItems: "center",
+						flex: 1,
+					}}>
+					<Text
+						style={{
+							fontFamily: "RobotoBoldBold",
+							fontSize: 12,
+							flex: 1,
+							color: "black",
+							marginLeft: 10,
+						}}>
+						{timing.slice(4)} → {newTiming}
+					</Text>
+				</View>
+				<View
+					style={{
+						justifyContent: "flex-start",
+						flexDirection: "row",
+						// borderTopWidth: 1,
+						borderColor: "white",
+						alignItems: "center",
+						backgroundColor: "white",
+						flex: 1,
+						borderBottomLeftRadius: 15,
+						borderBottomRightRadius: 15,
+						borderWidth: 2,
+						borderColor: YELLOW,
+					}}>
+					<Text
+						style={{
+							fontFamily: "RobotoRegular",
+							fontSize: 14,
+							color: YELLOW,
+							marginLeft: 35,
+							flex: 1,
+						}}>
+						{item.reason}
+					</Text>
+				</View>
+			</View>
+		);
+		return itemPartialCompleteStyle_TIME;
 	};
 
 	render() {
@@ -1953,7 +2675,11 @@ export class PlanOnCalendar extends React.Component {
 												this.setState({ selectedDate: selectedDay });
 												this.setState({ dateTimePickerDate: selectedDay });
 											}}>
-                        <MaterialCommunityIcons name="dots-vertical-circle" size={24} color="black" />
+											<MaterialCommunityIcons
+												name="dots-vertical-circle"
+												size={24}
+												color="black"
+											/>
 											<Text
 												style={{
 													fontFamily: "RobotoBoldBold",
@@ -2600,8 +3326,8 @@ export class PlanOnCalendar extends React.Component {
 						justifyContent: "flex-end",
 						flexDirection: "row",
 						height: 20,
-            borderTopWidth:2,
-            marginTop: "5%",
+						borderTopWidth: 2,
+						marginTop: "5%",
 					}}>
 					<TouchableOpacity
 						style={{
@@ -2610,32 +3336,36 @@ export class PlanOnCalendar extends React.Component {
 							borderRadius: 20,
 							justifyContent: "center",
 							alignItems: "center",
-
 						}}
-            onPress={async()=>{
-              let activityToUpdate = Object.assign({}, this.onReportActivity);
-              activityToUpdate.title = this.state.reportTitle;
-              activityToUpdate.start = this.onReportActivity.start.slice(0,10) + moment(this.state.startTime).format().slice(10,19);
-              activityToUpdate.end = this.onReportActivity.end.slice(0,10) + moment(this.state.endTime).format().slice(10,19);
-              let timeStamp = moment(new Date()).format();
-              activityToUpdate.key = this.onReportActivity.key + timeStamp;
-              await this.deleteActivity(this.onReportActivity);
-              await this.onPlanBtnPressed(activityToUpdate);
-              this.setState({isChangePlanModalVis:false});
+						onPress={async () => {
+							let activityToUpdate = Object.assign({}, this.onReportActivity);
+							activityToUpdate.title = this.state.reportTitle;
+							activityToUpdate.start =
+								this.onReportActivity.start.slice(0, 10) +
+								moment(this.state.startTime).format().slice(10, 19);
+							activityToUpdate.end =
+								this.onReportActivity.end.slice(0, 10) +
+								moment(this.state.endTime).format().slice(10, 19);
+							let timeStamp = moment(new Date()).format();
+							activityToUpdate.key = this.onReportActivity.key + timeStamp;
+							await this.deleteActivity(this.onReportActivity);
+							await this.onPlanBtnPressed(activityToUpdate);
+							this.setState({ isChangePlanModalVis: false });
 
-              let planBuddleToUpdate = this.state.plansBuddle;
-              planBuddleToUpdate.sort(function (a, b) {
-                return new Date(a.start) - new Date(b.start);
-              });
-              await this.setState({plansBuddle:planBuddleToUpdate});
-              console.log("this.state.plansBuddle",this.state.plansBuddle);
+							let planBuddleToUpdate = this.state.plansBuddle;
+							planBuddleToUpdate.sort(function (a, b) {
+								return new Date(a.start) - new Date(b.start);
+							});
+							await this.setState({ plansBuddle: planBuddleToUpdate });
+							console.log("this.state.plansBuddle", this.state.plansBuddle);
 
-              // console.log("activityToUpdate", activityToUpdate);
-              // console.log("moment(this.state.startTime).format()",);
-
-            }}
-            >
-						<Text style={{ fontWeight: "bold", textAlign:"right", fontSize:15}}>SAVE</Text>
+							// console.log("activityToUpdate", activityToUpdate);
+							// console.log("moment(this.state.startTime).format()",);
+						}}>
+						<Text
+							style={{ fontWeight: "bold", textAlign: "right", fontSize: 15 }}>
+							SAVE
+						</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
@@ -3125,30 +3855,29 @@ export class PlanOnCalendar extends React.Component {
 						</View>
 					</RNModal>
 					{/* Plan Detail View */}
-					<Modal
-						propagateSwipe={true}
-						isVisible={this.state.isPlanDetailModalVis}
+					<RNModal
+						animationType="slide"
+						visible={this.state.isPlanDetailModalVis}
+						// propagateSwipe={true}
+						// isVisible={this.state.isPlanDetailModalVis}
 						style={{
-							justifyContent: "flex-start",
+							justifyContent: "center",
 							alignItems: "center",
-							marginTop: 70,
-							marginBottom: 130,
+
+							// marginBottom: 100,
 						}}
-						hasBackdrop={true}
-						backdropOpacity={0}
-						onBackdropPress={() =>
-							this.setState({ isPlanDetailModalVis: false })
-						}
-						onSwipeComplete={() =>
-							this.setState({ isPlanDetailModalVis: false })
-						}
-						swipeDirection="down">
+						presentationStyle="overFullScreen"
+						transparent={true}
+						// hasBackdrop={true}
+						// backdropOpacity={0}
+						// onBackdropPress={() => this.setState({ isPlanDetailModalVis: false })}
+						// onSwipeComplete={() => this.setState({ isPlanDetailModalVis: false })}
+						// swipeDirection="down"
+					>
 						<View
 							style={{
-								flex: 1,
 								alignItems: "center",
 								justifyContent: "center",
-								flexDirection: "column",
 								width: "100%",
 								height: "100%",
 							}}>
@@ -3156,12 +3885,12 @@ export class PlanOnCalendar extends React.Component {
 								style={[
 									generalStyles.shadowStyle,
 									{
-										flex: 1,
-										width: "100%",
+										height: "90%",
+										width: "90%",
 										backgroundColor: "white",
 										// borderWidth: 2,
-										borderColor: "black",
-										flexDirection: "column",
+										// borderColor: "black",
+										// flexDirection: "column",
 										justifyContent: "flex-start",
 										alignItems: "center",
 										borderRadius: 15,
@@ -3188,13 +3917,27 @@ export class PlanOnCalendar extends React.Component {
                   </TouchableOpacity>
                 </View>
               </View> */}
-								<View style={{ flex: 0.9, width: "100%" }}>
+								<View style={{ height: "100%", width: "100%" }}>
+									<TouchableOpacity
+										style={{
+											position: "absolute",
+											top: 3,
+											right: 3,
+											zIndex: 1,
+										}}
+										onPress={() => {
+											this.setState({ isPlanDetailModalVis: false });
+
+											// this.reportModalSwiperRef.current.scrollBy(2, true);
+										}}>
+										<AntDesign name="closecircle" size={24} color="black" />
+									</TouchableOpacity>
+
 									<View
 										style={[
 											generalStyles.shadowStyle,
 											{
-												height: 80,
-												marginTop: 0,
+												height: "25%",
 												width: "100%",
 												backgroundColor: "white",
 												// borderWidth: 2,
@@ -3205,39 +3948,30 @@ export class PlanOnCalendar extends React.Component {
 												alignItems: "center",
 											},
 										]}>
-										{/* <View
-                    style={{
-                      flex: 0.4,
-                      width: "90%",
-                      marginTop: 10,
-                      marginLeft: 10,
-                      marginBottom: 0,
-                    }}
-                  >
-                    <Text style={{ fontSize: 15, fontWeight: "bold" }}>
-                      Records on {this.eventToday.title},{" "}
-                      {this.state.detailViewTop}
-                    </Text>
-                  </View> */}
 										<View
 											style={[
 												generalStyles.shadowStyle,
 												{
 													flex: 1,
-													width: "90%",
+													width: "100%",
 													marginTop: 0,
-													marginLeft: 10,
+													marginLeft: 0,
 													justifyContent: "space-between",
 													alignItems: "center",
 													flexDirection: "row",
-													// backgroundColor: RED,
+													borderColor: "grey",
+													backgroundColor: "white",
+													borderRadius: 15,
 												},
 											]}>
 											<View
 												style={{
 													borderRightWidth: 2,
-													width: 60,
+													width: 100,
 													borderColor: "grey",
+													height: "50%",
+													alignItems: "center",
+													justifyContent: "center",
 												}}>
 												<Text
 													style={{
@@ -3256,15 +3990,6 @@ export class PlanOnCalendar extends React.Component {
 													height: "100%",
 													// backgroundColor: "red",
 												}}>
-												{/* <Image
-                        source={{
-                          uri:
-                            "http://openweathermap.org/img/wn/" +
-                            this.selectedWeatherIcon +
-                            ".png",
-                        }}
-                        style={{ width: 60, height: 60 }}
-                      ></Image> */}
 												<Text
 													style={{ fontSize: 32, textAlignVertical: "center" }}>
 													{ICONS[this.selectedWeatherIcon]}{" "}
@@ -3282,6 +4007,8 @@ export class PlanOnCalendar extends React.Component {
 												style={{
 													borderLeftWidth: 2,
 													width: 100,
+													height: "50%",
+													alignItems: "center",
 													justifyContent: "center",
 													flexDirection: "row",
 													borderColor: "grey",
@@ -3295,12 +4022,148 @@ export class PlanOnCalendar extends React.Component {
 												</Text>
 											</View>
 										</View>
+										<View
+											style={{
+												height: "50%",
+												paddingHorizontal: 15,
+												marginBottom: 10,
+												display: this.state.isNoActivitySignVis,
+												justifyContent: "center",
+												alignItems: "center",
+											}}>
+											<Text
+												style={{
+													fontFamily: "RobotoBoldBlack",
+													fontSize: 22,
+													color: "grey",
+													textAlign: "center",
+												}}>
+												No Activity Planned for This Day
+											</Text>
+										</View>
+										<View
+											style={{
+												height: "55%",
+												paddingHorizontal: 5,
+												paddingBottom: 5,
+												marginBottom: 5,
+												display: this.state.isDetailViewActivityInfoListVis,
+												width: "100%",
+											}}>
+											<FlatList
+												data={this.detailViewCalendar}
+												contentContainerStyle={{
+													alignItems: "center",
+													justifyContent: "flex-start",
+													paddingHorizontal: 5,
+													width: "100%",
+													// backgroundColor:"red"
+												}}
+												renderItem={({ item }) => {
+													if (item.title) {
+														if (!item.isDeleted) {
+															let newTiming = "";
+															let timing;
+															if (item.newStart2) {
+																timing =
+																	moment(item.newStart2)
+																		.format("ddd")
+																		.toUpperCase() +
+																	" " +
+																	item.newStart2.slice(11, 16) +
+																	" - " +
+																	item.newEnd2.slice(11, 16) +
+																	" | " +
+																	item.duration +
+																	" MIN";
+															} else {
+																timing =
+																	moment(item.start)
+																		.format("ddd")
+																		.toUpperCase() +
+																	" " +
+																	item.start.slice(11, 16) +
+																	" - " +
+																	item.end.slice(11, 16) +
+																	" | " +
+																	item.duration +
+																	" MIN";
+															}
+															let itemBlockStyle;
+															if (item.newStart) {
+																newTiming =
+																	item.newStart.slice(11, 16) +
+																	" - " +
+																	item.newEnd.slice(11, 16) +
+																	" | " +
+																	item.newDuration +
+																	" MIN";
+															}
+
+															if (
+																!item.isReported &&
+																item.isPlanned != "added-activity"
+															) {
+																itemBlockStyle = this.itemUnreportedBlockStyle(
+																	item,
+																	timing
+																);
+															} else {
+																if (item.isActivityCompleted) {
+																	itemBlockStyle = this.itemCompletedBlockStyle(
+																		item,
+																		timing
+																	);
+																} else {
+																	if (item.partialStatus) {
+																		if (item.partialStatus === "TIME") {
+																			itemBlockStyle =
+																				this.itemPartialCompleteStyle_TIME(
+																					item,
+																					timing,
+																					newTiming
+																				);
+																		} else if (
+																			item.partialStatus === "ACTIVITY"
+																		) {
+																			itemBlockStyle =
+																				this.itemPartialCompleteStyle_ACTIVITY(
+																					item,
+																					timing
+																				);
+																		} else if (item.partialStatus === "NONE") {
+																			itemBlockStyle =
+																				this.itemUnCompletedBlockStyle(
+																					item,
+																					timing
+																				);
+																		} else {
+																			itemBlockStyle =
+																				this.itemPartialCompleteStyle_TIME_ACTIVITY(
+																					item,
+																					timing,
+																					newTiming
+																				);
+																		}
+																	}
+																}
+															}
+
+															return itemBlockStyle;
+														}
+													}
+
+													// console.log("items in plansBuddle", item);
+												}}
+											/>
+										</View>
 									</View>
+									{/* Calendar View */}
 									<View
 										style={[
 											generalStyles.shadowStyle,
 											{
-												height: "100%",
+												height: "75%",
 												backgroundColor: "white",
 												borderRadius: 20,
 												marginTop: 15,
@@ -3330,7 +4193,8 @@ export class PlanOnCalendar extends React.Component {
 								</View>
 							</View>
 						</View>
-					</Modal>
+					</RNModal>
+
 					{/* Calendar View & Buttons */}
 					<View
 						style={{

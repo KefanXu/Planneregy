@@ -105,6 +105,8 @@ export class BeforeLoginScreen extends React.Component {
       let thisMonthWeather;
       let nextMonthWeather;
 
+      let isEvaluationDate = false;
+
       let todayDateFormat = moment(new Date()).format().slice(0, 10);
       let recordEndDate = await SecureStore.getItemAsync("END_DATE");
       console.log("recordEndDate", recordEndDate);
@@ -112,7 +114,8 @@ export class BeforeLoginScreen extends React.Component {
 
       if (recordEndDate) {
         if (recordEndDate === todayDateFormat) {
-          navToScreen = "PlanOnCalendar";
+          navToScreen = "TrackingPage";
+          isEvaluationDate = true;
           this.setState({ dataType: "weather" });
           [lastMonthWeather, thisMonthWeather, nextMonthWeather] =
             await this.fetchWeatherInfo(userPlans);
@@ -245,7 +248,8 @@ export class BeforeLoginScreen extends React.Component {
         thisMonthWeather: thisMonthWeather,
         nextMonthWeather: nextMonthWeather,
         userActivityList: userActivityList[0].activityList,
-        isFromPlanSetUp: false
+        isFromPlanSetUp: false,
+        isEvaluationDate: isEvaluationDate
       });
       this.setState({ isLoaderVis: false });
       console.log("weather updated");
