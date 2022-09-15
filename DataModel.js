@@ -76,6 +76,26 @@ class DataModel {
 		});
 		return userActivityList;
 	};
+	loadAllUserEmails = async(email) => {
+		let fullUserList = await this.usersRef.get();
+		let userEmail;
+		let key;
+		fullUserList.forEach(async (qDocSnap) => {
+			let userInfo = qDocSnap.data();
+			// console.log("userInfo loadAllUserEmails",userInfo.email, userInfo.id);
+			if (userInfo.email){
+				if (email === userInfo.email) {
+					userEmail = userInfo.email;
+					key = userInfo.id;
+				}
+				
+			} else {
+				userEmail = "UNDEFINED"
+				key = "UNDEFINED"
+			}
+		})
+		return [userEmail,key]
+	}
 	//Load users' self-created plans
 	loadUserPlans = async (key) => {
 		let userPlanCollection = await this.usersRef
@@ -209,6 +229,22 @@ class DataModel {
 		}
 		console.log("createDailyNotifications");
 	};
+
+	//Create notification to remind user to do review
+	createReviewReminderNotification = async(newStrategyTitle) => {
+		let recordEndDate = await SecureStore.getItemAsync("END_DATE");
+		let trigger = new Date(
+			Date.parse(moment(recordEndDate).format().slice(0, 11) + "09:00:00")
+		);
+		await Notification.scheduleNotificationAsync({
+			content: {
+				title: "You just finished your week under strategy " + newStrategyTitle,
+				body: "Take some time to review this strategy and plan for the next week!",
+				data: { data: "goes here" },
+			},
+			trigger,
+		});
+	}
 	//Schedule notification when here is a plan: reminds users 1 hour before
 	scheduleNotification = async (newEvent) => {
 		//2021-04-16T10:37:00

@@ -36,16 +36,25 @@ export function Login({ navigation }) {
         }
       );
       let userInfoResponseJSON = await userInfoResponse.json();
-      let userEmail = userInfoResponseJSON.email;
-      console.log("userEmail", userEmail);
+      let userEmailFetched = userInfoResponseJSON.email;
+      // console.log("userEmail", userEmail);
       if (Platform.OS !== "web") {
         // Securely store the auth on your device
-        let emailAddress = await SecureStore.getItemAsync("USER_EMAIL");
-        if (emailAddress) {
+        // let emailAddress = await SecureStore.getItemAsync("USER_EMAIL");
+        let [userEmail,key] = await dataModel.loadAllUserEmails(userEmailFetched);
+        console.log("userEmail from login",userEmail);
+        if (userEmail != "UNDEFINED") {
           SecureStore.setItemAsync("ACCESS_TOKEN", accessToken);
+          console.log("from login", userEmail, key, accessToken);
           navigation.navigate("BeforeLoginScreen", {
             userEmail: userEmail,
+            key: key,
+            accessToken: accessToken,
+            isFromLogin: true
           });
+          SecureStore.setItemAsync("USER_EMAIL", userEmail);
+          SecureStore.setItemAsync("ACCESS_TOKEN", accessToken);
+          SecureStore.setItemAsync("USER_KEY", key);
         } else {
           await dataModel.createNewUser(userEmail);
           let key = dataModel.getUserKey();

@@ -26,6 +26,28 @@ export class BeforeLoginScreen extends React.Component {
   }
   //Get DataModel
   componentDidMount() {
+    
+    // this.setState({
+    //   isLoaderVis: !this.state.isLoaderVis,
+    // });
+
+    // this.dataModel = getDataModel();
+    // this.dataModel.asyncInit();
+
+    // this.loadFonts();
+    // this.checkIfUserExist();
+    this.focusUnsubscribe = this.props.navigation.addListener(
+      "focus",
+      this.onFocus
+    );
+
+
+    // console.log(
+    //   "this.state.firstScreenName componentDidMount",
+    //   this.state.firstScreenName
+    // );
+  }
+  onFocus = async () => {
     this.setState({
       isLoaderVis: !this.state.isLoaderVis,
     });
@@ -35,13 +57,7 @@ export class BeforeLoginScreen extends React.Component {
 
     this.loadFonts();
     this.checkIfUserExist();
-
-    // console.log(
-    //   "this.state.firstScreenName componentDidMount",
-    //   this.state.firstScreenName
-    // );
   }
-
   async loadFonts() {
     await Font.loadAsync({
       RobotoBoldBlack: require("./assets/fonts/Roboto/Roboto-Black.ttf"),
@@ -53,9 +69,23 @@ export class BeforeLoginScreen extends React.Component {
   checkIfUserExist = async () => {
     // await this.setState({isLoaderVis:true});
     //Get local-stored user basic info
-    let emailAddress = await SecureStore.getItemAsync("USER_EMAIL");
-    let accessToken = await SecureStore.getItemAsync("ACCESS_TOKEN");
-    let key = await SecureStore.getItemAsync("USER_KEY");
+    let emailAddress;
+    let accessToken;
+    let key;
+    // if (this.props.route.params.isFromLogin) {
+    //   emailAddress = this.props.route.params.userEmail;
+    //   accessToken = this.props.route.params.key;
+    //   key = this.props.route.params.accessToken;
+    // } else {
+      emailAddress = await SecureStore.getItemAsync("USER_EMAIL");
+      accessToken = await SecureStore.getItemAsync("ACCESS_TOKEN");
+      key = await SecureStore.getItemAsync("USER_KEY");
+    // }
+
+
+    // let emailAddressFB;
+    // await this.dataModel.loadAllUserEmails();
+
     // console.log("key", key);
     if (emailAddress) {
       //User already exist
@@ -104,6 +134,7 @@ export class BeforeLoginScreen extends React.Component {
       let lastMonthWeather;
       let thisMonthWeather;
       let nextMonthWeather;
+      let isGuideVis = false;
 
       let isEvaluationDate = false;
 
@@ -113,6 +144,7 @@ export class BeforeLoginScreen extends React.Component {
       let todayDate = new Date();
 
       if (recordEndDate) {
+
         if (recordEndDate === todayDateFormat) {
           navToScreen = "TrackingPage";
           isEvaluationDate = true;
@@ -183,6 +215,7 @@ export class BeforeLoginScreen extends React.Component {
           // await this.dataModel.updateWeatherInfo(key, weatherFullList);
         }
       } else {
+        isGuideVis = true;
         navToScreen = "PlanOnCalendar";
         this.setState({ dataType: "weather" });
         [lastMonthWeather, thisMonthWeather, nextMonthWeather] =
@@ -249,7 +282,8 @@ export class BeforeLoginScreen extends React.Component {
         nextMonthWeather: nextMonthWeather,
         userActivityList: userActivityList[0].activityList,
         isFromPlanSetUp: false,
-        isEvaluationDate: isEvaluationDate
+        isEvaluationDate: isEvaluationDate,
+        isGuideVis:isGuideVis
       });
       this.setState({ isLoaderVis: false });
       console.log("weather updated");

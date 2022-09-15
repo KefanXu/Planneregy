@@ -210,6 +210,10 @@ export class TrackingPage extends React.Component {
 		this.userStrategies.sort(function (a, b) {
 			return new Date(b.startDate) - new Date(a.startDate);
 		});
+		this.isGuideVis = false;
+		if (this.props.route.params.isGuideVis) {
+			this.isGuideVis = this.props.route.params.isGuideVis;
+		}
 		// console.log("this.userPlans",this.userPlans);
 		// console.log("this.userPlans",this.userKey);
 		//Get data model & user strategies
@@ -438,7 +442,7 @@ export class TrackingPage extends React.Component {
 			evaluationPage_Index: 0,
 			evaluationNEXTbtnTxt: "NEXT",
 			//Guide popup vis
-			isGuideVis: false,
+			isGuideVis: this.isGuideVis,
 			//Value for reloading
 			valueForReload: 0,
 			//Popup previous strategy modal
@@ -455,28 +459,43 @@ export class TrackingPage extends React.Component {
 			homeIconColor: "black",
 			//if the review btn is displayed
 			isReviewBtnVis:"none",
-			isReportBtnDisabled: true,
+			isReportBtnDisabled: false,
 			reportBtnColor:"black"
 		};
 		this.processUserStrategies();
 		// this.processDailyReports_after();
 		this.dailyReportPopup();
-		if (this.isEvaluationDate) {
+		if (this.isGuideVis) {
 			this.setState({ isReportModalVis: false });
-			this.setState({ isReviewPopVis: true });
-			this.setState({ isReviewBtnVis:"flex"})
+		} else {
+			if (this.isEvaluationDate) {
+				this.setState({ isReportModalVis: false });
+				this.setState({ isReviewPopVis: true });
+				this.setState({ isReviewBtnVis:"flex"})
+			}
 		}
+
 	}
 	componentDidMount() {
 		this.scrollToThisWeek();
 		this.dataModel = getDataModel();
 		this.dataModel.loadUserStrategies();
 		this.dailyReportPopup();
-		this.setState({ valueForReload: 1 });
+		this.focusUnsubscribe = this.props.navigation.addListener(
+			"focus",
+			this.onFocus
+		  );
 		// this.calculateCompletion2()
 		// this.setState({isBadgeVis:"none"})
 		// this.processDailyReports_after();
 		// console.log("componentDidMount");
+	}
+	onFocus = async () => {
+		this.scrollToThisWeek();
+		this.dataModel = getDataModel();
+		this.dataModel.loadUserStrategies();
+		this.dailyReportPopup();
+		this.setState({ valueForReload: 2 });
 	}
 	evaluatePanelPopup = async () => {
 		this.setState({ isSelectStrategyDisable: true });
@@ -624,17 +643,17 @@ export class TrackingPage extends React.Component {
 				}
 			}
 		}
-		// console.log("this.preList",this.preList);
+		console.log("this.preList",this.preList);
 		this.reportCnt = this.preList.length;
 		console.log("this.preList.length", this.preList.length);
-		this.setState({ preList: this.preList });
+		// this.setState({ preList: this.preList });
 		this.setState({ reportCnt: this.reportCnt });
 		if (this.reportCnt != 0) {
 			this.isBadgeVis = "flex";
 		} else {
 			this.isBadgeVis = "none";
 		}
-		this.setState({ isBadgeVis: this.isBadgeVis });
+		// this.setState({ isBadgeVis: this.isBadgeVis });
 	};
 	processDailyReports_after = async () => {
 		console.log("======processDailyReports_after======");
@@ -719,7 +738,7 @@ export class TrackingPage extends React.Component {
 					console.log("push daily report2", report);
 				}
 			} else {
-				console.log("this.state.plansBuddle", this.state.plansBuddle);
+				// console.log("this.state.plansBuddle", this.state.plansBuddle);
 				for (let event of this.state.plansBuddle) {
 					if (
 						event.start.slice(0, 10) === date &&
@@ -744,7 +763,7 @@ export class TrackingPage extends React.Component {
 		}
 		// console.log("this.state.isBadgeVis", this.state.isBadgeVis);
 
-		// console.log("this.state.preList", this.state.preList);
+		console.log("this.state.preList11", this.state.preList);
 	};
 	//Click the "Current Week" and scroll to the current week
 	scrollToThisWeek = () => {
@@ -3450,6 +3469,7 @@ export class TrackingPage extends React.Component {
 					thisMonthWeather: this.thisMonthWeather,
 					nextMonthWeather: this.nextMonthWeather,
 					userActivityList: this.props.route.params.userActivityList,
+					currentStrategy: this.currentStrategy,
 					keywords: this.currentStrategy.keywords,
 					plans: this.currentStrategy.plans,
 					title: this.currentStrategy.title,
@@ -4702,7 +4722,7 @@ export class TrackingPage extends React.Component {
 							alignItems: "center",
 						},
 					]}>
-					{/* Report option switch selector */}
+					{/* Top title & Progress bar */}
 					<View
 						style={{
 							width: "100%",
@@ -4823,15 +4843,6 @@ export class TrackingPage extends React.Component {
 										alignItems: "center",
 										justifyContent: "center",
 									}}>
-									{/* <View
-                    style={{
-                      height: 9,
-                      width: 9,
-                      borderRadius: 4.5,
-                      backgroundColor: GREEN,
-                      marginRight: 10,
-                    }}
-                  /> */}
 									<Text
 										style={{
 											fontFamily: "RobotoBoldBlack",
@@ -4907,38 +4918,6 @@ export class TrackingPage extends React.Component {
 										</View>
 									);
 								})}
-								{/* <FlatList
-                  horizontal={true}
-                  contentContainerStyle={{
-                    flexDirection: "row",
-                    width: "100%",
-                    backgroundColor: "red",
-                  }}
-                  data={this.state.keywordsBuddle}
-                  renderItem={({ item }) => {
-                    return (
-                      <View
-                        style={{
-                          borderRadius: 20,
-                          backgroundColor: "#E7E7E7",
-                          marginRight: 2,
-                          padding: 5,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "black",
-                            fontWeight: "bold",
-                            color: "#1AB700",
-                            fontSize: 8,
-                          }}
-                        >
-                          # {item.title}
-                        </Text>
-                      </View>
-                    );
-                  }}
-                /> */}
 							</ScrollView>
 						</TouchableOpacity>
 						<TouchableOpacity
@@ -4956,7 +4935,7 @@ export class TrackingPage extends React.Component {
 								justifyContent: "space-between",
 								alignItems: "center",
 								paddingVertical: 15,
-								display:this.state.isReviewBtnVis
+								// display:this.state.isReviewBtnVis
 							}}
 							disabled={this.state.isReviewBtnDisabled}
 							onPress={() => {
@@ -5009,7 +4988,7 @@ export class TrackingPage extends React.Component {
 								zIndex: 1,
 							}}>
 							<Badge
-								label={this.state.reportCnt}
+								label={this.state.reportCnt.toString()}
 								size={16}
 								backgroundColor={"red"}
 							/>
@@ -7682,6 +7661,25 @@ export class TrackingPage extends React.Component {
 									style={{ width: "100%", padding: "5%" }}
 									onPress={() => {
 										console.log("selected previous strategy to go");
+										this.submitStrategyEvaluation();
+										this.props.navigation.navigate("PlanOnCalendar", {
+											userEmail: this.userEmail,
+											userInfo: this.userInfo,
+											userStrategies: this.userStrategies,
+											eventsLastMonth: this.eventsLastMonth,
+											eventsThisMonth: this.eventsThisMonth,
+											eventsNextMonth: this.eventsNextMonth,
+											fullEventList: this.fullEventList,
+											lastMonthWeather: this.lastMonthWeather,
+											thisMonthWeather: this.thisMonthWeather,
+											nextMonthWeather: this.nextMonthWeather,
+											userActivityList: this.props.route.params.userActivityList,
+											currentStrategy: this.state.selectedStrategy,
+											keywords: this.state.selectedStrategy.keywords,
+											plans: this.state.selectedStrategy.plans,
+											title: this.state.selectedStrategy.title,
+											// isFromPlanSetUp: false
+										});
 									}}>
 									<Text
 										style={{
@@ -10845,6 +10843,8 @@ export class TrackingPage extends React.Component {
 							this.setState({ displayCalView: "flex" });
 							this.setState({ displayTitle: "flex" });
 							if (index === 1) {
+								this.setState({ archiveIconColor: "black" });
+								this.setState({ homeIconColor: "grey" });
 								this.setState({ panelHeight: 300 });
 								this._panel.hide();
 								this.setState({
@@ -10861,6 +10861,8 @@ export class TrackingPage extends React.Component {
 									title: "Strategies",
 								});
 							} else if (index === 0) {
+								this.setState({ archiveIconColor: "grey" });
+								this.setState({ homeIconColor: "black" });
 								this._panel.show();
 								this.setState({
 									hideIcon2: (
