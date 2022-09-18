@@ -1537,7 +1537,7 @@ export class PlanOnCalendar extends React.Component {
 						borderTopRightRadius: 12,
 						borderWidth: 3,
 						height: "100%",
-						backgroundColor: this.state.reportBtnColor,
+						backgroundColor: "grey",
 						borderColor: this.state.reportBtnColor,
 						justifyContent: "center",
 						alignItems: "center",

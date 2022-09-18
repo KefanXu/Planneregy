@@ -273,7 +273,7 @@ export class TrackingPage extends React.Component {
 
 		this.preList = [];
 		this.reportCnt;
-		this.isBadgeVis = "flex";
+		this.isBadgeVis = "none";
 		this.processDailyReports();
 		//Determine where the report popup come from
 		this.isReportFromPopup = true;
@@ -458,9 +458,12 @@ export class TrackingPage extends React.Component {
 			archiveIconColor: "grey",
 			homeIconColor: "black",
 			//if the review btn is displayed
-			isReviewBtnVis:"none",
+			isReviewBtnVis: "none",
 			isReportBtnDisabled: false,
-			reportBtnColor:"black"
+			reportBtnColor: "black",
+			unplannedActivityPanelVis:"none",
+			addUnplannedActivityBtnVis:"flex",
+			currentGuideStep:1
 		};
 		this.processUserStrategies();
 		// this.processDailyReports_after();
@@ -471,10 +474,9 @@ export class TrackingPage extends React.Component {
 			if (this.isEvaluationDate) {
 				this.setState({ isReportModalVis: false });
 				this.setState({ isReviewPopVis: true });
-				this.setState({ isReviewBtnVis:"flex"})
+				this.setState({ isReviewBtnVis: "flex" });
 			}
 		}
-
 	}
 	componentDidMount() {
 		this.scrollToThisWeek();
@@ -484,7 +486,7 @@ export class TrackingPage extends React.Component {
 		this.focusUnsubscribe = this.props.navigation.addListener(
 			"focus",
 			this.onFocus
-		  );
+		);
 		// this.calculateCompletion2()
 		// this.setState({isBadgeVis:"none"})
 		// this.processDailyReports_after();
@@ -496,7 +498,7 @@ export class TrackingPage extends React.Component {
 		this.dataModel.loadUserStrategies();
 		this.dailyReportPopup();
 		this.setState({ valueForReload: 2 });
-	}
+	};
 	evaluatePanelPopup = async () => {
 		this.setState({ isSelectStrategyDisable: true });
 		this.setState({ isReviewBtnDisabled: true });
@@ -643,7 +645,7 @@ export class TrackingPage extends React.Component {
 				}
 			}
 		}
-		console.log("this.preList",this.preList);
+		console.log("this.preList", this.preList);
 		this.reportCnt = this.preList.length;
 		console.log("this.preList.length", this.preList.length);
 		// this.setState({ preList: this.preList });
@@ -653,7 +655,7 @@ export class TrackingPage extends React.Component {
 		} else {
 			this.isBadgeVis = "none";
 		}
-		// this.setState({ isBadgeVis: this.isBadgeVis });
+		this.setState({ isBadgeVis: this.isBadgeVis });
 	};
 	processDailyReports_after = async () => {
 		console.log("======processDailyReports_after======");
@@ -1536,11 +1538,11 @@ export class TrackingPage extends React.Component {
 			.format()
 			.slice(0, 10);
 		if (selectedEventDate > today) {
-			this.setState({reportBtnColor:"grey"});
-			this.setState({ isReportBtnDisabled: true})
+			this.setState({ reportBtnColor: "grey" });
+			this.setState({ isReportBtnDisabled: true });
 		} else {
-			this.setState({reportBtnColor:"black"});
-			this.setState({ isReportBtnDisabled: false})
+			this.setState({ reportBtnColor: "black" });
+			this.setState({ isReportBtnDisabled: false });
 		}
 		if (monthNum === today.getMonth()) {
 			weatherList = this.thisMonthWeather;
@@ -1656,9 +1658,11 @@ export class TrackingPage extends React.Component {
 	//Close the daily report window
 	onDailyReportClose = () => {
 		this.setState({ isReportModalVis: false });
+		this.setState({ addUnplannedActivityBtnVis:"flex"})
 		this.setState({ currentSwipeIndex: 0 });
 		this.setState({ currentSwipePage: 0 });
 		this.setState({ reportModalHeight: "50%" });
+		this.setState({ unplannedActivityPanelVis: "none"}) 
 		this.setState({ reportNEXTbtn: "NEXT" });
 		this.setState({ isReportSwipePERVvis: "flex" });
 		this.setState({ isReportSwipePERVdisabled: true });
@@ -1684,7 +1688,7 @@ export class TrackingPage extends React.Component {
 		);
 		this.setState({ selectedDate: selectedDay });
 		this.setState({ dateTimePickerDate: selectedDay });
-
+		this.setState({ unplannedActivityPanelVis: "flex"}) 
 		this.setState({ isReportModalVis: true });
 		this.setState({ currentSwipeIndex: 8 });
 		this.setState({ currentSwipePage: 8 });
@@ -1693,6 +1697,8 @@ export class TrackingPage extends React.Component {
 		this.setState({ isReportSwipePERVvis: "none" });
 		this.setState({ reportStatus: "ADD_ACTIVITY" });
 		this.setState({ reportNEXTbtn: "SUBMIT" });
+		this.setState({ addUnplannedActivityBtnVis:"none"})
+
 	};
 	//The previous btn on the report modal pressed
 	onReportPrevBtnPressed = () => {
@@ -1912,7 +1918,7 @@ export class TrackingPage extends React.Component {
 		} else if (this.state.currentSwipePage === 1) {
 			currentSwipePage = currentSwipePage + 7;
 			this.setState({ currentSwipeIndex: 8 });
-			this.setState({ reportModalHeight: 670 });
+			this.setState({ reportModalHeight: "50%" });
 			this.setState({ isReportModalVis: false });
 			this.setState({ reportStatus: "COMPLETE" });
 			this.setState({ reportNEXTbtn: "SUBMIT" });
@@ -1979,7 +1985,7 @@ export class TrackingPage extends React.Component {
 			this.reportModalSwiperRef.current.scrollBy(2, true);
 			currentSwipePage = currentSwipePage + 2;
 			this.setState({ currentSwipeIndex: 7 });
-			this.setState({ reportModalHeight: 670 });
+			this.setState({ reportModalHeight:  "50%" });
 			this.setState({ reportNEXTbtn: "SUBMIT" });
 			this.setState({ reportStatus: "PARTIALLY_COMPLETE_ACTIVITY" });
 			this.setState({ isReportModalVis: false });
@@ -2010,7 +2016,7 @@ export class TrackingPage extends React.Component {
 			this.setState({ currentSwipeIndex: 8 });
 			this.setState({ reportNEXTbtn: "SUBMIT" });
 			this.setState({ reportStatus: "PARTIALLY_COMPLETE_TIME" });
-			this.setState({ reportModalHeight: 670 });
+			this.setState({ reportModalHeight:  "50%" });
 			this.setState({ isReportModalVis: false });
 			setTimeout(() => {
 				this.setState({ isReportModalVis: true }), 1000;
@@ -2030,6 +2036,12 @@ export class TrackingPage extends React.Component {
 				this.onSubmitPressed_UserAddedActivity();
 				this.onDailyReportClose();
 			}
+			showMessage({
+				message: "Activity Submitted",
+				description: "Wait for updating...",
+				type: "success",
+				icon: "success",
+			});
 		}
 		// } else if (this.state.currentSwipePage === 1) {
 		//   this.setState({ currentSwipeIndex: 2 });
@@ -2900,7 +2912,7 @@ export class TrackingPage extends React.Component {
 						borderWidth: 3,
 						height: "100%",
 						backgroundColor: this.state.reportBtnColor,
-						borderColor:this.state.reportBtnColor,
+						borderColor: this.state.reportBtnColor,
 						justifyContent: "center",
 						alignItems: "center",
 					}}
@@ -4935,7 +4947,7 @@ export class TrackingPage extends React.Component {
 								justifyContent: "space-between",
 								alignItems: "center",
 								paddingVertical: 15,
-								// display:this.state.isReviewBtnVis
+								display: this.state.isReviewBtnVis,
 							}}
 							disabled={this.state.isReviewBtnDisabled}
 							onPress={() => {
@@ -6827,23 +6839,7 @@ export class TrackingPage extends React.Component {
 									{this.calculateCompletion()}%
 								</Text>
 							</View>
-							<View
-								style={{
-									flexDirection: "row",
-									alignItems: "center",
-									marginRight: 10,
-								}}>
-								<Ionicons name="heart-circle" size={15} color="white" />
-								<Text
-									style={{
-										fontWeight: "bold",
-										fontSize: 11,
-										color: "white",
-										marginLeft: 5,
-									}}>
-									{this.calculateSatisfaction()}
-								</Text>
-							</View>
+
 							<View
 								style={{
 									flexDirection: "row",
@@ -6859,6 +6855,23 @@ export class TrackingPage extends React.Component {
 										marginLeft: 5,
 									}}>
 									{this.calculateTotalDuration()} min
+								</Text>
+							</View>
+							<View
+								style={{
+									flexDirection: "row",
+									alignItems: "center",
+									marginRight: 10,
+								}}>
+								<Ionicons name="heart-circle" size={15} color="white" />
+								<Text
+									style={{
+										fontWeight: "bold",
+										fontSize: 11,
+										color: "white",
+										marginLeft: 5,
+									}}>
+									{this.calculateSatisfaction()}
 								</Text>
 							</View>
 						</View>
@@ -7293,7 +7306,17 @@ export class TrackingPage extends React.Component {
 													alignItems: "center",
 													marginRight: 10,
 												}}>
-												<Ionicons name="heart-circle" size={15} color="white" />
+												<View
+													style={{
+														alignItems: "center",
+														justifyContent: "center",
+														borderRadius: 20,
+														backgroundColor: "white",
+														height: 13,
+														width: 13,
+													}}>
+													<AntDesign name="like1" size={8} color="black" />
+												</View>
 												<Text
 													style={{
 														fontWeight: "bold",
@@ -7301,9 +7324,10 @@ export class TrackingPage extends React.Component {
 														color: "white",
 														marginLeft: 5,
 													}}>
-													{avgSatisfaction}
+													{item.rating}
 												</Text>
 											</View>
+
 											<View
 												style={{
 													flexDirection: "row",
@@ -7319,6 +7343,23 @@ export class TrackingPage extends React.Component {
 														marginLeft: 5,
 													}}>
 													{accDuration} min
+												</Text>
+											</View>
+											<View
+												style={{
+													flexDirection: "row",
+													alignItems: "center",
+													marginRight: 10,
+												}}>
+												<Ionicons name="heart-circle" size={15} color="white" />
+												<Text
+													style={{
+														fontWeight: "bold",
+														fontSize: 11,
+														color: "white",
+														marginLeft: 5,
+													}}>
+													{avgSatisfaction}
 												</Text>
 											</View>
 										</View>
@@ -7673,7 +7714,8 @@ export class TrackingPage extends React.Component {
 											lastMonthWeather: this.lastMonthWeather,
 											thisMonthWeather: this.thisMonthWeather,
 											nextMonthWeather: this.nextMonthWeather,
-											userActivityList: this.props.route.params.userActivityList,
+											userActivityList:
+												this.props.route.params.userActivityList,
 											currentStrategy: this.state.selectedStrategy,
 											keywords: this.state.selectedStrategy.keywords,
 											plans: this.state.selectedStrategy.plans,
@@ -8459,8 +8501,7 @@ export class TrackingPage extends React.Component {
 			</View>
 		);
 		let reportScreen_EIGHT = (
-			<View
-				style={{ height: "100%", width: "100%", padding: 15, marginTop: 5 }}>
+			<View style={{ height: 500, width: "100%", padding: 15, marginTop: 5 }}>
 				<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 16 }}>
 					Tell us what are other activities you did?{" "}
 				</Text>
@@ -8477,375 +8518,393 @@ export class TrackingPage extends React.Component {
 						marginTop: 10,
 						marginBottom: 10,
 					}}></View>
-				<Text
-					style={{
-						fontFamily: "RobotoBoldItalic",
-						fontSize: 16,
-						marginBottom: 5,
-					}}>
-					Unplanned Activities
-				</Text>
-				{/* Activity List */}
-				<View
-					style={[
-						generalStyles.shadowStyle,
-						{ width: "100%", height: 150, paddingHorizontal: 0 },
-					]}>
-					<FlatList
-						data={this.state.selfReportedActivityList}
-						renderItem={({ item }) => {
-							if (!item.isDeleted) {
-								let timing =
-									moment(item.start).format("ddd").toUpperCase() +
-									" " +
-									item.start.slice(11, 16) +
-									" - " +
-									item.end.slice(11, 16) +
-									" | " +
-									item.duration +
-									" MIN";
-
-								return (
-									<View
-										style={[
-											{
-												width: "100%",
-												height: 39,
-												borderRadius: 20,
-												borderColor: "#F0F0F0",
-												borderWidth: 1,
-												paddingHorizontal: 0,
-												flexDirection: "row",
-												alignItems: "center",
-												justifyContent: "space-between",
-												marginTop: 5,
-											},
-										]}>
-										<Text
-											ellipsizeMode="tail"
-											numberOfLines={1}
-											style={{
-												fontFamily: "RobotoBoldBold",
-												fontSize: 14,
-												paddingLeft: 8,
-												width: 100,
-											}}>
-											{item.title}
-										</Text>
-										<Text style={{ fontFamily: "RobotoRegular", fontSize: 14 }}>
-											{timing}
-										</Text>
-										<Text style={{ fontFamily: "RobotoRegular", fontSize: 14 }}>
-											{/* {item.duration} */}
-										</Text>
-										<TouchableOpacity
-											onPress={() => this.deleteActivity_reportScreen(item)}>
-											<Ionicons
-												name="md-close-circle"
-												size={24}
-												color="black"
-											/>
-										</TouchableOpacity>
-									</View>
-								);
-							}
-							// console.log("items in plansBuddle", item);
+				<TouchableOpacity style={{flexDirection:"row", justifyContent:"flex-start", alignItems:"center", display:this.state.addUnplannedActivityBtnVis}}						
+				onPress={() => {
+							this.setState({ reportModalHeight: 670 });
+							this.setState({ unplannedActivityPanelVis: "flex"}) 
+						}}>
+					<View
+						style={{
+							alignItems: "center",
+							justifyContent: "center",
+							marginRight: 10,
 						}}
-					/>
-				</View>
-				{/* First Row of Activity Selection */}
-				<View
-					style={{
-						flexDirection: "row",
-						justifyContent: "space-between",
-						alignItems: "center",
-						paddingHorizontal: "5%",
-						paddingVertical: "2%",
-						height: 90,
-						width: "100%",
-						borderColor: "#DADADA",
-						borderWidth: 2,
-						borderRadius: 20,
-						marginTop: "5%",
-					}}>
-					<View
-						style={{
-							justifyContent: "space-between",
-							alignItems: "center",
-							height: "100%",
-							width: "50%",
-							paddingVertical: "2%",
-							paddingHorizontal: "2%",
-						}}>
-						<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
-							Activity
-						</Text>
-						<View
-							style={{
-								backgroundColor: "black",
-								borderRadius: 40,
-								height: "50%",
-								width: "100%",
-								justifyContent: "center",
-								alignItems: "center",
-							}}>
-							<ModalSelector
-								style={{ borderWidth: 0, borderRadius: 20 }}
-								// touchableStyle={{ color: "white" }}
-								optionContainerStyle={[
-									generalStyles.shadowStyle,
-									{
-										borderWidth: 0,
-										backgroundColor: "white",
-										borderColor: "grey",
-										// borderWidth: 2,
-										borderRadius: 15,
-									},
-								]}
-								selectStyle={{ borderWidth: 0 }}
-								selectTextStyle={{
-									textAlign: "center",
-									color: "white",
-									fontWeight: "bold",
-									borderRadius: 20,
-									fontSize: 12,
-								}}
-								initValueTextStyle={{
-									textAlign: "center",
-									color: "white",
-									fontWeight: "bold",
-									backgroundColor: "black",
-									borderRadius: 20,
-									fontSize: 12,
-								}}
-								backdropPressToClose={true}
-								overlayStyle={{
-									flex: 1,
-									padding: "5%",
-									justifyContent: "center",
-									backgroundColor: "rgba(0,0,0,0)",
-									borderRadius: 20,
-								}}
-								optionTextStyle={{
-									fontWeight: "bold",
-									fontFamily: "RobotoBoldBlack",
-								}}
-								sectionTextStyle={{
-									fontWeight: "bold",
-									fontFamily: "RobotoBoldItalic",
-								}}
-								cancelStyle={{
-									backgroundColor: "black",
-									borderRadius: 15,
-								}}
-								cancelTextStyle={{ fontWeight: "bold", color: "white" }}
-								data={this.state.activityData}
-								initValue={"Select Here"}
-								onChange={async (item) => {
-									this.setState({ isActivityTypeSelected: true });
-									this.setState({ selectedActivity: item.label });
-									// await this.activityFilter(item);
-								}}
-							/>
-						</View>
+>
+						<Ionicons name="chevron-down-circle" size={25} color="black" />
 					</View>
+					<Text
+						style={{
+							fontFamily: "RobotoBoldItalic",
+							fontSize: 16,
+						}}>
+						Click to Add Unplanned Activities
+					</Text>
+				</TouchableOpacity>
+				<View style={{display:this.state.unplannedActivityPanelVis}}>
+					{/* Activity List */}
+					<View
+						style={[
+							generalStyles.shadowStyle,
+							{ width: "100%", height: 150, paddingHorizontal: 0 },
+						]}>
+						<FlatList
+							data={this.state.selfReportedActivityList}
+							renderItem={({ item }) => {
+								if (!item.isDeleted) {
+									let timing =
+										moment(item.start).format("ddd").toUpperCase() +
+										" " +
+										item.start.slice(11, 16) +
+										" - " +
+										item.end.slice(11, 16) +
+										" | " +
+										item.duration +
+										" MIN";
+
+									return (
+										<View
+											style={[
+												{
+													width: "100%",
+													height: 39,
+													borderRadius: 20,
+													borderColor: "#F0F0F0",
+													borderWidth: 1,
+													paddingHorizontal: 0,
+													flexDirection: "row",
+													alignItems: "center",
+													justifyContent: "space-between",
+													marginTop: 5,
+												},
+											]}>
+											<Text
+												ellipsizeMode="tail"
+												numberOfLines={1}
+												style={{
+													fontFamily: "RobotoBoldBold",
+													fontSize: 14,
+													paddingLeft: 8,
+													width: 100,
+												}}>
+												{item.title}
+											</Text>
+											<Text
+												style={{ fontFamily: "RobotoRegular", fontSize: 14 }}>
+												{timing}
+											</Text>
+											<Text
+												style={{ fontFamily: "RobotoRegular", fontSize: 14 }}>
+												{/* {item.duration} */}
+											</Text>
+											<TouchableOpacity
+												onPress={() => this.deleteActivity_reportScreen(item)}>
+												<Ionicons
+													name="md-close-circle"
+													size={24}
+													color="black"
+												/>
+											</TouchableOpacity>
+										</View>
+									);
+								}
+								// console.log("items in plansBuddle", item);
+							}}
+						/>
+					</View>
+					{/* First Row of Activity Selection */}
 					<View
 						style={{
+							flexDirection: "row",
 							justifyContent: "space-between",
 							alignItems: "center",
-							height: "100%",
-							width: "50%",
+							paddingHorizontal: "5%",
 							paddingVertical: "2%",
-							paddingHorizontal: "2%",
+							height: 90,
+							width: "100%",
+							borderColor: "#DADADA",
+							borderWidth: 2,
+							borderRadius: 20,
+							marginTop: "5%",
 						}}>
-						<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
-							Self-Defined
-						</Text>
-						{/* Add New Activity Text Field */}
 						<View
 							style={{
-								backgroundColor: "white",
-								height: "50%",
-								borderRadius: 20,
-								borderWidth: 2,
-								borderColor: "black",
-								marginRight: 0,
-								flexDirection: "row",
-								alignItems: "center",
 								justifyContent: "space-between",
+								alignItems: "center",
+								height: "100%",
+								width: "50%",
+								paddingVertical: "2%",
+								paddingHorizontal: "2%",
 							}}>
-							<TextInput
-								style={{
-									fontSize: 16,
-									marginLeft: 5,
-									width: "100%",
-									textAlign: "center",
-									fontFamily: "RobotoBoldItalic",
-								}}
-								ref={(input) => {
-									this.textInput = input;
-								}}
-								placeholder="new activity"
-								value={this.state.userDefinedActivityText}
-								onChangeText={(text) =>
-									this.setState({ userDefinedActivityText: text })
-								}></TextInput>
+							<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
+								Activity
+							</Text>
 							<View
 								style={{
-									margin: 1,
+									backgroundColor: "black",
+									borderRadius: 40,
+									height: "50%",
+									width: "100%",
 									justifyContent: "center",
-									position: "absolute",
-									marginRight: 1,
+									alignItems: "center",
 								}}>
-								<TouchableOpacity
-									style={{ alignItems: "center", justifyContent: "center" }}
-									onPress={this.addNewActivityBtnPressed}>
-									<Ionicons
-										name="ios-add-circle"
-										size={25}
-										color={"black"}
-										// style={{flex:0.1}}
-									/>
-								</TouchableOpacity>
+								<ModalSelector
+									style={{ borderWidth: 0, borderRadius: 20 }}
+									// touchableStyle={{ color: "white" }}
+									optionContainerStyle={[
+										generalStyles.shadowStyle,
+										{
+											borderWidth: 0,
+											backgroundColor: "white",
+											borderColor: "grey",
+											// borderWidth: 2,
+											borderRadius: 15,
+										},
+									]}
+									selectStyle={{ borderWidth: 0 }}
+									selectTextStyle={{
+										textAlign: "center",
+										color: "white",
+										fontWeight: "bold",
+										borderRadius: 20,
+										fontSize: 12,
+									}}
+									initValueTextStyle={{
+										textAlign: "center",
+										color: "white",
+										fontWeight: "bold",
+										backgroundColor: "black",
+										borderRadius: 20,
+										fontSize: 12,
+									}}
+									backdropPressToClose={true}
+									overlayStyle={{
+										flex: 1,
+										padding: "5%",
+										justifyContent: "center",
+										backgroundColor: "rgba(0,0,0,0)",
+										borderRadius: 20,
+									}}
+									optionTextStyle={{
+										fontWeight: "bold",
+										fontFamily: "RobotoBoldBlack",
+									}}
+									sectionTextStyle={{
+										fontWeight: "bold",
+										fontFamily: "RobotoBoldItalic",
+									}}
+									cancelStyle={{
+										backgroundColor: "black",
+										borderRadius: 15,
+									}}
+									cancelTextStyle={{ fontWeight: "bold", color: "white" }}
+									data={this.state.activityData}
+									initValue={"Select Here"}
+									onChange={async (item) => {
+										this.setState({ isActivityTypeSelected: true });
+										this.setState({ selectedActivity: item.label });
+										// await this.activityFilter(item);
+									}}
+								/>
+							</View>
+						</View>
+						<View
+							style={{
+								justifyContent: "space-between",
+								alignItems: "center",
+								height: "100%",
+								width: "50%",
+								paddingVertical: "2%",
+								paddingHorizontal: "2%",
+							}}>
+							<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
+								Self-Defined
+							</Text>
+							{/* Add New Activity Text Field */}
+							<View
+								style={{
+									backgroundColor: "white",
+									height: "50%",
+									borderRadius: 20,
+									borderWidth: 2,
+									borderColor: "black",
+									marginRight: 0,
+									flexDirection: "row",
+									alignItems: "center",
+									justifyContent: "space-between",
+								}}>
+								<TextInput
+									style={{
+										fontSize: 16,
+										marginLeft: 5,
+										width: "100%",
+										textAlign: "center",
+										fontFamily: "RobotoBoldItalic",
+									}}
+									ref={(input) => {
+										this.textInput = input;
+									}}
+									placeholder="new activity"
+									value={this.state.userDefinedActivityText}
+									onChangeText={(text) =>
+										this.setState({ userDefinedActivityText: text })
+									}></TextInput>
+								<View
+									style={{
+										margin: 1,
+										justifyContent: "center",
+										position: "absolute",
+										marginRight: 1,
+									}}>
+									<TouchableOpacity
+										style={{ alignItems: "center", justifyContent: "center" }}
+										onPress={this.addNewActivityBtnPressed}>
+										<Ionicons
+											name="ios-add-circle"
+											size={25}
+											color={"black"}
+											// style={{flex:0.1}}
+										/>
+									</TouchableOpacity>
+								</View>
 							</View>
 						</View>
 					</View>
-				</View>
-				{/* Second Row of Date & Time Selection */}
-				<View
-					style={{
-						flexDirection: "row",
-						justifyContent: "space-between",
-						alignItems: "center",
-						// paddingHorizontal: "5%",
+					{/* Second Row of Date & Time Selection */}
+					<View
+						style={{
+							flexDirection: "row",
+							justifyContent: "space-between",
+							alignItems: "center",
+							// paddingHorizontal: "5%",
 
-						height: 90,
-						width: "100%",
-						borderColor: "#DADADA",
-						backgroundColor: "#F0F0F0",
-						borderWidth: 2,
-						borderRadius: 20,
-						marginTop: "2%",
-					}}>
-					<View
-						style={{
-							flex: 1,
-							height: "100%",
-							alignItems: "center",
-							justifyContent: "space-between",
-							borderColor: "#F0F0F0",
-							backgroundColor: "#DADADA",
-							paddingVertical: "4%",
-							borderBottomLeftRadius: 15,
-							borderTopLeftRadius: 15,
+							height: 90,
+							width: "100%",
+							borderColor: "#DADADA",
+							backgroundColor: "#F0F0F0",
+							borderWidth: 2,
+							borderRadius: 20,
+							marginTop: "2%",
 						}}>
-						<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
-							Date
-						</Text>
 						<View
 							style={{
-								justifyContent: "center",
+								flex: 1,
+								height: "100%",
 								alignItems: "center",
-								height: 40,
-								width: "100%",
+								justifyContent: "space-between",
+								borderColor: "#F0F0F0",
 								backgroundColor: "#DADADA",
-								borderRadius: 5,
+								paddingVertical: "4%",
+								borderBottomLeftRadius: 15,
+								borderTopLeftRadius: 15,
 							}}>
-							<DateTimePicker
-								value={this.state.dateTimePickerDate}
-								mode="date"
-								is24Hour={true}
-								display="default"
-								onChange={async (e, date) => {
-									this.pickTheDate(date);
-									this.setState({ dateTimePickerDate: date });
-								}}
+							<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
+								Date
+							</Text>
+							<View
 								style={{
-									width: 80,
+									justifyContent: "center",
+									alignItems: "center",
 									height: 40,
-									flex: 1,
-								}}
-							/>
+									width: "100%",
+									backgroundColor: "#DADADA",
+									borderRadius: 5,
+								}}>
+								<DateTimePicker
+									value={this.state.dateTimePickerDate}
+									mode="date"
+									is24Hour={true}
+									display="default"
+									onChange={async (e, date) => {
+										this.pickTheDate(date);
+										this.setState({ dateTimePickerDate: date });
+									}}
+									style={{
+										width: 80,
+										height: 40,
+										flex: 1,
+									}}
+								/>
+							</View>
 						</View>
-					</View>
-					<View
-						style={{
-							flex: 1,
-							height: "100%",
-							alignItems: "center",
-							justifyContent: "space-between",
-							paddingVertical: "4%",
-						}}>
-						<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
-							From
-						</Text>
 						<View
 							style={{
-								justifyContent: "center",
+								flex: 1,
+								height: "100%",
 								alignItems: "center",
-								height: 40,
-								width: "100%",
-								backgroundColor: "#F0F0F0",
-								borderTopLeftRadius: 5,
-								borderBottomLeftRadius: 5,
+								justifyContent: "space-between",
+								paddingVertical: "4%",
 							}}>
-							<DateTimePicker
-								value={this.state.startTime}
-								mode="spinner"
-								minuteInterval={10}
-								is24Hour={true}
-								display="default"
-								onChange={async (e, date) => this.pickStartTime(date)}
+							<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
+								From
+							</Text>
+							<View
 								style={{
-									width: 90,
+									justifyContent: "center",
+									alignItems: "center",
 									height: 40,
-									flex: 1,
-								}}
-							/>
+									width: "100%",
+									backgroundColor: "#F0F0F0",
+									borderTopLeftRadius: 5,
+									borderBottomLeftRadius: 5,
+								}}>
+								<DateTimePicker
+									value={this.state.startTime}
+									mode="spinner"
+									minuteInterval={10}
+									is24Hour={true}
+									display="default"
+									onChange={async (e, date) => this.pickStartTime(date)}
+									style={{
+										width: 90,
+										height: 40,
+										flex: 1,
+									}}
+								/>
+							</View>
 						</View>
-					</View>
-					<View
-						style={{
-							flex: 1,
-							height: "100%",
-							alignItems: "center",
-							justifyContent: "space-between",
-							paddingVertical: "4%",
-						}}>
-						<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
-							To
-						</Text>
 						<View
 							style={{
-								justifyContent: "center",
+								flex: 1,
+								height: "100%",
 								alignItems: "center",
-								height: 40,
-								width: "100%",
-								backgroundColor: "#F0F0F0",
-								borderTopRightRadius: 5,
-								borderBottomRightRadius: 5,
+								justifyContent: "space-between",
+								paddingVertical: "4%",
 							}}>
-							<DateTimePicker
-								value={this.state.endTime}
-								mode="spinner"
-								minuteInterval={10}
-								is24Hour={true}
-								display="default"
-								onChange={async (e, date) => this.pickEndTime(date)}
+							<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 14 }}>
+								To
+							</Text>
+							<View
 								style={{
-									width: 90,
+									justifyContent: "center",
+									alignItems: "center",
 									height: 40,
-									flex: 1,
-								}}
-							/>
+									width: "100%",
+									backgroundColor: "#F0F0F0",
+									borderTopRightRadius: 5,
+									borderBottomRightRadius: 5,
+								}}>
+								<DateTimePicker
+									value={this.state.endTime}
+									mode="spinner"
+									minuteInterval={10}
+									is24Hour={true}
+									display="default"
+									onChange={async (e, date) => this.pickEndTime(date)}
+									style={{
+										width: 90,
+										height: 40,
+										flex: 1,
+									}}
+								/>
+							</View>
 						</View>
 					</View>
-				</View>
-				<View style={{ alignItems: "center", justifyContent: "center" }}>
-					<TouchableOpacity
-						onPress={() => this.onPlanBtnPressed_reportScreen()}>
-						<AddActivityBtn height={32} width={202} marginTop={"2%"} />
-					</TouchableOpacity>
+					<View style={{ alignItems: "center", justifyContent: "center" }}>
+						<TouchableOpacity
+							onPress={() => this.onPlanBtnPressed_reportScreen()}>
+							<AddActivityBtn height={32} width={202} marginTop={"2%"} />
+						</TouchableOpacity>
+					</View>
 				</View>
 			</View>
 		);
@@ -9301,6 +9360,41 @@ export class TrackingPage extends React.Component {
 								})}
 							</View>
 						</ScrollView>
+						<TouchableOpacity
+							style={[
+								generalStyles.shadowStyle,
+								{
+									width: 90,
+									height: 35,
+									backgroundColor: "white",
+									marginLeft: 10,
+									borderRadius: 20,
+									flexDirection: "row",
+									justifyContent: "space-between",
+									alignItems: "center",
+									paddingHorizontal: 10,
+									position:"absolute",
+									right:5,
+									top:5
+								},
+							]}
+							onPress={() => {
+								this.evaluatePanelPopup();
+								// this.setState({isReviewBtnDisabled:true})
+								this.mainContentSwiperRef.current.goToPage(1, true);
+								// this.panelSwiperRef.current.goToPage(0, true);
+							}}>
+							{/* <MaterialIcons name="all-inclusive" size={20} color={GREEN} /> */}
+							<FontAwesome5 name="flag-checkered" size={18} color={GREEN} />
+							<Text
+								style={{
+									fontFamily: "RobotoBoldItalic",
+									fontSize: 14,
+									color: GREEN,
+								}}>
+								Review
+							</Text>
+						</TouchableOpacity>
 					</View>
 				</Modal>
 				{/* Plan Detail View */}
@@ -9372,7 +9466,7 @@ export class TrackingPage extends React.Component {
 									onPress={() => {
 										this.setState({ isPlanDetailModalVis: false });
 										this.setState({ isReportBtnDisabled: false });
-										this.setState({ reportBtnColor: "black"})
+										this.setState({ reportBtnColor: "black" });
 										// this.reportModalSwiperRef.current.scrollBy(2, true);
 									}}>
 									<AntDesign name="closecircle" size={24} color="black" />
@@ -9939,15 +10033,6 @@ export class TrackingPage extends React.Component {
 																	alignItems: "center",
 																	justifyContent: "center",
 																}}>
-																{/* <View
-                    style={{
-                      height: 9,
-                      width: 9,
-                      borderRadius: 4.5,
-                      backgroundColor: GREEN,
-                      marginRight: 10,
-                    }}
-                  /> */}
 																<Text
 																	style={{
 																		fontFamily: "RobotoBoldBlack",
@@ -10041,11 +10126,21 @@ export class TrackingPage extends React.Component {
 																	alignItems: "center",
 																	marginRight: 10,
 																}}>
-																<Ionicons
-																	name="heart-circle"
-																	size={15}
-																	color="white"
-																/>
+																<View
+																	style={{
+																		alignItems: "center",
+																		justifyContent: "center",
+																		borderRadius: 20,
+																		backgroundColor: "white",
+																		height: 13,
+																		width: 13,
+																	}}>
+																	<AntDesign
+																		name="like1"
+																		size={8}
+																		color="black"
+																	/>
+																</View>
 																<Text
 																	style={{
 																		fontWeight: "bold",
@@ -10053,7 +10148,7 @@ export class TrackingPage extends React.Component {
 																		color: "white",
 																		marginLeft: 5,
 																	}}>
-																	{avgSatisfaction}
+																	{item.rating}
 																</Text>
 															</View>
 															<View
@@ -10075,6 +10170,27 @@ export class TrackingPage extends React.Component {
 																		marginLeft: 5,
 																	}}>
 																	{accDuration} min
+																</Text>
+															</View>
+															<View
+																style={{
+																	flexDirection: "row",
+																	alignItems: "center",
+																	marginRight: 10,
+																}}>
+																<Ionicons
+																	name="heart-circle"
+																	size={15}
+																	color="white"
+																/>
+																<Text
+																	style={{
+																		fontWeight: "bold",
+																		fontSize: 11,
+																		color: "white",
+																		marginLeft: 5,
+																	}}>
+																	{avgSatisfaction}
 																</Text>
 															</View>
 														</View>
@@ -10340,6 +10456,7 @@ export class TrackingPage extends React.Component {
 								}}
 								onPress={() => {
 									this.setState({ isGuideVis: false });
+									this.setState({currentGuideStep: 1});
 
 									// this.reportModalSwiperRef.current.scrollBy(2, true);
 								}}>
@@ -10347,6 +10464,26 @@ export class TrackingPage extends React.Component {
 								<Text
 									style={{ fontWeight: "bold", color: "white", fontSize: 18 }}>
 									SKIP
+								</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={{
+									position: "absolute",
+									bottom: "3%",
+									right: 10,
+									zIndex: 1,
+									display:this.state.currentGuideStep === 5 ? "flex" : "none"
+								}}
+								onPress={() => {
+									this.setState({ isGuideVis: false });
+									this.setState({currentGuideStep: 1});
+
+									// this.reportModalSwiperRef.current.scrollBy(2, true);
+								}}>
+								{/* <AntDesign name="closecircle" size={24} color="black" /> */}
+								<Text
+									style={{ fontWeight: "bold", color: "white", fontSize: 18 }}>
+									DONE
 								</Text>
 							</TouchableOpacity>
 							<Swiper
@@ -10362,6 +10499,10 @@ export class TrackingPage extends React.Component {
 									<TouchableOpacity
 										onPress={() => {
 											this.tipModalSwiperRef.current.scrollBy(1, false);
+											let currentGuideStep = this.state.currentGuideStep;
+											currentGuideStep++;
+											this.setState({currentGuideStep: currentGuideStep});
+											console.log("this.state.currentGuideStep",this.state.currentGuideStep);
 										}}>
 										<Text
 											style={{
@@ -10377,6 +10518,10 @@ export class TrackingPage extends React.Component {
 									<TouchableOpacity
 										onPress={() => {
 											this.tipModalSwiperRef.current.scrollBy(-1, false);
+											let currentGuideStep = this.state.currentGuideStep;
+											currentGuideStep--;
+											this.setState({currentGuideStep: currentGuideStep});
+											console.log("this.state.currentGuideStep",this.state.currentGuideStep);
 										}}>
 										<Text
 											style={{
@@ -10470,7 +10615,6 @@ export class TrackingPage extends React.Component {
 										fontFamily: "RobotoBoldItalic",
 										fontSize: 23,
 										marginBottom: 20,
-
 									}}>
 									Tell us how you think this current strategy is working so far:{" "}
 								</Text>
@@ -10645,15 +10789,15 @@ export class TrackingPage extends React.Component {
 									</View>
 								</View>
 								<Text
-										style={{
-											fontFamily: "RobotoBoldItalic",
-											fontSize: 18,
-											marginTop: 40,
-											width:"90%"
-										}}>
-										Click the <Text style={{ color: GREEN }}>Review</Text>{" "}
-										button above to start your weekly reviewing process
-									</Text>
+									style={{
+										fontFamily: "RobotoBoldItalic",
+										fontSize: 18,
+										marginTop: 40,
+										width: "90%",
+									}}>
+									Click the <Text style={{ color: GREEN }}>Review</Text> button
+									above to start your weekly reviewing process
+								</Text>
 							</View>
 
 							<TouchableOpacity
