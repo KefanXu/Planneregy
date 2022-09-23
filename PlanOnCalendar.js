@@ -302,6 +302,7 @@ export class PlanOnCalendar extends React.Component {
 			reportBtnColor: "Report",
 			//Visibility of Guide btn
 			isGuideVis: this.isGuideVis,
+			currentGuideStep:1
 		};
 		if (this.isDataFromTracking) {
 			for (let event of this.plansBuddle) {
@@ -4496,6 +4497,26 @@ export class PlanOnCalendar extends React.Component {
 										SKIP
 									</Text>
 								</TouchableOpacity>
+								<TouchableOpacity
+								style={{
+									position: "absolute",
+									bottom: "3%",
+									right: 10,
+									zIndex: 1,
+									display:this.state.currentGuideStep === 6 ? "flex" : "none"
+								}}
+								onPress={() => {
+									this.setState({ isGuideVis: false });
+									this.setState({currentGuideStep: 1});
+
+									// this.reportModalSwiperRef.current.scrollBy(2, true);
+								}}>
+								{/* <AntDesign name="closecircle" size={24} color="black" /> */}
+								<Text
+									style={{ fontWeight: "bold", color: "white", fontSize: 18 }}>
+									DONE
+								</Text>
+							</TouchableOpacity>
 								<Swiper
 									activeDotColor="white"
 									// index={this.state.currentSwipeIndex}
@@ -4509,6 +4530,9 @@ export class PlanOnCalendar extends React.Component {
 										<TouchableOpacity
 											onPress={() => {
 												this.tipModalSwiperRef.current.scrollBy(1, false);
+												let currentGuideStep = this.state.currentGuideStep;
+												currentGuideStep++;
+												this.setState({currentGuideStep: currentGuideStep});
 											}}>
 											<Text
 												style={{

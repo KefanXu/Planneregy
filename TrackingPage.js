@@ -174,8 +174,8 @@ const REPORTSCREEN_SEVEN = [
 	{ label: "No", value: "No" },
 ];
 const REPORT_OPTIONS = [
-	{ label: "Reports", value: "report" },
-	{ label: "Records", value: "records" },
+	{ label: "ToDos", value: "report" },
+	{ label: "Completed", value: "records" },
 	{ label: "Overview", value: "overview" },
 
 	// { label: "Both", value: "both" },
@@ -467,26 +467,41 @@ export class TrackingPage extends React.Component {
 		};
 		this.processUserStrategies();
 		// this.processDailyReports_after();
-		this.dailyReportPopup();
-		if (this.isGuideVis) {
-			this.setState({ isReportModalVis: false });
-		} else {
-			if (this.isEvaluationDate) {
-				this.setState({ isReportModalVis: false });
-				this.setState({ isReviewPopVis: true });
-				this.setState({ isReviewBtnVis: "flex" });
-			}
-		}
+		
+		// if (this.isGuideVis) {
+		// 	this.setState({ isReportModalVis: false });
+		// } else {
+		// 	if (this.isEvaluationDate) {
+		// 		console.log("is evaluation");
+		// 		this.setState({ isReportModalVis: false });
+		// 		this.setState({ isReviewPopVis: true });
+		// 		this.setState({ isReviewBtnVis: "flex" });
+		// 	} else {
+		// 		this.dailyReportPopup();
+		// 	}
+		// }
 	}
 	componentDidMount() {
 		this.scrollToThisWeek();
 		this.dataModel = getDataModel();
 		this.dataModel.loadUserStrategies();
-		this.dailyReportPopup();
+		// this.dailyReportPopup();
 		this.focusUnsubscribe = this.props.navigation.addListener(
 			"focus",
 			this.onFocus
 		);
+		if (this.isGuideVis) {
+			this.setState({ isReportModalVis: false });
+		} else {
+			if (this.isEvaluationDate) {
+				console.log("is evaluation");
+				this.setState({ isReportModalVis: false });
+				this.setState({ isReviewPopVis: true });
+				this.setState({ isReviewBtnVis: "flex" });
+			} else {
+				this.dailyReportPopup();
+			}
+		}
 		// this.calculateCompletion2()
 		// this.setState({isBadgeVis:"none"})
 		// this.processDailyReports_after();
@@ -496,7 +511,7 @@ export class TrackingPage extends React.Component {
 		this.scrollToThisWeek();
 		this.dataModel = getDataModel();
 		this.dataModel.loadUserStrategies();
-		this.dailyReportPopup();
+		// this.dailyReportPopup();
 		this.setState({ valueForReload: 2 });
 	};
 	evaluatePanelPopup = async () => {
@@ -4077,6 +4092,21 @@ export class TrackingPage extends React.Component {
 								},
 							]}
 							onPress={() => {
+								if (this.state.reportCnt != 0) {
+									Alert.alert(
+										"You have unfinished reports",
+										"Please finish all your reports before reviewing planning strategy",
+										[
+										  {
+											text: "Cancel",
+											onPress: () => console.log("Cancel Pressed"),
+											style: "cancel"
+										  },
+										  { text: "OK", onPress: () => console.log("OK Pressed") }
+										]
+									  );
+									  return;
+								}
 								this.evaluatePanelPopup();
 								// this.setState({isReviewBtnDisabled:true})
 								this.mainContentSwiperRef.current.goToPage(1, true);
@@ -4892,9 +4922,9 @@ export class TrackingPage extends React.Component {
 										{this.state.strategyDuration}
 									</Text>
 								</View>
-								<View style={{ position: "absolute", right: 5 }}>
+								{/* <View style={{ position: "absolute", right: 5 }}>
 									<FontAwesome5 name="play-circle" size={18} color="white" />
-								</View>
+								</View> */}
 							</View>
 							<ScrollView
 								horizontal={true}
@@ -4951,6 +4981,21 @@ export class TrackingPage extends React.Component {
 							}}
 							disabled={this.state.isReviewBtnDisabled}
 							onPress={() => {
+								if (this.state.reportCnt != 0) {
+									Alert.alert(
+										"You have unfinished reports",
+										"Please finish all your reports before reviewing planning strategy",
+										[
+										  {
+											text: "Cancel",
+											onPress: () => console.log("Cancel Pressed"),
+											style: "cancel"
+										  },
+										  { text: "OK", onPress: () => console.log("OK Pressed") }
+										]
+									  );
+									  return;
+								}
 								this.setState({ isPanelVis: "flex" });
 								this.evaluatePanelPopup();
 								this.mainContentSwiperRef.current.goToPage(1, true);
@@ -7252,7 +7297,7 @@ export class TrackingPage extends React.Component {
 													{item.startDate.slice(5)} → {item.endDate.slice(5)}
 												</Text>
 											</View>
-											<View style={{ position: "absolute", right: 5 }}>
+											{/* <View style={{ position: "absolute", right: 5 }}>
 												{isTodayInBetween ? (
 													<FontAwesome5
 														name="play-circle"
@@ -7266,7 +7311,7 @@ export class TrackingPage extends React.Component {
 														color="white"
 													/>
 												)}
-											</View>
+											</View> */}
 										</View>
 										<View
 											style={{
@@ -7470,6 +7515,23 @@ export class TrackingPage extends React.Component {
 							this.onHideDetailPressed2();
 						}}>
 						{this.state.hideIcon2}
+					</TouchableOpacity>
+					<TouchableOpacity
+						style={{
+							position: "absolute",
+							right: "5%",
+							top: "3%",
+							zIndex: 1,
+						}}
+						onPress={() => {
+							this.setState({ evaluatePanelDisplay: "none" });
+							this.setState({ swipeAblePanelDisplay: "flex" });
+							this.setState({ isPanelVis: "none" });
+							this.setState({ isPanelHided: true });
+							this.setState({ isSelectStrategyDisable: false });
+							this.setState({ isReviewBtnDisabled: false });
+						}}>
+						<MaterialIcons name="cancel" size={24} color="black" />
 					</TouchableOpacity>
 					{/* <TouchableOpacity
             style={{
@@ -8537,7 +8599,7 @@ export class TrackingPage extends React.Component {
 							fontFamily: "RobotoBoldItalic",
 							fontSize: 16,
 						}}>
-						Click to Add Unplanned Activities
+						Click here to Add Unplanned Activities
 					</Text>
 				</TouchableOpacity>
 				<View style={{display:this.state.unplannedActivityPanelVis}}>
@@ -9087,13 +9149,19 @@ export class TrackingPage extends React.Component {
 						// onSwipeComplete={() => this.setState({ isReportModalVis: false })}
 						// swipeDirection="down"
 					>
-						<View
-							style={{
-								width: "100%",
-								height: "100%",
-								justifyContent: "center",
-								alignItems: "center",
-							}}>
+					<BlurView
+						intensity={30}
+						style={{
+							position: "absolute",
+							top: 0,
+							left: 0,
+							right: 0,
+							bottom: 0,
+							height: "100%",
+							width: "100%",
+							justifyContent: "center",
+							alignItems: "center",
+						}}>
 							<View
 								style={[
 									generalStyles.shadowStyle,
@@ -9264,7 +9332,7 @@ export class TrackingPage extends React.Component {
 									</TouchableOpacity>
 								</View>
 							</View>
-						</View>
+						</BlurView>
 					</RNModal>
 				</KeyboardAvoidingView>
 				{/* Plan Strategy Detail Modal */}
@@ -9379,7 +9447,25 @@ export class TrackingPage extends React.Component {
 								},
 							]}
 							onPress={() => {
+								if (this.state.reportCnt != 0) {
+									Alert.alert(
+										"You have unfinished reports",
+										"Please finish all your reports before reviewing planning strategy",
+										[
+										  {
+											text: "Cancel",
+											onPress: () => console.log("Cancel Pressed"),
+											style: "cancel"
+										  },
+										  { text: "OK", onPress: () => console.log("OK Pressed") }
+										]
+									  );
+									  return;
+								}
+								this.setState({isStrategyDetailModalVis: false})
+								this.setState({ isPanelVis: "flex" });
 								this.evaluatePanelPopup();
+								this.setState({ isReviewPopVis: false });
 								// this.setState({isReviewBtnDisabled:true})
 								this.mainContentSwiperRef.current.goToPage(1, true);
 								// this.panelSwiperRef.current.goToPage(0, true);
@@ -10072,7 +10158,7 @@ export class TrackingPage extends React.Component {
 																	{item.endDate.slice(5)}
 																</Text>
 															</View>
-															<View style={{ position: "absolute", right: 5 }}>
+															{/* <View style={{ position: "absolute", right: 5 }}>
 																{isTodayInBetween ? (
 																	<FontAwesome5
 																		name="play-circle"
@@ -10086,7 +10172,7 @@ export class TrackingPage extends React.Component {
 																		color="white"
 																	/>
 																)}
-															</View>
+															</View> */}
 														</View>
 														<View
 															style={{
@@ -10472,7 +10558,7 @@ export class TrackingPage extends React.Component {
 									bottom: "3%",
 									right: 10,
 									zIndex: 1,
-									display:this.state.currentGuideStep === 5 ? "flex" : "none"
+									display:this.state.currentGuideStep === 6 ? "flex" : "none"
 								}}
 								onPress={() => {
 									this.setState({ isGuideVis: false });
@@ -10553,6 +10639,8 @@ export class TrackingPage extends React.Component {
 								{tip_THREE}
 								{tip_FOUR}
 								{tip_FIVE}
+								{tip_FIVE}
+
 							</Swiper>
 						</View>
 					</View>
@@ -10606,7 +10694,7 @@ export class TrackingPage extends React.Component {
 									flexDirection: "row",
 									justifyContent: "space-between",
 									alignItems: "center",
-									marginTop: 10,
+									marginTop: "40%",
 									width: "100%",
 									flexDirection: "column",
 								}}>
@@ -10704,13 +10792,13 @@ export class TrackingPage extends React.Component {
 														{this.state.strategyDuration}
 													</Text>
 												</View>
-												<View style={{ position: "absolute", right: 5 }}>
+												{/* <View style={{ position: "absolute", right: 5 }}>
 													<FontAwesome5
 														name="play-circle"
 														size={18}
 														color="white"
 													/>
-												</View>
+												</View> */}
 											</View>
 											<ScrollView
 												horizontal={true}
@@ -10766,6 +10854,21 @@ export class TrackingPage extends React.Component {
 											}}
 											disabled={this.state.isReviewBtnDisabled}
 											onPress={() => {
+												if (this.state.reportCnt != 0) {
+													Alert.alert(
+														"You have unfinished reports",
+														"Please finish all your reports before reviewing planning strategy",
+														[
+														  {
+															text: "Cancel",
+															onPress: () => console.log("Cancel Pressed"),
+															style: "cancel"
+														  },
+														  { text: "OK", onPress: () => console.log("OK Pressed") }
+														]
+													  );
+													  return;
+												}
 												this.setState({ isPanelVis: "flex" });
 												this.evaluatePanelPopup();
 												this.mainContentSwiperRef.current.goToPage(1, true);

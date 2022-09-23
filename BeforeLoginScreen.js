@@ -142,9 +142,10 @@ export class BeforeLoginScreen extends React.Component {
       let recordEndDate = await SecureStore.getItemAsync("END_DATE");
       console.log("recordEndDate", recordEndDate);
       let todayDate = new Date();
-
+      console.log("recordEndDate",recordEndDate);
+      console.log("todayDateFormat",todayDateFormat);
       if (recordEndDate) {
-
+        console.log("recordEndDate exist");
         if (recordEndDate === todayDateFormat) {
           navToScreen = "TrackingPage";
           isEvaluationDate = true;
