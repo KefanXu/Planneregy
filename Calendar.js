@@ -98,6 +98,7 @@ export class MonthCalendar extends React.Component {
     // console.log("this.props.thisMonthEvents",this.props.thisMonthEvents);
     let eventListDates = [];
     for (let event of this.props.thisMonthEvents) {
+      // console.log("event.start thisMonthEvents", event.start);
       let dateNum = String(event.start).slice(8, 10);
       if (!eventListDates.includes(dateNum)) {
         eventListDates.push(dateNum);
@@ -114,6 +115,8 @@ export class MonthCalendar extends React.Component {
     }
     for (let date of dayEventsList) {
       for (let event of this.props.thisMonthEvents) {
+        // console.log("event.start dayEventsList", event.start);
+
         let dateNum = parseInt(String(event.start).slice(8, 10));
         if (dateNum === date.dateNum) {
           let newEvent = Object.assign({}, event);

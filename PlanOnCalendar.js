@@ -155,6 +155,7 @@ export class PlanOnCalendar extends React.Component {
 			this.currentStrategy = this.props.route.params.currentStrategy;
 			let keywords = this.processKeywords(this.props.route.params.keywords);
 			let plans = this.processEventsFromTracking(this.props.route.params.plans);
+			console.log("plans====", plans);
 			let title = this.props.route.params.title;
 
 			this.isDataFromTracking = true;
@@ -306,7 +307,9 @@ export class PlanOnCalendar extends React.Component {
 		};
 		if (this.isDataFromTracking) {
 			for (let event of this.plansBuddle) {
-				this.onPlanBtnPressed(event);
+				if (!event.isDeleted) {
+					this.onPlanBtnPressed(event);
+				}
 			}
 		}
 
@@ -343,6 +346,7 @@ export class PlanOnCalendar extends React.Component {
 		let plans = prePlans;
 		for (let event of plans) {
 			event.isReported = false;
+			console.log("event.duration",event.duration);
 		}
 		let todayDate = new Date();
 		for (let i = 0; i < 7; i++) {
@@ -360,6 +364,9 @@ export class PlanOnCalendar extends React.Component {
 				}
 			}
 		}
+		plans.sort(function (a, b) {
+			return new Date(b.startDate) - new Date(a.startDate);
+		});
 		return plans;
 	};
 	processKeywords(keywords) {
@@ -814,7 +821,7 @@ export class PlanOnCalendar extends React.Component {
 			color: "white",
 			title: activityName,
 		};
-		console.log("preEvent", preEvent);
+		// console.log("preEvent", preEvent);
 		if (preEvent) {
 			newEvent = preEvent;
 		}
@@ -827,7 +834,7 @@ export class PlanOnCalendar extends React.Component {
 			newEvent.key = timeStamp;
 		}
 
-		console.log("newEvent", newEvent);
+		// console.log("newEvent", newEvent);
 		let weatherList = [];
 		// console.log("moment.getMonth(selectedDate)",moment(selectedDate).month());
 		// console.log("moment.getMonth(new Date())",moment(new Date()).month());
@@ -849,9 +856,17 @@ export class PlanOnCalendar extends React.Component {
 		let duration = moment.duration(
 			moment(formattedEndTime).diff(moment(formattedStartTime))
 		);
-		let durationMinutes = parseInt(duration.asMinutes()) % 60;
+		let durationMinutes;
+		if (preEvent) {
+			newEvent.duration = preEvent.duration;
+			durationMinutes = preEvent.duration;
+		} else {
+			
+			durationMinutes = parseInt(duration.asMinutes()) % 60;
+			newEvent.duration = durationMinutes;
 
-		newEvent.duration = durationMinutes;
+
+		}
 		try {
 			newEvent.activityReminderKey = await this.dataModel.scheduleNotification(
 				newEvent
@@ -2663,7 +2678,7 @@ export class PlanOnCalendar extends React.Component {
 							Your planned activities will appear here
 						</Text>
 					</View>
-					<View style={{ width: "100%", height: 280, paddingHorizontal: 15 }}>
+					<View style={{ width: "100%", height: 150, paddingHorizontal: 15 }}>
 						<FlatList
 							data={this.state.plansBuddle}
 							renderItem={({ item }) => {
@@ -2912,6 +2927,16 @@ export class PlanOnCalendar extends React.Component {
 							}}>
 							Give a name to your plans:
 						</Text>
+						<Text
+							style={{
+								fontFamily: "RobotoRegular",
+								fontSize: 12,
+								marginTop: "2%",
+								width: "80%",
+								textAlign: "center",
+							}}>
+							(21 characters maximum)
+						</Text>
 						<View
 							style={{
 								backgroundColor: "white",
@@ -2933,6 +2958,7 @@ export class PlanOnCalendar extends React.Component {
 									fontFamily: "RobotoBoldItalic",
 								}}
 								placeholder="e.g. Morning Exercise Plan"
+								maxLength={25}
 								ref={(input) => {
 									this.planStrategyInputRef = input;
 								}}

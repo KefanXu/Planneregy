@@ -140,19 +140,19 @@ export class BeforeLoginScreen extends React.Component {
 
       let todayDateFormat = moment(new Date()).format().slice(0, 10);
       let recordEndDate = await SecureStore.getItemAsync("END_DATE");
-      console.log("recordEndDate", recordEndDate);
+      // console.log("recordEndDate", recordEndDate);
       let todayDate = new Date();
-      console.log("recordEndDate",recordEndDate);
-      console.log("todayDateFormat",todayDateFormat);
+      // console.log("recordEndDate",recordEndDate);
+      // console.log("todayDateFormat",todayDateFormat);
       if (recordEndDate) {
-        console.log("recordEndDate exist");
+        // console.log("recordEndDate exist");
         if (recordEndDate === todayDateFormat) {
           navToScreen = "TrackingPage";
           isEvaluationDate = true;
           this.setState({ dataType: "weather" });
           [lastMonthWeather, thisMonthWeather, nextMonthWeather] =
             await this.fetchWeatherInfo(userPlans);
-          console.log("weather fetched");
+          // console.log("weather fetched");
           let weatherFullList = [];
 
           for (let weather of lastMonthWeather) {
@@ -170,7 +170,7 @@ export class BeforeLoginScreen extends React.Component {
             newWeather.month = todayDate.getMonth() + 1;
             weatherFullList.push(newWeather);
           }
-          console.log("weather processed");
+          // console.log("weather processed");
           await this.dataModel.updateWeatherInfo(key, weatherFullList);
         } else {
           navToScreen = "TrackingPage";

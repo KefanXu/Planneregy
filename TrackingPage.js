@@ -16,6 +16,8 @@ import {
 	// Modal,
 } from "react-native";
 import { Modal as RNModal } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import * as Font from "expo-font";
 // import { TextInput } from 'react-native-paper';
 
@@ -544,11 +546,13 @@ export class TrackingPage extends React.Component {
 		// console.log("this.state.preList",this.state.preList);
 		for (let item of this.state.preList) {
 			// console.log("item.start.slice(5, 10)",item.start.slice(5, 10),today);
-			if (item.start.slice(5, 10) === today) {
-				reportItem = item;
-				isReportExist = true;
-				if (item.timeStamp) {
-					isActivityPlanned = true;
+			if (item.start) {
+				if (item.start.slice(5, 10) === today) {
+					reportItem = item;
+					isReportExist = true;
+					if (item.timeStamp) {
+						isActivityPlanned = true;
+					}
 				}
 			}
 		}
@@ -622,18 +626,21 @@ export class TrackingPage extends React.Component {
 			let date = moment(preDate).format().slice(0, 10);
 			let isReportExist = false;
 			for (let event of this.userPlans) {
-				let eventStartDate = new Date(
-					moment(event.start.slice(0, 10)).format("YYYY-MM-DD")
-				);
-				if (event.start && eventStartDate >= formattedStartDate) {
-					if (
-						event.start.slice(0, 10) === date.slice(0, 10) &&
-						!event.isDeleted &&
-						event.isPlanned != "added-activity"
-					) {
-						isReportExist = true;
+				if (event.start) {
+					let eventStartDate = new Date(
+						moment(event.start.slice(0, 10)).format("YYYY-MM-DD")
+					);
+					if (event.start && eventStartDate >= formattedStartDate) {
+						if (
+							event.start.slice(0, 10) === date.slice(0, 10) &&
+							!event.isDeleted &&
+							event.isPlanned != "added-activity"
+						) {
+							isReportExist = true;
+						}
 					}
 				}
+
 			}
 			if (!isReportExist) {
 				report.title = "Daily Report";
@@ -648,15 +655,18 @@ export class TrackingPage extends React.Component {
 				}
 			} else {
 				for (let event of this.userPlans) {
-					if (
-						event.start.slice(0, 10) === date &&
-						!event.isReported &&
-						!event.isDeleted
-					) {
-						// console.log("push event1", event.title);
-						this.preList.push(event);
-						// console.log("push event");
+					if (event.start) {
+						if (
+							event.start.slice(0, 10) === date &&
+							!event.isReported &&
+							!event.isDeleted
+						) {
+							// console.log("push event1", event.title);
+							this.preList.push(event);
+							// console.log("push event");
+						}
 					}
+
 				}
 			}
 		}
@@ -728,18 +738,21 @@ export class TrackingPage extends React.Component {
 			let date = moment(preDate).format().slice(0, 10);
 			let isReportExist = false;
 			for (let event of this.userPlans) {
-				let eventStartDate = new Date(
-					moment(event.start.slice(0, 10)).format("YYYY-MM-DD")
-				);
-				if (event.start && eventStartDate >= formattedStartDate) {
-					if (
-						event.start.slice(0, 10) === date.slice(0, 10) &&
-						!event.isDeleted &&
-						event.isPlanned != "added-activity"
-					) {
-						isReportExist = true;
+				if (event.start) {
+					let eventStartDate = new Date(
+						moment(event.start.slice(0, 10)).format("YYYY-MM-DD")
+					);
+					if (event.start && eventStartDate >= formattedStartDate) {
+						if (
+							event.start.slice(0, 10) === date.slice(0, 10) &&
+							!event.isDeleted &&
+							event.isPlanned != "added-activity"
+						) {
+							isReportExist = true;
+						}
 					}
 				}
+
 			}
 			if (!isReportExist) {
 				// console.log("this.preList",this.preList);
@@ -2241,8 +2254,9 @@ export class TrackingPage extends React.Component {
 		eventToUpdate.isActivityCompleted = true;
 		eventToUpdate.isReported = true;
 		eventToUpdate.satisfactionScore = this.state.satisfactionScore;
-		this.onSubmitPressed_UserAddedActivity();
-
+		if (this.state.selfReportedActivityList.length != 0) {
+			this.onSubmitPressed_UserAddedActivity();
+		}
 		let formattedThisMonth = parseInt(moment(new Date()).format().slice(5, 7));
 		let formattedSelectedMonth = parseInt(
 			moment(eventToUpdate.start).format().slice(5, 7)
@@ -2296,10 +2310,10 @@ export class TrackingPage extends React.Component {
 			eventToUpdateToFirebaseActivities.key = key;
 		}
 
-		console.log(
-			"eventToUpdateToFirebaseActivities",
-			eventToUpdateToFirebaseActivities
-		);
+		// console.log(
+		// 	"eventToUpdateToFirebaseActivities",
+		// 	eventToUpdateToFirebaseActivities
+		// );
 		console.log(
 			"==================onSubmitPressed_CompleteActivity=================="
 		);
@@ -3404,7 +3418,7 @@ export class TrackingPage extends React.Component {
 		}
 		let accDuration = 0;
 		for (let event of selectedStrategyPlans) {
-			if (event.satisfactionScore) {
+			if (event.satisfactionScore && !event.isDeleted) {
 				if (event.newDuration) {
 					accDuration = accDuration + event.newDuration;
 				} else {
@@ -3464,7 +3478,7 @@ export class TrackingPage extends React.Component {
 		}
 		let accDuration = 0;
 		for (let event of selectedStrategyPlans) {
-			if (event.satisfactionScore) {
+			if (event.satisfactionScore && !event.isDeleted) {
 				if (event.newDuration) {
 					accDuration = accDuration + event.newDuration;
 				} else {
@@ -5608,10 +5622,11 @@ export class TrackingPage extends React.Component {
 						</TouchableOpacity>
 						<View
 							style={{
-								flexDirection: "row",
+								flexDirection: "column",
 								justifyContent: "space-between",
 								alignItems: "center",
 								height: 45,
+								marginBottom:"2%"
 							}}>
 							<Text
 								style={{
@@ -6533,7 +6548,7 @@ export class TrackingPage extends React.Component {
 									{this.state.selectedStrategy.title}
 								</Text>
 							</View>
-							<View
+							{/* <View
 								style={{
 									flexDirection: "column",
 									justifyContent: "center",
@@ -6554,7 +6569,7 @@ export class TrackingPage extends React.Component {
 									{this.state.selectedStrategy.startDate} →{" "}
 									{this.state.selectedStrategy.endDate}
 								</Text>
-							</View>
+							</View> */}
 							{/* <View style={{ position: "absolute", right: 5 }}>
                     <MaterialIcons
                       name="track-changes"
@@ -6826,7 +6841,7 @@ export class TrackingPage extends React.Component {
 									{this.state.selectedStrategy.title}
 								</Text>
 							</View>
-							<View
+							{/* <View
 								style={{
 									flexDirection: "column",
 									justifyContent: "center",
@@ -6847,7 +6862,7 @@ export class TrackingPage extends React.Component {
 									{this.state.selectedStrategy.startDate} →{" "}
 									{this.state.selectedStrategy.endDate}
 								</Text>
-							</View>
+							</View> */}
 							{/* <View style={{ position: "absolute", right: 5 }}>
                     <MaterialIcons
                       name="track-changes"
@@ -9051,7 +9066,7 @@ export class TrackingPage extends React.Component {
 					backgroundColor: "white",
 					width: "100%",
 					height: "100%",
-					justifyContent: "flex-start",
+					justifyContent: "space-between",
 					alignItems: "center",
 				}}>
 				<FlashMessage position="bottom" />
@@ -10951,6 +10966,8 @@ export class TrackingPage extends React.Component {
 							paddingBottom: 20,
 							paddingTop: 20,
 							display: this.state.mainContentSwiperDisplay,
+							// position:"absolute",
+							// bottom:0,
 						},
 					]}>
 					{/* <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
@@ -10962,9 +10979,9 @@ export class TrackingPage extends React.Component {
 						style={[
 							{
 								width: "100%",
-								height: 30,
+								height: 60,
 								position: "absolute",
-								bottom: 30,
+								bottom: 0,
 								backgroundColor: "transparent",
 								zIndex: 1,
 								justifyContent: "space-between",
