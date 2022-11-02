@@ -74,15 +74,25 @@ import { generalStyles } from "./styles/GeneralStyling";
 
 // import Swiper from "react-native-swiper";
 
-let TEST_DATA = [
-	"Light Exercise",
-	"Moderate Exercise",
-	"Intensive Exercise",
-	"Morning",
-	"Afternoon",
-	"Home Workout",
-	"Outdoor",
-	"Gym",
+// let TEST_DATA = [
+// 	"Light Exercise",
+// 	"Moderate Exercise",
+// 	"Intensive Exercise",
+// 	"Morning",
+// 	"Afternoon",
+// 	"Home Workout",
+// 	"Outdoor",
+// 	"Gym",
+// ];
+let SAMPLE_KEYWORDS_DATA = [
+	{ title: "Light Exercise", isSelected: false },
+	{ title: "Moderate Exercise", isSelected: false },
+	{ title: "Intensive Exercise", isSelected: false },
+	{ title: "Morning", isSelected: false },
+	{ title: "Afternoon", isSelected: false },
+	{ title: "Home Workout", isSelected: false },
+	{ title: "Outdoor", isSelected: false },
+	{ title: "Gym", isSelected: false },
 ];
 
 let TEST_DATA2 = [
@@ -207,7 +217,8 @@ export class PlanOnCalendar extends React.Component {
 		this.detailViewCalendar = [];
 
 		this.onReportActivity = { title: "", start: "", end: "", duration: "" };
-
+		//initiate page index for onboarding view
+		this.pageIndex = 0;
 		this.state = {
 			date: new Date(),
 
@@ -303,7 +314,17 @@ export class PlanOnCalendar extends React.Component {
 			reportBtnColor: "Report",
 			//Visibility of Guide btn
 			isGuideVis: this.isGuideVis,
-			currentGuideStep:1
+			currentGuideStep: 1,
+			//Text in the bottom add btn
+			bottomAddTxt: "Add Activity",
+			//If bottom bar visible
+			bottomBarVis: "flex",
+			//If add activity modal visible
+			isAddingActivityModalVis: false,
+			//If add keywords modal visible
+			isAddingKeywordsModalVis: false,
+			//sample keywords list
+			keywordsListInPanel: SAMPLE_KEYWORDS_DATA,
 		};
 		if (this.isDataFromTracking) {
 			for (let event of this.plansBuddle) {
@@ -322,14 +343,14 @@ export class PlanOnCalendar extends React.Component {
 		this.focusUnsubscribe = this.props.navigation.addListener(
 			"focus",
 			this.onFocus
-		  );
+		);
 		// console.log("componentDidMount");
 	}
 	onFocus = async () => {
 		this.scrollToThisWeek();
 		this.setState({ reportTitle: "0" });
 		this.setState({ reportTitle: "1" });
-	}
+	};
 	//Click the "Current Week" and scroll to the current week
 	scrollToThisWeek = () => {
 		setTimeout(() => {
@@ -346,7 +367,7 @@ export class PlanOnCalendar extends React.Component {
 		let plans = prePlans;
 		for (let event of plans) {
 			event.isReported = false;
-			console.log("event.duration",event.duration);
+			console.log("event.duration", event.duration);
 		}
 		let todayDate = new Date();
 		for (let i = 0; i < 7; i++) {
@@ -766,7 +787,7 @@ export class PlanOnCalendar extends React.Component {
 				});
 				return;
 			}
-			this._panel.hide();
+			this.setState({ isAddingActivityModalVis: false });
 		}
 
 		let selectedDate = this.state.selectedDate;
@@ -861,11 +882,8 @@ export class PlanOnCalendar extends React.Component {
 			newEvent.duration = preEvent.duration;
 			durationMinutes = preEvent.duration;
 		} else {
-			
 			durationMinutes = parseInt(duration.asMinutes()) % 60;
 			newEvent.duration = durationMinutes;
-
-
 		}
 		try {
 			newEvent.activityReminderKey = await this.dataModel.scheduleNotification(
@@ -998,11 +1016,13 @@ export class PlanOnCalendar extends React.Component {
 		});
 		// console.log("this.userPlans after delete 2",this.userPlans);
 	};
+
+
 	//Add user defined keywords to the list
 	addKeywords = () => {
 		let newKeywordsRow = this.state.userDefinedKeywords;
 		if (newKeywordsRow) {
-			if (newKeywordsRow === "") {
+			if (newKeywordsRow.trim() === "") {
 				showMessage({
 					message: "Invalid Name",
 					description: "keywords name can't be empty",
@@ -1011,10 +1031,10 @@ export class PlanOnCalendar extends React.Component {
 				});
 				return;
 			}
-			let newKeywords = { title: newKeywordsRow, type: "USER_DEFINED" };
+			let newKeywords = { title: newKeywordsRow, isSelected: true };
 			this.KeyWordTextInput.clear();
 			this.setState({ userDefinedKeywords: "" });
-			let updatedKeywordsListFromInput = this.state.keywordsListFromInput;
+			let updatedKeywordsListFromInput = this.state.keywordsListInPanel;
 			for (let keywords of updatedKeywordsListFromInput) {
 				if (keywords.title.toLowerCase() === newKeywords.title.toLowerCase()) {
 					showMessage({
@@ -1026,17 +1046,18 @@ export class PlanOnCalendar extends React.Component {
 					return;
 				}
 			}
-			updatedKeywordsListFromInput.push(newKeywords);
-			this.setState({ keywordsListFromInput: updatedKeywordsListFromInput });
 
-			let updatedKeywordsBuddle = [];
-			for (let keywords of this.state.keywordsListFromExample) {
-				updatedKeywordsBuddle.push(keywords);
-			}
-			for (let keywords of updatedKeywordsListFromInput) {
-				updatedKeywordsBuddle.push(keywords);
-			}
-			this.setState({ keywordsBuddle: updatedKeywordsBuddle });
+			updatedKeywordsListFromInput.push(newKeywords);
+			this.setState({ keywordsListInPanel: updatedKeywordsListFromInput });
+
+			// let updatedKeywordsBuddle = [];
+			// for (let keywords of this.state.keywordsListFromExample) {
+			// 	updatedKeywordsBuddle.push(keywords);
+			// }
+			// for (let keywords of updatedKeywordsListFromInput) {
+			// 	updatedKeywordsBuddle.push(keywords);
+			// }
+			// this.setState({ keywordsBuddle: updatedKeywordsBuddle });
 			showMessage({
 				message: "Added keywords",
 				description: newKeywords.title + " added to keywords",
@@ -1053,33 +1074,111 @@ export class PlanOnCalendar extends React.Component {
 			return;
 		}
 	};
+	// addKeywords = () => {
+	// 	let newKeywordsRow = this.state.userDefinedKeywords;
+	// 	if (newKeywordsRow) {
+	// 		if (newKeywordsRow.trim() === "") {
+	// 			showMessage({
+	// 				message: "Invalid Name",
+	// 				description: "keywords name can't be empty",
+	// 				type: "warning",
+	// 				icon: "warning",
+	// 			});
+	// 			return;
+	// 		}
+	// 		let newKeywords = { title: newKeywordsRow, type: "USER_DEFINED" };
+	// 		this.KeyWordTextInput.clear();
+	// 		this.setState({ userDefinedKeywords: "" });
+	// 		let updatedKeywordsListFromInput = this.state.keywordsListFromInput;
+	// 		for (let keywords of updatedKeywordsListFromInput) {
+	// 			if (keywords.title.toLowerCase() === newKeywords.title.toLowerCase()) {
+	// 				showMessage({
+	// 					message: "Invalid Name",
+	// 					description: "keywords already exists",
+	// 					type: "warning",
+	// 					icon: "warning",
+	// 				});
+	// 				return;
+	// 			}
+	// 		}
+	// 		setTimeout(() => {
+	// 			this.setState({ isAddingKeywordsModalVis: false });
+	// 		});
+	// 		updatedKeywordsListFromInput.push(newKeywords);
+	// 		this.setState({ keywordsListFromInput: updatedKeywordsListFromInput });
+
+	// 		let updatedKeywordsBuddle = [];
+	// 		for (let keywords of this.state.keywordsListFromExample) {
+	// 			updatedKeywordsBuddle.push(keywords);
+	// 		}
+	// 		for (let keywords of updatedKeywordsListFromInput) {
+	// 			updatedKeywordsBuddle.push(keywords);
+	// 		}
+	// 		this.setState({ keywordsBuddle: updatedKeywordsBuddle });
+	// 		showMessage({
+	// 			message: "Added keywords",
+	// 			description: newKeywords.title + " added to keywords",
+	// 			type: "success",
+	// 			icon: "success",
+	// 		});
+	// 	} else {
+	// 		showMessage({
+	// 			message: "Invalid Name",
+	// 			description: "keywords name can't be empty",
+	// 			type: "warning",
+	// 			icon: "warning",
+	// 		});
+	// 		return;
+	// 	}
+	// };
 	//Delete user defined keywords
 	deleteKeywords = (item) => {
-		let deleteIndex;
-		for (let keywords of this.state.keywordsListFromInput) {
-			if (keywords.title === item.title) {
-				deleteIndex = this.state.keywordsListFromInput.indexOf(keywords);
+		console.log("delete",item);
+		let updatedKeywordsListInPanel = this.state.keywordsListInPanel;
+		for (let keyword of updatedKeywordsListInPanel) {
+			if (item.title === keyword.title) {
+				keyword.isSelected = false
 			}
 		}
-		let updatedKeywordsListFromInput = this.state.keywordsListFromInput;
-		updatedKeywordsListFromInput.splice(deleteIndex, 1);
-		this.setState({
-			keywordsListFromInput: updatedKeywordsListFromInput,
-		});
+		this.setState({ keywordsListInPanel: updatedKeywordsListInPanel});
+		let updatedKeywordsBuddle = this.state.keywordsBuddle;
+		let deleteIndex;
+		for (let keyword of updatedKeywordsBuddle) {
+			if (item.title === keyword.title) {
+				deleteIndex = updatedKeywordsBuddle.indexOf(keyword);
+			}
+		}
+		updatedKeywordsBuddle.splice(deleteIndex, 1);
+		this.setState({ keywordsBuddle: updatedKeywordsBuddle});
 
-		let updatedKeywordsBuddle = [];
-		for (let keywords of this.state.keywordsListFromInput) {
-			updatedKeywordsBuddle.push(keywords);
-		}
-		for (let keywords of this.state.keywordsListFromExample) {
-			updatedKeywordsBuddle.push(keywords);
-		}
-		this.setState({
-			keywordsBuddle: updatedKeywordsBuddle,
-		});
 	};
+	// deleteKeywords = (item) => {
+	// 	let deleteIndex;
+	// 	for (let keywords of this.state.keywordsListFromInput) {
+	// 		if (keywords.title === item.title) {
+	// 			deleteIndex = this.state.keywordsListFromInput.indexOf(keywords);
+	// 		}
+	// 	}
+	// 	let updatedKeywordsListFromInput = this.state.keywordsListFromInput;
+	// 	updatedKeywordsListFromInput.splice(deleteIndex, 1);
+	// 	this.setState({
+	// 		keywordsListFromInput: updatedKeywordsListFromInput,
+	// 	});
+
+	// 	let updatedKeywordsBuddle = [];
+	// 	for (let keywords of this.state.keywordsListFromInput) {
+	// 		updatedKeywordsBuddle.push(keywords);
+	// 	}
+	// 	for (let keywords of this.state.keywordsListFromExample) {
+	// 		updatedKeywordsBuddle.push(keywords);
+	// 	}
+	// 	this.setState({
+	// 		keywordsBuddle: updatedKeywordsBuddle,
+	// 	});
+	// };
 	//Modify keywords selected from examples
 	onChangeChips = (chips) => {
+		console.log("chips", chips);
 		let updatedKeywordsListFromExample = [];
 		let updatedKeywordsBuddle = [];
 		for (let keywords of this.state.keywordsListFromInput) {
@@ -1116,13 +1215,14 @@ export class PlanOnCalendar extends React.Component {
 		this.setState({ conformationPageDisplay: "none" });
 		this.mainContentSwiperRef.current.goToPage(1, true);
 		this.setState({ panelHeight: 450 });
-		this._panel.hide();
+		// this._panel.hide();
 		this.setState({ displayCalView: "flex" });
 		this.setState({ displayTitle: "flex" });
 		this.setState({
 			title: <SummarizePlanningStrategy height={28} width={119} />,
 		});
-		this.panelSwiperRef.current.goToPage(1, true);
+		this.setState({ bottomBarVis: "flex" });
+		// this.panelSwiperRef.current.goToPage(1, true);
 	};
 	//Fired when user presses the confirm btn on the last page
 	onConfirmBtnPressed = async () => {
@@ -1199,7 +1299,9 @@ export class PlanOnCalendar extends React.Component {
 			"nextMonthWeather",
 			JSON.stringify(this.nextMonthWeather)
 		);
-		await this.dataModel.createReviewReminderNotification(this.state.planStrategyName);
+		await this.dataModel.createReviewReminderNotification(
+			this.state.planStrategyName
+		);
 		// console.log("save nextMonthWeather");
 		// SecureStore.setItemAsync("END_DATE", endDate);
 	};
@@ -1231,7 +1333,7 @@ export class PlanOnCalendar extends React.Component {
 			isFromPlanSetUp: true,
 			isGuideVis: this.isGuideVis,
 			isEvaluationDate: false,
-			isFromLogin: false
+			isFromLogin: false,
 		});
 		// this.props.navigation.navigate("BeforeLoginScreen", {
 		//   // userEmail: this.userEmail,
@@ -2007,8 +2109,9 @@ export class PlanOnCalendar extends React.Component {
 			<View
 				style={{
 					alignItems: "center",
-					justifyContent: "flex-start",
+					justifyContent: "space-between",
 					height: 450,
+					paddingBottom: 20,
 					// backgroundColor:"red"
 				}}>
 				<SlidingUpPanelTxt height={108} width={335} marginTop={15} />
@@ -2323,12 +2426,13 @@ export class PlanOnCalendar extends React.Component {
 			<View
 				style={{
 					alignItems: "center",
-					justifyContent: "flex-start",
+					justifyContent: "space-between",
 					height: 450,
+					paddingBottom: 20,
 				}}>
 				<SlidingUpPanelTxt2 height={188} width={335} marginTop={15} />
-				<View style={{ width: 335, marginTop: "2%" }}>
-					<SelectableChips
+				<ScrollView style={{ width: 335, marginTop: "0%" }}>
+					{/* <SelectableChips
 						initialChips={TEST_DATA}
 						chipStyle={{
 							backgroundColor: "black",
@@ -2349,59 +2453,136 @@ export class PlanOnCalendar extends React.Component {
 						}}
 						onChangeChips={(chips) => {
 							this.onChangeChips(chips);
-							this._panel.hide();
+							// this.setState({ isAddingKeywordsModalVis: false})
 						}}
 						alertRequired={false}
-					/>
-				</View>
+					/> */}
+					<View
+						style={{
+							flexDirection: "row",
+							flexWrap: "wrap",
+							alignItems: "center",
+							marginTop: "5%",
+						}}>
+						{this.state.keywordsListInPanel.map((item) => {
+							return (
+								<TouchableOpacity
+									style={{
+										height: 25,
+										borderRadius: 20,
+										backgroundColor: item.isSelected ? "#1AB700" : "black",
+										justifyContent: "space-between",
+										alignItems: "center",
+										alignSelf: "center",
+										marginBottom: 5,
+										marginRight: 5,
+										paddingHorizontal: 2,
+										flexDirection: "row",
+									}}
+									onPress={() => {
+										let updateList = this.state.keywordsListInPanel;
+										for (let keyword of updateList) {
+											if (keyword.title === item.title) {
+												keyword.isSelected = !keyword.isSelected;
+											}
+										}
+										this.setState({ keywordsListInPanel: updateList });
+									}}>
+									<Text
+										style={{
+											fontFamily: "RobotoBoldBlack",
+											color: "white",
+											paddingHorizontal: 20,
+											fontSize: 12,
+										}}>
+										{item.title}
+									</Text>
+								</TouchableOpacity>
+							);
+						})}
+					</View>
+				</ScrollView>
 				<View
 					style={{
-						backgroundColor: "white",
 						height: 32,
-						width: 180,
-						borderRadius: 20,
-						borderWidth: 2,
-						borderColor: "black",
-						marginRight: 0,
+						width: "90%",
 						flexDirection: "row",
+						justifyContent: "flex-start",
 						alignItems: "center",
-						justifyContent: "space-between",
-						position: "absolute",
-						bottom: 50,
+						// backgroundColor:"red"
 					}}>
-					<TextInput
-						style={{
-							fontSize: 14,
-							width: "100%",
-							textAlign: "center",
-							fontFamily: "RobotoBoldItalic",
-						}}
-						placeholder="Add Keywords"
-						ref={(input) => {
-							this.KeyWordTextInput = input;
-						}}
-						value={this.state.userDefinedKeywords}
-						onChangeText={(text) => {
-							this.setState({ userDefinedKeywords: text });
-						}}
-					/>
 					<View
-						style={{ margin: 1, width: 25, position: "absolute", right: 1 }}>
-						<TouchableOpacity
+						style={{
+							backgroundColor: "white",
+							height: 32,
+							width: 180,
+							borderRadius: 20,
+							borderWidth: 2,
+							borderColor: "black",
+							marginRight: 20,
+							flexDirection: "row",
+							alignItems: "center",
+							justifyContent: "space-between",
+						}}>
+						<TextInput
 							style={{
-								alignItems: "flex-end",
-								justifyContent: "flex-end",
-								flex: 1,
+								fontSize: 14,
+								width: "100%",
+								textAlign: "center",
+								fontFamily: "RobotoBoldItalic",
 							}}
-							onPress={() => {
-								this.addKeywords();
-								setTimeout(() => {
-									this._panel.hide();
-								});
-							}}>
-							<Ionicons name="ios-add-circle" size={25} color={"black"} />
-						</TouchableOpacity>
+							placeholder="Add Keywords"
+							ref={(input) => {
+								this.KeyWordTextInput = input;
+							}}
+							value={this.state.userDefinedKeywords}
+							onChangeText={(text) => {
+								this.setState({ userDefinedKeywords: text });
+							}}
+						/>
+						<View
+							style={{ margin: 1, width: 25, position: "absolute", right: 1 }}>
+							<TouchableOpacity
+								style={{
+									alignItems: "flex-end",
+									justifyContent: "flex-end",
+									flex: 1,
+								}}
+								onPress={() => {
+									this.addKeywords();
+								}}>
+								<Ionicons name="ios-add-circle" size={25} color={"black"} />
+							</TouchableOpacity>
+						</View>
 					</View>
+					<TouchableOpacity
+					onPress={() => {
+						setTimeout(() => {
+							this.setState({ isAddingKeywordsModalVis: false });
+						});
+
+						let updatedKeywordsBuddle = [];
+						for (let keywords of this.state.keywordsListInPanel) {
+							if (keywords.isSelected) {
+								updatedKeywordsBuddle.push(keywords);
+							}
+						}
+						this.setState({ keywordsBuddle: updatedKeywordsBuddle });
+					}}
+						style={{
+							height: 32,
+							backgroundColor: "white",
+							borderColor:"black",
+							borderWidth:2,
+							borderRadius: 20,
+							justifyContent: "center",
+							alignItems: "center",
+							paddingHorizontal:10
+						}}>
+						<Text style={{ fontFamily: "RobotoBoldBlack", color: "black" }}>
+							Add All
+						</Text>
+					</TouchableOpacity>
 				</View>
 			</View>
 		);
@@ -2411,6 +2592,7 @@ export class PlanOnCalendar extends React.Component {
 					alignItems: "center",
 					justifyContent: "flex-start",
 					height: "100%",
+					display: this.state.swipeAblePanelDisplay
 				}}>
 				<View
 					style={{
@@ -2470,11 +2652,18 @@ export class PlanOnCalendar extends React.Component {
 		);
 		let thirdSlidePanelPageUpdated = (
 			<View
-				style={{
-					alignItems: "center",
-					justifyContent: "flex-start",
-					height: "100%",
-				}}>
+				style={[
+					generalStyles.shadowStyle,
+					{
+						alignItems: "center",
+						justifyContent: "flex-start",
+						height: "100%",
+						display: this.state.thirdSlidePanelPageUpdatedDisplay
+						// width:"100%",
+						// borderRadius:20,
+						// backgroundColor:"white"
+					},
+				]}>
 				<View
 					style={{
 						alignItems: "center",
@@ -2615,6 +2804,7 @@ export class PlanOnCalendar extends React.Component {
 					height: "100%",
 					justifyContent: "flex-start",
 					alignItems: "center",
+					// backgroundColor:"red"
 				}}>
 				{/* Body */}
 				<View
@@ -2663,7 +2853,7 @@ export class PlanOnCalendar extends React.Component {
 							</Text>
 						</View>
 						<Text style={{ fontFamily: "RobotoBoldBold", fontSize: 13 }}>
-							{this.state.accumulatedMinutes}/150 minutes remains
+							{this.state.accumulatedMinutes}/150 minutes
 						</Text>
 					</View>
 					<View style={{ width: "100%", paddingLeft: 15, marginBottom: 15 }}>
@@ -2678,7 +2868,7 @@ export class PlanOnCalendar extends React.Component {
 							Your planned activities will appear here
 						</Text>
 					</View>
-					<View style={{ width: "100%", height: 150, paddingHorizontal: 15 }}>
+					<View style={{ width: "100%", height: 400, paddingHorizontal: 15 }}>
 						<FlatList
 							data={this.state.plansBuddle}
 							renderItem={({ item }) => {
@@ -2863,7 +3053,7 @@ export class PlanOnCalendar extends React.Component {
 												display: item.type === "EXAMPLE" ? "none" : "flex",
 											}}>
 											<TouchableOpacity
-												onPress={(item) => this.deleteKeywords(item)}>
+												onPress={() => this.deleteKeywords(item)}>
 												<Ionicons
 													name="md-close-circle"
 													size={20}
@@ -2902,6 +3092,10 @@ export class PlanOnCalendar extends React.Component {
 							alignItems: "center",
 						},
 					]}>
+					<View style={{ position: "absolute", bottom: 10 }}>
+						{thirdSlidePanelPage}
+						{thirdSlidePanelPageUpdated}
+					</View>
 					{this.state.confirmPageIcon}
 					<Text
 						style={{
@@ -3524,55 +3718,55 @@ export class PlanOnCalendar extends React.Component {
 							imageContainerStyles={{ height: this.state.panelHeight }}
 							bottomBarHeight={30}
 							showSkip={false}
-							showNext={true}
-							NextButtonComponent={() => (
-								<TouchableOpacity
-									style={{ width: "100%", padding: "5%" }}
-									onPress={() => {
-										this.panelSwiperRef.current.goNext();
-									}}>
-									<Text
-										style={{
-											fontFamily: "RobotoBoldBlack",
-											textAlign: "right",
-											marginRight: 10,
-										}}>
-										NEXT
-									</Text>
-								</TouchableOpacity>
-							)}
+							showNext={false}
+							// NextButtonComponent={() => (
+							// 	<TouchableOpacity
+							// 		style={{ width: "100%", padding: "5%" }}
+							// 		onPress={() => {
+							// 			this.panelSwiperRef.current.goNext();
+							// 		}}>
+							// 		<Text
+							// 			style={{
+							// 				fontFamily: "RobotoBoldBlack",
+							// 				textAlign: "right",
+							// 				marginRight: 10,
+							// 			}}>
+							// 			NEXT
+							// 		</Text>
+							// 	</TouchableOpacity>
+							// )}
 							bottomBarColor="white"
 							showDone={false}
-							pageIndexCallback={(index) => {
-								if (index === 2) {
-									// this.setState({ panelDisplay: "none" });
-									this.setState({ panelHeight: 200 });
-									this.setState({ displayCalView: "none" });
-									this.setState({ displayTitle: "none" });
-									this.setState({ mainContentSwiperDisplay: "none" });
-									this.setState({ conformationPageDisplay: "flex" });
-									this._panel.show();
-								} else {
-									this.setState({ mainContentSwiperDisplay: "flex" });
-									this.setState({ conformationPageDisplay: "none" });
-									this.mainContentSwiperRef.current.goToPage(index, true);
-									this.setState({ panelHeight: 450 });
-									this._panel.hide();
-									this.setState({ displayCalView: "flex" });
-									this.setState({ displayTitle: "flex" });
-									if (index === 1) {
-										this.setState({
-											title: (
-												<SummarizePlanningStrategy height={28} width={119} />
-											),
-										});
-									} else if (index === 0) {
-										this.setState({
-											title: <PlanActivities height={28} width={150} />,
-										});
-									}
-								}
-							}}
+							// pageIndexCallback={(index) => {
+							// 	if (index === 2) {
+							// 		// this.setState({ panelDisplay: "none" });
+							// 		this.setState({ panelHeight: 200 });
+							// 		this.setState({ displayCalView: "none" });
+							// 		this.setState({ displayTitle: "none" });
+							// 		this.setState({ mainContentSwiperDisplay: "none" });
+							// 		this.setState({ conformationPageDisplay: "flex" });
+							// 		this._panel.show();
+							// 	} else {
+							// 		this.setState({ mainContentSwiperDisplay: "flex" });
+							// 		this.setState({ conformationPageDisplay: "none" });
+							// 		this.mainContentSwiperRef.current.goToPage(index, true);
+							// 		this.setState({ panelHeight: 450 });
+							// 		this._panel.hide();
+							// 		this.setState({ displayCalView: "flex" });
+							// 		this.setState({ displayTitle: "flex" });
+							// 		if (index === 1) {
+							// 			this.setState({
+							// 				title: (
+							// 					<SummarizePlanningStrategy height={28} width={119} />
+							// 				),
+							// 			});
+							// 		} else if (index === 0) {
+							// 			this.setState({
+							// 				title: <PlanActivities height={28} width={150} />,
+							// 			});
+							// 		}
+							// 	}
+							// }}
 							pages={[
 								{
 									title: "",
@@ -3586,12 +3780,12 @@ export class PlanOnCalendar extends React.Component {
 									backgroundColor: "white",
 									image: secondSlidePanelPage,
 								},
-								{
-									title: "",
-									subtitle: "",
-									backgroundColor: "white",
-									image: thirdSlidePanelPage,
-								},
+								// {
+								// 	title: "",
+								// 	subtitle: "",
+								// 	backgroundColor: "white",
+								// 	image: thirdSlidePanelPage,
+								// },
 							]}
 						/>
 					</View>
@@ -3688,7 +3882,7 @@ export class PlanOnCalendar extends React.Component {
 						justifyContent: "flex-start",
 						alignItems: "center",
 					}}>
-					<FlashMessage position="bottom" />
+					<FlashMessage position="top" />
 
 					{/* Guide Btn */}
 					<TouchableOpacity
@@ -3856,6 +4050,90 @@ export class PlanOnCalendar extends React.Component {
 							</ScrollView>
 						</View>
 					</Modal>
+					{/* Add Activity Modal */}
+					<RNModal
+						presentationStyle="overFullScreen"
+						transparent={true}
+						visible={this.state.isAddingActivityModalVis}
+						style={{
+							justifyContent: "flex-start",
+							alignItems: "center",
+							marginTop: "50%",
+						}}
+						animationType="slide">
+						<View
+							style={[
+								generalStyles.shadowStyle,
+								{
+									backgroundColor: "white",
+									height: 450,
+									width: "100%",
+									position: "absolute",
+									bottom: 0,
+									borderRadius: 20,
+									alignItems: "center",
+									justifyContent: "center",
+								},
+							]}>
+							{firstSlidePanelPage}
+							<TouchableOpacity
+								style={{
+									position: "absolute",
+									top: 2,
+									flexDirection: "row",
+									width: "100%",
+									justifyContent: "flex-end",
+									paddingHorizontal: 2,
+								}}
+								onPress={() =>
+									this.setState({ isAddingActivityModalVis: false })
+								}>
+								<AntDesign name="closecircle" size={24} color="black" />
+							</TouchableOpacity>
+						</View>
+					</RNModal>
+					{/* Add Keywords Modal */}
+					<RNModal
+						presentationStyle="overFullScreen"
+						transparent={true}
+						visible={this.state.isAddingKeywordsModalVis}
+						style={{
+							justifyContent: "flex-start",
+							alignItems: "center",
+							marginTop: "50%",
+						}}
+						animationType="slide">
+						<View
+							style={[
+								generalStyles.shadowStyle,
+								{
+									backgroundColor: "white",
+									height: 450,
+									width: "100%",
+									position: "absolute",
+									bottom: 0,
+									borderRadius: 20,
+									alignItems: "center",
+									justifyContent: "center",
+								},
+							]}>
+							{secondSlidePanelPage}
+							<TouchableOpacity
+								style={{
+									position: "absolute",
+									top: 2,
+									flexDirection: "row",
+									width: "100%",
+									justifyContent: "flex-end",
+									paddingHorizontal: 2,
+								}}
+								onPress={() =>
+									this.setState({ isAddingKeywordsModalVis: false })
+								}>
+								<AntDesign name="closecircle" size={24} color="black" />
+							</TouchableOpacity>
+						</View>
+					</RNModal>
 					{/* Change plan popup modal */}
 					<RNModal
 						animationType="slide"
@@ -4524,25 +4802,30 @@ export class PlanOnCalendar extends React.Component {
 									</Text>
 								</TouchableOpacity>
 								<TouchableOpacity
-								style={{
-									position: "absolute",
-									bottom: "3%",
-									right: 10,
-									zIndex: 1,
-									display:this.state.currentGuideStep === 6 ? "flex" : "none"
-								}}
-								onPress={() => {
-									this.setState({ isGuideVis: false });
-									this.setState({currentGuideStep: 1});
+									style={{
+										position: "absolute",
+										bottom: "3%",
+										right: 10,
+										zIndex: 1,
+										display:
+											this.state.currentGuideStep === 6 ? "flex" : "none",
+									}}
+									onPress={() => {
+										this.setState({ isGuideVis: false });
+										this.setState({ currentGuideStep: 1 });
 
-									// this.reportModalSwiperRef.current.scrollBy(2, true);
-								}}>
-								{/* <AntDesign name="closecircle" size={24} color="black" /> */}
-								<Text
-									style={{ fontWeight: "bold", color: "white", fontSize: 18 }}>
-									DONE
-								</Text>
-							</TouchableOpacity>
+										// this.reportModalSwiperRef.current.scrollBy(2, true);
+									}}>
+									{/* <AntDesign name="closecircle" size={24} color="black" /> */}
+									<Text
+										style={{
+											fontWeight: "bold",
+											color: "white",
+											fontSize: 18,
+										}}>
+										DONE
+									</Text>
+								</TouchableOpacity>
 								<Swiper
 									activeDotColor="white"
 									// index={this.state.currentSwipeIndex}
@@ -4558,7 +4841,7 @@ export class PlanOnCalendar extends React.Component {
 												this.tipModalSwiperRef.current.scrollBy(1, false);
 												let currentGuideStep = this.state.currentGuideStep;
 												currentGuideStep++;
-												this.setState({currentGuideStep: currentGuideStep});
+												this.setState({ currentGuideStep: currentGuideStep });
 											}}>
 											<Text
 												style={{
@@ -4632,83 +4915,97 @@ export class PlanOnCalendar extends React.Component {
 								display: this.state.mainContentSwiperDisplay,
 							},
 						]}>
-						<View style={{marginBottom:20, display: this.isDataFromTracking? "flex":"none"}}>
-						<View style={{ width: "100%", alignItems: "center" }}>
-							<View style={{ width: "90%", flexDirection:"row", justifyContent:"flex-start", alignItems:"center" }}>
-							<Ionicons name="arrow-forward-circle-sharp" size={15} color="black" />
-								<Text
+						<View
+							style={{
+								marginBottom: 20,
+								display: this.isDataFromTracking ? "flex" : "none",
+							}}>
+							<View style={{ width: "100%", alignItems: "center" }}>
+								<View
 									style={{
-										fontFamily: "RobotoBoldItalic",
-										fontSize: 18,
-										textAlign: "left",
-										marginLeft: 5,
-									}}>
-									Continued Strategy
-								</Text>
-							</View>
-						</View>
-						<View style={{ width: "100%", alignItems: "center" }}>
-							<View
-								style={[
-									generalStyles.shadowStyle,
-									{
-										height: 81,
-										width: 335,
-										borderColor: GREEN,
-										borderWidth: 2,
-										borderRadius: 20,
-										marginTop: "2%",
+										width: "90%",
 										flexDirection: "row",
-										backgroundColor: "white",
-									},
-								]}>
-								<TouchableOpacity
-									style={{
-										height: "100%",
-										width: "100%",
-
-										// borderRightColor: "black",
-										// borderRightWidth: 2,
-										paddingLeft: 0,
-										paddingVertical: 0,
-										justifyContent: "space-between",
-										alignItems: "flex-start",
-										flexDirection: "column",
+										justifyContent: "flex-start",
+										alignItems: "center",
 									}}>
-									<View
+									<Ionicons
+										name="arrow-forward-circle-sharp"
+										size={15}
+										color="black"
+									/>
+									<Text
 										style={{
+											fontFamily: "RobotoBoldItalic",
+											fontSize: 18,
+											textAlign: "left",
+											marginLeft: 5,
+										}}>
+										Continued Strategy
+									</Text>
+								</View>
+							</View>
+							<View style={{ width: "100%", alignItems: "center" }}>
+								<View
+									style={[
+										generalStyles.shadowStyle,
+										{
+											height: 81,
+											width: 335,
+											borderColor: GREEN,
+											borderWidth: 2,
+											borderRadius: 20,
+											marginTop: "2%",
 											flexDirection: "row",
-											alignItems: "center",
-											justifyContent: "flex-start",
+											backgroundColor: "white",
+										},
+									]}>
+									<TouchableOpacity
+										style={{
+											height: "100%",
 											width: "100%",
-											height: "50%",
-											borderTopLeftRadius: 18,
-											borderTopRightRadius: 18,
-											backgroundColor: GREEN,
+
+											// borderRightColor: "black",
+											// borderRightWidth: 2,
+											paddingLeft: 0,
+											paddingVertical: 0,
+											justifyContent: "space-between",
+											alignItems: "flex-start",
+											flexDirection: "column",
 										}}>
 										<View
 											style={{
 												flexDirection: "row",
 												alignItems: "center",
-												justifyContent: "center",
+												justifyContent: "flex-start",
+												width: "100%",
+												height: "50%",
+												borderTopLeftRadius: 18,
+												borderTopRightRadius: 18,
+												backgroundColor: GREEN,
 											}}>
-											<Text
+											<View
 												style={{
-													fontFamily: "RobotoBoldBlack",
-													fontSize: 18,
-													marginBottom: 0,
-													marginRight: 10,
+													flexDirection: "row",
 													alignItems: "center",
 													justifyContent: "center",
-													marginLeft: "10%",
-													color: "white",
-													alignSelf: "center",
-													textAlign: "center",
 												}}>
-												{this.planStrategyName}
-											</Text>
-										</View>
-										{/* <View
+												<Text
+													style={{
+														fontFamily: "RobotoBoldBlack",
+														fontSize: 18,
+														marginBottom: 0,
+														marginRight: 10,
+														alignItems: "center",
+														justifyContent: "center",
+														marginLeft: "10%",
+														color: "white",
+														alignSelf: "center",
+														textAlign: "center",
+													}}>
+													{this.planStrategyName}
+												</Text>
+											</View>
+											{/* <View
 													style={{
 														flexDirection: "column",
 														justifyContent: "center",
@@ -4729,52 +5026,52 @@ export class PlanOnCalendar extends React.Component {
 														{this.state.strategyDuration}
 													</Text>
 												</View> */}
-										<View style={{ position: "absolute", right: 5 }}>
-											<FontAwesome5
-												name="play-circle"
-												size={18}
-												color="white"
-											/>
+											<View style={{ position: "absolute", right: 5 }}>
+												<FontAwesome5
+													name="play-circle"
+													size={18}
+													color="white"
+												/>
+											</View>
 										</View>
-									</View>
-									<ScrollView
-										horizontal={true}
-										style={{
-											width: "100%",
-											height: "50%",
-											flexDirection: "row",
-										}}
-										contentContainerStyle={{
-											alignItems: "center",
-											paddingLeft: "5%",
-											paddingRight: "5%",
-										}}>
-										{this.keywordsBuddle.map((item) => {
-											return (
-												<View
-													style={{
-														borderRadius: 20,
-														height: 32,
-														// backgroundColor: "#E7E7E7",
-														marginRight: 2,
-														padding: 5,
-													}}>
-													<Text
+										<ScrollView
+											horizontal={true}
+											style={{
+												width: "100%",
+												height: "50%",
+												flexDirection: "row",
+											}}
+											contentContainerStyle={{
+												alignItems: "center",
+												paddingLeft: "5%",
+												paddingRight: "5%",
+											}}>
+											{this.keywordsBuddle.map((item) => {
+												return (
+													<View
 														style={{
-															color: "black",
-															fontWeight: "bold",
-															color: "#1AB700",
-															fontSize: 13,
+															borderRadius: 20,
+															height: 32,
+															// backgroundColor: "#E7E7E7",
+															marginRight: 2,
+															padding: 5,
 														}}>
-														# {item.title}
-													</Text>
-												</View>
-											);
-										})}
-									</ScrollView>
-								</TouchableOpacity>
+														<Text
+															style={{
+																color: "black",
+																fontWeight: "bold",
+																color: "#1AB700",
+																fontSize: 13,
+															}}>
+															# {item.title}
+														</Text>
+													</View>
+												);
+											})}
+										</ScrollView>
+									</TouchableOpacity>
+								</View>
 							</View>
-						</View>
 						</View>
 						<Onboarding
 							bottomBarHighlight={false}
@@ -4782,7 +5079,13 @@ export class PlanOnCalendar extends React.Component {
 							showSkip={false}
 							showNext={false}
 							pageIndexCallback={(index) => {
-								this.panelSwiperRef.current.goToPage(index, true);
+								// this.panelSwiperRef.current.goToPage(index, true);
+								this.pageIndex = index;
+								if (index === 0) {
+									this.setState({ bottomAddTxt: "Add Activity" });
+								} else {
+									this.setState({ bottomAddTxt: "Add Keywords" });
+								}
 							}}
 							pages={[
 								{
@@ -4801,7 +5104,97 @@ export class PlanOnCalendar extends React.Component {
 						/>
 					</View>
 					{/* Slide Up Panel */}
-					{slideUpPanel}
+					{/* {slideUpPanel} */}
+					{/* Bottom Bar */}
+					<View
+						style={{
+							position: "absolute",
+							bottom: 20,
+							zIndex: 1,
+							width: "100%",
+							paddingHorizontal: "5%",
+							alignItems: "center",
+							justifyContent: "space-between",
+							flexDirection: "row",
+							display: this.state.bottomBarVis,
+						}}>
+						<TouchableOpacity
+							style={{
+								flexDirection: "row",
+								justifyContent: "center",
+								alignItems: "center",
+							}}
+							onPress={() => {
+								if (this.pageIndex === 0) {
+									this.setState({ isAddingActivityModalVis: true });
+								} else {
+									this.setState({ isAddingKeywordsModalVis: true });
+								}
+							}}>
+							<Ionicons name="add-circle" size={30} color="black" />
+							<Text
+								style={{
+									fontFamily: "RobotoBoldBlack",
+									fontSize: 16,
+									marginLeft: 5,
+								}}>
+								{this.state.bottomAddTxt}
+							</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							onPress={() => {
+								// this.panelSwiperRef.current.goNext();
+								if (this.pageIndex === 1) {
+									// this.setState({ panelDisplay: "none" });
+									this.setState({ panelHeight: 200 });
+									this.setState({ displayCalView: "none" });
+									this.setState({ displayTitle: "none" });
+									this.setState({ mainContentSwiperDisplay: "none" });
+									this.setState({ conformationPageDisplay: "flex" });
+									this.setState({ bottomBarVis: "none" });
+									// this._panel.show();
+								} else if (this.pageIndex === 0) {
+									this.setState({ mainContentSwiperDisplay: "flex" });
+									this.setState({ conformationPageDisplay: "none" });
+									this.mainContentSwiperRef.current.goToPage(1, true);
+									this.pageIndex = 1;
+									this.setState({ bottomAddTxt: "Add Keywords" });
+
+									this.setState({ panelHeight: 450 });
+									// this._panel.hide();
+									this.setState({ displayCalView: "flex" });
+									this.setState({ displayTitle: "flex" });
+									// if (this.pageIndex === 1) {
+									// 	this.setState({
+									// 		title: (
+									// 			<SummarizePlanningStrategy height={28} width={119} />
+									// 		),
+									// 	});
+									// 	this.pageIndex = 1;
+									// } else if (this.pageIndex === 0) {
+									// 	this.setState({
+									// 		title: <PlanActivities height={28} width={150} />,
+									// 	});
+									// 	// this.mainContentSwiperRef.current.goToPage(1, true);
+									// }
+								}
+							}}
+							style={{
+								flexDirection: "row",
+								justifyContent: "center",
+								alignItems: "center",
+							}}>
+							<Text
+								style={{
+									fontFamily: "RobotoBoldBlack",
+									fontSize: 16,
+									marginRight: 5,
+								}}>
+								Next
+							</Text>
+							<AntDesign name="rightcircle" size={27} color="black" />
+						</TouchableOpacity>
+					</View>
 				</View>
 			</KeyboardAvoidingView>
 		);

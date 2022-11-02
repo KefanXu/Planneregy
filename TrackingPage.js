@@ -755,7 +755,7 @@ export class TrackingPage extends React.Component {
 
 			}
 			if (!isReportExist) {
-				// console.log("this.preList",this.preList);
+				console.log("add daily report");
 				report.title = "Daily Report";
 				report.start = date;
 				report.end = report.start;
@@ -768,7 +768,7 @@ export class TrackingPage extends React.Component {
 					console.log("push daily report2", report);
 				}
 			} else {
-				// console.log("this.state.plansBuddle", this.state.plansBuddle);
+				console.log("this.state.plansBuddle", this.state.plansBuddle);
 				for (let event of this.state.plansBuddle) {
 					if (
 						event.start.slice(0, 10) === date &&
@@ -2201,6 +2201,7 @@ export class TrackingPage extends React.Component {
 	};
 	//Submit the report when no activity performed
 	onSubmitDailyReport_NoActivity = async () => {
+		console.log("daily no activity");
 		this.setState({ isReportModalVis: false });
 		let itemToSubmit = this.dailyReportItem;
 		itemToSubmit.isReported = true;
@@ -2228,6 +2229,15 @@ export class TrackingPage extends React.Component {
 	};
 	//Submit the user added activities
 	onSubmitPressed_UserAddedActivity = async () => {
+		console.log("onSubmitPressed_UserAddedActivity");
+		let itemToSubmit = this.dailyReportItem;
+		itemToSubmit.isReported = true;
+		let formattedSelectedMonth = parseInt(
+			moment(itemToSubmit.start).format().slice(5, 7)
+		);
+		this.userPlans.push(itemToSubmit);
+		this.processDailyReports_after();
+
 		this.setState({ isReportModalVis: false });
 		for (let event of this.state.selfReportedActivityList) {
 			event.isReported = true;
@@ -2239,7 +2249,14 @@ export class TrackingPage extends React.Component {
 				this.combinedEventListLast.push(event);
 				this.pastMonthBtnPressed();
 			}
+			// this.userPlans.push(event);
 		}
+		// for (let event of this.userPlans) {
+		// 	if (event.title) {
+		// 		if (event.title === "Daily Report")
+		// 	}
+		// }
+		// this.processDailyReports_after();
 	};
 	//Submit the completed activity
 	onSubmitPressed_CompleteActivity = async () => {
@@ -2445,10 +2462,15 @@ export class TrackingPage extends React.Component {
 		}
 		// console.log("reportStatus", reportStatus);
 		// console.log("this.state.selectedActivity", this.state.selectedActivity);
-
+		eventToUpdate.isReported = true;
+		for (let event of this.userPlans) {
+			if (event.timeStamp === eventToUpdate.timeStamp) {
+				event.isReported = true;
+			}
+		}
 		if (reportStatus === "PARTIALLY_COMPLETE_TIME") {
 			// Add a new partially completed activity
-
+			
 			newActivity.isActivityCompleted = false;
 			newActivity.isReported = true;
 			newActivity.isOtherActivity = true;
@@ -2617,9 +2639,9 @@ export class TrackingPage extends React.Component {
 		await this.dataModel.updateStrategy(this.userKey, strategyToUpdate);
 		await this.dataModel.loadUserStrategies(this.userKey);
 		this.userStrategies = this.dataModel.getUserStrategies();
-		await this.processDailyReports_after();
 		let newValueForReload = this.state.valueForReload + 1;
 		await this.setState({ valueForReload: newValueForReload });
+		this.processDailyReports_after();
 	};
 
 	lastMonthEventReported = async (date) => {
@@ -10007,6 +10029,7 @@ export class TrackingPage extends React.Component {
 													},
 												]}>
 												<TouchableOpacity
+													disabled = {isTodayInBetween?true:false}
 													style={{
 														height: "100%",
 														width: "100%",
@@ -11153,9 +11176,11 @@ export class TrackingPage extends React.Component {
 								});
 								this.setState({ selectedStrategyDate: "" });
 								// this._panel.hide();
-								if (this.state.currentMonth != "THIS_MONTH") {
-									this.resetCalendarToCurrentMonth();
-								}
+								// console.log("this.state.currentMonth",this.state.currentMonth);
+								// if (this.state.currentMonth != "THIS_MONTH") {
+								// 	console.log("reset month");
+								this.resetCalendarToCurrentMonth();
+								// }
 
 								this.setState({
 									selectedStrategyDate: this.currentStrategy.startDate,
@@ -11169,6 +11194,7 @@ export class TrackingPage extends React.Component {
 									currentMonthDate: this.state.selectedDateRaw,
 								});
 								this.scrollToThisWeek();
+								
 							}
 						}}
 						pages={[
