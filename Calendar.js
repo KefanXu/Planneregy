@@ -563,7 +563,7 @@ export class MonthCalendar extends React.Component {
                                 </Text>
                               </View>
                             );
-                          } else if (item.isPlanned === "added-activity") {
+                          } else if (item.isPlanned === "added-activity" && !item.isDeleted) {
                             return (
                               <View
                                 style={{
@@ -778,7 +778,7 @@ export class MonthCalendar extends React.Component {
                                 </Text>
                               </View>
                             );
-                          } else if (item.isPlanned === "added-activity") {
+                          } else if (item.isPlanned === "added-activity" && !item.isDeleted) {
                             return (
                               //User-added planned events
                               <View

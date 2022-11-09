@@ -110,6 +110,7 @@ let TEST_DATA2 = [
 	{ title: "Outdoor", id: 7 },
 	{ title: "Gym", id: 8 },
 ];
+const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
 
 let TEST_DATA3 = [
 	{ title: "Walking", date: "MON 9:30AM-9:50AM", duration: "20 MIN", id: 1 },
@@ -463,13 +464,13 @@ export class TrackingPage extends React.Component {
 			isReviewBtnVis: "none",
 			isReportBtnDisabled: false,
 			reportBtnColor: "black",
-			unplannedActivityPanelVis:"none",
-			addUnplannedActivityBtnVis:"flex",
-			currentGuideStep:1
+			unplannedActivityPanelVis: "none",
+			addUnplannedActivityBtnVis: "flex",
+			currentGuideStep: 1,
 		};
 		this.processUserStrategies();
 		// this.processDailyReports_after();
-		
+
 		// if (this.isGuideVis) {
 		// 	this.setState({ isReportModalVis: false });
 		// } else {
@@ -640,9 +641,9 @@ export class TrackingPage extends React.Component {
 						}
 					}
 				}
-
 			}
 			if (!isReportExist) {
+				console.log("add daily report");
 				report.title = "Daily Report";
 				report.start = date;
 				report.end = report.start;
@@ -666,7 +667,6 @@ export class TrackingPage extends React.Component {
 							// console.log("push event");
 						}
 					}
-
 				}
 			}
 		}
@@ -752,7 +752,6 @@ export class TrackingPage extends React.Component {
 						}
 					}
 				}
-
 			}
 			if (!isReportExist) {
 				console.log("add daily report");
@@ -808,13 +807,12 @@ export class TrackingPage extends React.Component {
 		});
 	};
 	processUserEvents = () => {
+		// console.log("this.userPlans", this.userPlans);
+
 		for (let event of this.userPlans) {
 			if (event.title && !event.isDeleted) {
 				if (
-					!this.combineEventListFull.includes(event) &&
-					!this.combineEventListFull.some(
-						(e) => e.timeStamp === event.timeStamp
-					)
+					!this.combineEventListFull.includes(event)
 				) {
 					this.combineEventListFull.push(event);
 				}
@@ -822,36 +820,22 @@ export class TrackingPage extends React.Component {
 				let monthNum = parseInt(event.end.slice(5, 7));
 				let currMonth = new Date();
 				if (monthNum === currMonth.getMonth() + 1) {
-					if (
-						!this.combinedEventListThis.includes(event) &&
-						!this.combinedEventListThis.some(
-							(e) => e.timeStamp === event.timeStamp
-						)
-					) {
+					if (!this.combinedEventListThis.includes(event)) {
 						this.combinedEventListThis.push(event);
 					}
 				} else if (monthNum === currMonth.getMonth()) {
-					if (
-						!this.combinedEventListLast.includes(event) &&
-						!this.combinedEventListLast.some(
-							(e) => e.timeStamp === event.timeStamp
-						)
-					) {
+					if (!this.combinedEventListLast.includes(event)) {
 						this.combinedEventListLast.push(event);
 					}
 				} else if (monthNum === currMonth.getMonth() + 2) {
-					if (
-						!this.combinedEventListNext.includes(event) &&
-						!this.combinedEventListNext.some(
-							(e) => e.timeStamp === event.timeStamp
-						)
-					) {
+					if (!this.combinedEventListNext.includes(event)) {
 						this.combinedEventListNext.push(event);
 					}
 				}
 				//let plannedEvent = Object.assign({}, event);
 			}
 		}
+		// console.log("combinedEventListThis", this.combinedEventListThis);
 	};
 	//Process user strategies and get the current one
 	processUserStrategies = async () => {
@@ -1686,11 +1670,11 @@ export class TrackingPage extends React.Component {
 	//Close the daily report window
 	onDailyReportClose = () => {
 		this.setState({ isReportModalVis: false });
-		this.setState({ addUnplannedActivityBtnVis:"flex"})
+		this.setState({ addUnplannedActivityBtnVis: "flex" });
 		this.setState({ currentSwipeIndex: 0 });
 		this.setState({ currentSwipePage: 0 });
 		this.setState({ reportModalHeight: "50%" });
-		this.setState({ unplannedActivityPanelVis: "none"}) 
+		this.setState({ unplannedActivityPanelVis: "none" });
 		this.setState({ reportNEXTbtn: "NEXT" });
 		this.setState({ isReportSwipePERVvis: "flex" });
 		this.setState({ isReportSwipePERVdisabled: true });
@@ -1716,7 +1700,7 @@ export class TrackingPage extends React.Component {
 		);
 		this.setState({ selectedDate: selectedDay });
 		this.setState({ dateTimePickerDate: selectedDay });
-		this.setState({ unplannedActivityPanelVis: "flex"}) 
+		this.setState({ unplannedActivityPanelVis: "flex" });
 		this.setState({ isReportModalVis: true });
 		this.setState({ currentSwipeIndex: 8 });
 		this.setState({ currentSwipePage: 8 });
@@ -1725,8 +1709,7 @@ export class TrackingPage extends React.Component {
 		this.setState({ isReportSwipePERVvis: "none" });
 		this.setState({ reportStatus: "ADD_ACTIVITY" });
 		this.setState({ reportNEXTbtn: "SUBMIT" });
-		this.setState({ addUnplannedActivityBtnVis:"none"})
-
+		this.setState({ addUnplannedActivityBtnVis: "none" });
 	};
 	//The previous btn on the report modal pressed
 	onReportPrevBtnPressed = () => {
@@ -2013,7 +1996,7 @@ export class TrackingPage extends React.Component {
 			this.reportModalSwiperRef.current.scrollBy(2, true);
 			currentSwipePage = currentSwipePage + 2;
 			this.setState({ currentSwipeIndex: 7 });
-			this.setState({ reportModalHeight:  "50%" });
+			this.setState({ reportModalHeight: "50%" });
 			this.setState({ reportNEXTbtn: "SUBMIT" });
 			this.setState({ reportStatus: "PARTIALLY_COMPLETE_ACTIVITY" });
 			this.setState({ isReportModalVis: false });
@@ -2044,7 +2027,7 @@ export class TrackingPage extends React.Component {
 			this.setState({ currentSwipeIndex: 8 });
 			this.setState({ reportNEXTbtn: "SUBMIT" });
 			this.setState({ reportStatus: "PARTIALLY_COMPLETE_TIME" });
-			this.setState({ reportModalHeight:  "50%" });
+			this.setState({ reportModalHeight: "50%" });
 			this.setState({ isReportModalVis: false });
 			setTimeout(() => {
 				this.setState({ isReportModalVis: true }), 1000;
@@ -2062,6 +2045,7 @@ export class TrackingPage extends React.Component {
 				this.OnSubmitPressed_PartiallyComplete();
 			} else {
 				this.onSubmitPressed_UserAddedActivity();
+				this.onSubmitDailyReport_NoActivity();
 				this.onDailyReportClose();
 			}
 			showMessage({
@@ -2470,7 +2454,7 @@ export class TrackingPage extends React.Component {
 		}
 		if (reportStatus === "PARTIALLY_COMPLETE_TIME") {
 			// Add a new partially completed activity
-			
+
 			newActivity.isActivityCompleted = false;
 			newActivity.isReported = true;
 			newActivity.isOtherActivity = true;
@@ -4133,15 +4117,15 @@ export class TrackingPage extends React.Component {
 										"You have unfinished reports",
 										"Please finish all your reports before reviewing planning strategy",
 										[
-										  {
-											text: "Cancel",
-											onPress: () => console.log("Cancel Pressed"),
-											style: "cancel"
-										  },
-										  { text: "OK", onPress: () => console.log("OK Pressed") }
+											{
+												text: "Cancel",
+												onPress: () => console.log("Cancel Pressed"),
+												style: "cancel",
+											},
+											{ text: "OK", onPress: () => console.log("OK Pressed") },
 										]
-									  );
-									  return;
+									);
+									return;
 								}
 								this.evaluatePanelPopup();
 								// this.setState({isReviewBtnDisabled:true})
@@ -5022,15 +5006,15 @@ export class TrackingPage extends React.Component {
 										"You have unfinished reports",
 										"Please finish all your reports before reviewing planning strategy",
 										[
-										  {
-											text: "Cancel",
-											onPress: () => console.log("Cancel Pressed"),
-											style: "cancel"
-										  },
-										  { text: "OK", onPress: () => console.log("OK Pressed") }
+											{
+												text: "Cancel",
+												onPress: () => console.log("Cancel Pressed"),
+												style: "cancel",
+											},
+											{ text: "OK", onPress: () => console.log("OK Pressed") },
 										]
-									  );
-									  return;
+									);
+									return;
 								}
 								this.setState({ isPanelVis: "flex" });
 								this.evaluatePanelPopup();
@@ -5648,7 +5632,7 @@ export class TrackingPage extends React.Component {
 								justifyContent: "space-between",
 								alignItems: "center",
 								height: 45,
-								marginBottom:"2%"
+								marginBottom: "2%",
 							}}>
 							<Text
 								style={{
@@ -7046,7 +7030,7 @@ export class TrackingPage extends React.Component {
 							if (this.state.evaluationPage_FOUR_value === "No") {
 								this.setState({ evaluationNEXTbtnTxt: "NEXT" });
 							} else {
-								this.setState({ evaluationNEXTbtnTxt: "START TRACKING!" });
+								this.setState({ evaluationNEXTbtnTxt: "START PLANNING!" });
 							}
 						}}
 					/>
@@ -7083,7 +7067,7 @@ export class TrackingPage extends React.Component {
 							if (this.state.evaluationPage_FIVE_value === "No") {
 								this.setState({ evaluationNEXTbtnTxt: "NEXT" });
 							} else {
-								this.setState({ evaluationNEXTbtnTxt: "START TRACKING!" });
+								this.setState({ evaluationNEXTbtnTxt: "START PLANNING!" });
 							}
 						}}
 					/>
@@ -7828,7 +7812,7 @@ export class TrackingPage extends React.Component {
 											textAlign: "right",
 											marginRight: 10,
 										}}>
-										START TRACKING!
+										START PLANNING!
 									</Text>
 								</TouchableOpacity>
 							)}
@@ -8617,18 +8601,23 @@ export class TrackingPage extends React.Component {
 						marginTop: 10,
 						marginBottom: 10,
 					}}></View>
-				<TouchableOpacity style={{flexDirection:"row", justifyContent:"flex-start", alignItems:"center", display:this.state.addUnplannedActivityBtnVis}}						
-				onPress={() => {
-							this.setState({ reportModalHeight: 670 });
-							this.setState({ unplannedActivityPanelVis: "flex"}) 
-						}}>
+				<TouchableOpacity
+					style={{
+						flexDirection: "row",
+						justifyContent: "flex-start",
+						alignItems: "center",
+						display: this.state.addUnplannedActivityBtnVis,
+					}}
+					onPress={() => {
+						this.setState({ reportModalHeight: 670 });
+						this.setState({ unplannedActivityPanelVis: "flex" });
+					}}>
 					<View
 						style={{
 							alignItems: "center",
 							justifyContent: "center",
 							marginRight: 10,
-						}}
->
+						}}>
 						<Ionicons name="chevron-down-circle" size={25} color="black" />
 					</View>
 					<Text
@@ -8639,7 +8628,7 @@ export class TrackingPage extends React.Component {
 						Click here to Add Unplanned Activities
 					</Text>
 				</TouchableOpacity>
-				<View style={{display:this.state.unplannedActivityPanelVis}}>
+				<View style={{ display: this.state.unplannedActivityPanelVis }}>
 					{/* Activity List */}
 					<View
 						style={[
@@ -9155,11 +9144,11 @@ export class TrackingPage extends React.Component {
 				{/* Title */}
 				<View
 					style={{
-						height: 28,
 						width: "50%",
 						marginTop: "10%",
 						alignItems: "center",
 						justifyContent: "center",
+						// backgroundColor:"red",
 						display: this.state.displayTitle,
 						flexDirection: "row",
 					}}>
@@ -9186,19 +9175,19 @@ export class TrackingPage extends React.Component {
 						// onSwipeComplete={() => this.setState({ isReportModalVis: false })}
 						// swipeDirection="down"
 					>
-					<BlurView
-						intensity={30}
-						style={{
-							position: "absolute",
-							top: 0,
-							left: 0,
-							right: 0,
-							bottom: 0,
-							height: "100%",
-							width: "100%",
-							justifyContent: "center",
-							alignItems: "center",
-						}}>
+						<BlurView
+							intensity={30}
+							style={{
+								position: "absolute",
+								top: 0,
+								left: 0,
+								right: 0,
+								bottom: 0,
+								height: "100%",
+								width: "100%",
+								justifyContent: "center",
+								alignItems: "center",
+							}}>
 							<View
 								style={[
 									generalStyles.shadowStyle,
@@ -9478,9 +9467,9 @@ export class TrackingPage extends React.Component {
 									justifyContent: "space-between",
 									alignItems: "center",
 									paddingHorizontal: 10,
-									position:"absolute",
-									right:5,
-									top:5
+									position: "absolute",
+									right: 5,
+									top: 5,
 								},
 							]}
 							onPress={() => {
@@ -9489,17 +9478,17 @@ export class TrackingPage extends React.Component {
 										"You have unfinished reports",
 										"Please finish all your reports before reviewing planning strategy",
 										[
-										  {
-											text: "Cancel",
-											onPress: () => console.log("Cancel Pressed"),
-											style: "cancel"
-										  },
-										  { text: "OK", onPress: () => console.log("OK Pressed") }
+											{
+												text: "Cancel",
+												onPress: () => console.log("Cancel Pressed"),
+												style: "cancel",
+											},
+											{ text: "OK", onPress: () => console.log("OK Pressed") },
 										]
-									  );
-									  return;
+									);
+									return;
 								}
-								this.setState({isStrategyDetailModalVis: false})
+								this.setState({ isStrategyDetailModalVis: false });
 								this.setState({ isPanelVis: "flex" });
 								this.evaluatePanelPopup();
 								this.setState({ isReviewPopVis: false });
@@ -10029,7 +10018,7 @@ export class TrackingPage extends React.Component {
 													},
 												]}>
 												<TouchableOpacity
-													disabled = {isTodayInBetween?true:false}
+													disabled={isTodayInBetween ? true : false}
 													style={{
 														height: "100%",
 														width: "100%",
@@ -10407,7 +10396,54 @@ export class TrackingPage extends React.Component {
 						backgroundColor: "white",
 						marginBottom: 0,
 					}}>
-					<CalendarHeader height={15} width={"100%"} />
+					{/* <CalendarHeader height={15} width={"100%"} /> */}
+					<View
+						style={{
+							width: "100%",
+							height: 20,
+							flexDirection: "row",
+							justifyContent: "space-between",
+							paddingHorizontal: 4,
+						}}>
+						{weekDays.map((item) => {
+							return (
+								<View
+									style={{
+										flex: 0.2,
+										height: 18,
+										width: "95%",
+										flexDirection: "row",
+										backgroundColor: "white",
+										borderRadius: 15,
+										justifyContent: "center",
+										alignItems: "center",
+									}}>
+									<View
+										style={{
+											flex: 1,
+											height: "100%",
+											width: "100%",
+											justifyContent: "center",
+											alignItems: "center",
+											flexDirection: "row",
+										}}>
+										<Text
+											style={{
+												textAlign: "center",
+												alignSelf: "center",
+												justifyContent: "center",
+												alignContent: "center",
+												fontSize: 16,
+												color: "black",
+												fontWeight: "bold",
+											}}>
+											{item}
+										</Text>
+									</View>
+								</View>
+							);
+						})}
+					</View>
 					<View
 						style={{
 							height: this.state.calendarViewHeight,
@@ -10580,7 +10616,7 @@ export class TrackingPage extends React.Component {
 								}}
 								onPress={() => {
 									this.setState({ isGuideVis: false });
-									this.setState({currentGuideStep: 1});
+									this.setState({ currentGuideStep: 1 });
 
 									// this.reportModalSwiperRef.current.scrollBy(2, true);
 								}}>
@@ -10596,11 +10632,11 @@ export class TrackingPage extends React.Component {
 									bottom: "3%",
 									right: 10,
 									zIndex: 1,
-									display:this.state.currentGuideStep === 6 ? "flex" : "none"
+									display: this.state.currentGuideStep === 6 ? "flex" : "none",
 								}}
 								onPress={() => {
 									this.setState({ isGuideVis: false });
-									this.setState({currentGuideStep: 1});
+									this.setState({ currentGuideStep: 1 });
 
 									// this.reportModalSwiperRef.current.scrollBy(2, true);
 								}}>
@@ -10625,8 +10661,11 @@ export class TrackingPage extends React.Component {
 											this.tipModalSwiperRef.current.scrollBy(1, false);
 											let currentGuideStep = this.state.currentGuideStep;
 											currentGuideStep++;
-											this.setState({currentGuideStep: currentGuideStep});
-											console.log("this.state.currentGuideStep",this.state.currentGuideStep);
+											this.setState({ currentGuideStep: currentGuideStep });
+											console.log(
+												"this.state.currentGuideStep",
+												this.state.currentGuideStep
+											);
 										}}>
 										<Text
 											style={{
@@ -10644,8 +10683,11 @@ export class TrackingPage extends React.Component {
 											this.tipModalSwiperRef.current.scrollBy(-1, false);
 											let currentGuideStep = this.state.currentGuideStep;
 											currentGuideStep--;
-											this.setState({currentGuideStep: currentGuideStep});
-											console.log("this.state.currentGuideStep",this.state.currentGuideStep);
+											this.setState({ currentGuideStep: currentGuideStep });
+											console.log(
+												"this.state.currentGuideStep",
+												this.state.currentGuideStep
+											);
 										}}>
 										<Text
 											style={{
@@ -10678,7 +10720,6 @@ export class TrackingPage extends React.Component {
 								{tip_FOUR}
 								{tip_FIVE}
 								{tip_FIVE}
-
 							</Swiper>
 						</View>
 					</View>
@@ -10897,15 +10938,18 @@ export class TrackingPage extends React.Component {
 														"You have unfinished reports",
 														"Please finish all your reports before reviewing planning strategy",
 														[
-														  {
-															text: "Cancel",
-															onPress: () => console.log("Cancel Pressed"),
-															style: "cancel"
-														  },
-														  { text: "OK", onPress: () => console.log("OK Pressed") }
+															{
+																text: "Cancel",
+																onPress: () => console.log("Cancel Pressed"),
+																style: "cancel",
+															},
+															{
+																text: "OK",
+																onPress: () => console.log("OK Pressed"),
+															},
 														]
-													  );
-													  return;
+													);
+													return;
 												}
 												this.setState({ isPanelVis: "flex" });
 												this.evaluatePanelPopup();
@@ -11194,7 +11238,6 @@ export class TrackingPage extends React.Component {
 									currentMonthDate: this.state.selectedDateRaw,
 								});
 								this.scrollToThisWeek();
-								
 							}
 						}}
 						pages={[

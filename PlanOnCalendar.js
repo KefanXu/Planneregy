@@ -219,6 +219,8 @@ export class PlanOnCalendar extends React.Component {
 		this.onReportActivity = { title: "", start: "", end: "", duration: "" };
 		//initiate page index for onboarding view
 		this.pageIndex = 0;
+		//Assign different timestap to auto-added events
+		this.timeStampCnt = 0;
 		this.state = {
 			date: new Date(),
 
@@ -848,7 +850,8 @@ export class PlanOnCalendar extends React.Component {
 		}
 
 		let timeStamp = moment(new Date()).format();
-		newEvent.timeStamp = timeStamp;
+		newEvent.timeStamp = timeStamp + this.timeStampCnt;
+		this.timeStampCnt++;
 		if (preEvent) {
 			newEvent.key = timeStamp + preEvent.key;
 		} else {
