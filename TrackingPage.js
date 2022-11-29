@@ -762,7 +762,10 @@ export class TrackingPage extends React.Component {
 				let reportStartDate = new Date(
 					moment(report.start.slice(0, 10)).format("YYYY-MM-DD")
 				);
-				if (reportStartDate >= formattedStartDate) {
+				if (
+					reportStartDate >= formattedStartDate &&
+					!this.preList.some((e) => e.start === event.start)
+				) {
 					this.preList.push(report);
 					console.log("push daily report2", report);
 				}
@@ -772,7 +775,8 @@ export class TrackingPage extends React.Component {
 					if (
 						event.start.slice(0, 10) === date &&
 						!event.isReported &&
-						!event.isDeleted
+						!event.isDeleted &&
+						!this.preList.some((e) => e.timeStamp === event.timeStamp)
 					) {
 						this.preList.push(event);
 					}
@@ -808,11 +812,14 @@ export class TrackingPage extends React.Component {
 	};
 	processUserEvents = () => {
 		// console.log("this.userPlans", this.userPlans);
-
+		console.log("processUserEvents");
 		for (let event of this.userPlans) {
 			if (event.title && !event.isDeleted) {
 				if (
-					!this.combineEventListFull.includes(event)
+					!this.combineEventListFull.includes(event) &&
+					!this.combineEventListFull.some(
+						(e) => e.timeStamp === event.timeStamp
+					)
 				) {
 					this.combineEventListFull.push(event);
 				}
@@ -820,15 +827,30 @@ export class TrackingPage extends React.Component {
 				let monthNum = parseInt(event.end.slice(5, 7));
 				let currMonth = new Date();
 				if (monthNum === currMonth.getMonth() + 1) {
-					if (!this.combinedEventListThis.includes(event)) {
+					if (
+						!this.combinedEventListThis.includes(event) &&
+						!this.combinedEventListThis.some(
+							(e) => e.timeStamp === event.timeStamp
+						)
+					) {
 						this.combinedEventListThis.push(event);
 					}
-				} else if (monthNum === currMonth.getMonth()) {
+				} else if (
+					monthNum === currMonth.getMonth() &&
+					!this.combinedEventListLast.some(
+						(e) => e.timeStamp === event.timeStamp
+					)
+				) {
 					if (!this.combinedEventListLast.includes(event)) {
 						this.combinedEventListLast.push(event);
 					}
 				} else if (monthNum === currMonth.getMonth() + 2) {
-					if (!this.combinedEventListNext.includes(event)) {
+					if (
+						!this.combinedEventListNext.includes(event) &&
+						!this.combinedEventListNext.some(
+							(e) => e.timeStamp === event.timeStamp
+						)
+					) {
 						this.combinedEventListNext.push(event);
 					}
 				}
@@ -1248,7 +1270,7 @@ export class TrackingPage extends React.Component {
 		let duration = moment.duration(
 			moment(formattedEndTime).diff(moment(formattedStartTime))
 		);
-		let durationMinutes = parseInt(duration.asMinutes()) % 60;
+		let durationMinutes = parseInt(duration.asMinutes());
 
 		newEvent.duration = durationMinutes;
 		newEvent.activityReminderKey = await this.dataModel.scheduleNotification(
@@ -2157,7 +2179,7 @@ export class TrackingPage extends React.Component {
 		let duration = moment.duration(
 			moment(formattedEndTime).diff(moment(formattedStartTime))
 		);
-		let durationMinutes = parseInt(duration.asMinutes()) % 60;
+		let durationMinutes = parseInt(duration.asMinutes());
 
 		newEvent.duration = durationMinutes;
 		let updatedAdditionalActivityList = this.state.selfReportedActivityList;
@@ -2507,7 +2529,7 @@ export class TrackingPage extends React.Component {
 			let duration = moment.duration(
 				moment(formattedEndTime).diff(moment(formattedStartTime))
 			);
-			let durationMinutes = parseInt(duration.asMinutes()) % 60;
+			let durationMinutes = parseInt(duration.asMinutes());
 			eventToUpdate.newDuration = durationMinutes;
 			newActivity.newDuration = durationMinutes;
 			await this.dataModel.createNewPlan(this.userKey, newActivity);
@@ -3695,6 +3717,7 @@ export class TrackingPage extends React.Component {
 								ref={(input) => {
 									this.textInput = input;
 								}}
+								maxLength={12}
 								placeholder="new activity"
 								value={this.state.userDefinedActivityText}
 								onChangeText={(text) =>
@@ -3919,6 +3942,7 @@ export class TrackingPage extends React.Component {
 							textAlign: "center",
 							fontFamily: "RobotoBoldItalic",
 						}}
+						maxLength={12}
 						placeholder="Add Keywords"
 						ref={(input) => {
 							this.KeyWordTextInput = input;
@@ -8256,6 +8280,7 @@ export class TrackingPage extends React.Component {
 								ref={(input) => {
 									this.textInput = input;
 								}}
+								maxLength={12}
 								placeholder="new activity"
 								value={this.state.userDefinedActivityText}
 								onChangeText={(text) =>
@@ -8517,6 +8542,7 @@ export class TrackingPage extends React.Component {
 								ref={(input) => {
 									this.textInput = input;
 								}}
+								maxLength={12}
 								placeholder="new activity"
 								value={this.state.userDefinedActivityText}
 								onChangeText={(text) =>
@@ -8831,6 +8857,7 @@ export class TrackingPage extends React.Component {
 									ref={(input) => {
 										this.textInput = input;
 									}}
+									maxLength={12}
 									placeholder="new activity"
 									value={this.state.userDefinedActivityText}
 									onChangeText={(text) =>
@@ -9079,6 +9106,7 @@ export class TrackingPage extends React.Component {
 					height: "100%",
 					justifyContent: "space-between",
 					alignItems: "center",
+					paddingVertical: "15%",
 				}}>
 				<FlashMessage position="bottom" />
 
@@ -9145,7 +9173,7 @@ export class TrackingPage extends React.Component {
 				<View
 					style={{
 						width: "50%",
-						marginTop: "10%",
+						// marginTop: "10%",
 						alignItems: "center",
 						justifyContent: "center",
 						// backgroundColor:"red",
@@ -9176,7 +9204,7 @@ export class TrackingPage extends React.Component {
 						// swipeDirection="down"
 					>
 						<BlurView
-							intensity={30}
+							intensity={0}
 							style={{
 								position: "absolute",
 								top: 0,
@@ -11042,121 +11070,6 @@ export class TrackingPage extends React.Component {
             {summaryPage}
             {finalConfirmationPage}
           </Swiper> */}
-					<View
-						style={[
-							{
-								width: "100%",
-								height: 60,
-								position: "absolute",
-								bottom: 0,
-								backgroundColor: "transparent",
-								zIndex: 1,
-								justifyContent: "space-between",
-								alignItems: "center",
-								flexDirection: "row",
-								paddingHorizontal: "5%",
-							},
-						]}>
-						<TouchableOpacity
-							style={[
-								// generalStyles.shadowStyle,
-								{
-									backgroundColor: "white",
-									justifyContent: "center",
-									alignItems: "center",
-									borderRadius: 20,
-									height: 30,
-									width: 100,
-								},
-							]}
-							onPress={async () => {
-								this.setState({ archiveIconColor: "grey" });
-								this.setState({ homeIconColor: "black" });
-								this.mainContentSwiperRef.current.goToPage(0, true);
-								this.setState({ selectedStrategy: this.currentStrategy });
-								this.setState({
-									selectedKeywords: this.currentStrategy.keywords,
-								});
-								this.setState({
-									selectedStrategyPlans: this.currentStrategy.plans,
-								});
-								this.setState({
-									title: "Tracking",
-								});
-								this.setState({ selectedStrategyDate: "" });
-								if (this.state.currentMonth != "THIS_MONTH") {
-									this.resetCalendarToCurrentMonth();
-								}
-
-								this.setState({
-									selectedStrategyDate: this.currentStrategy.startDate,
-								});
-								this.setState({
-									monthCalStrategyStartDate: this.currentStrategy.startDate,
-								});
-								let eventDate = new Date(this.currentStrategy.startDate);
-								await this.setState({ selectedDateRaw: eventDate });
-								await this.setState({
-									currentMonthDate: this.state.selectedDateRaw,
-								});
-								this.scrollToThisWeek();
-							}}>
-							<Entypo name="home" size={24} color={this.state.homeIconColor} />
-						</TouchableOpacity>
-						{/* <TouchableOpacity
-							style={[
-								generalStyles.shadowStyle,
-								{
-									width: 100,
-									height: 40,
-									backgroundColor: "white",
-									borderRadius: 20,
-									flexDirection: "row",
-									justifyContent: "space-between",
-									alignItems: "center",
-									paddingHorizontal: 15,
-									marginBottom: 30,
-								},
-							]}
-							onPress={() => {
-								this.setState({ isPanelVis: "flex" });
-								this.evaluatePanelPopup();
-								this.mainContentSwiperRef.current.goToPage(1, true);
-							}}>
-							<FontAwesome5 name="flag-checkered" size={18} color={GREEN} />
-							<Text
-								style={{
-									fontFamily: "RobotoBoldItalic",
-									fontSize: 14,
-									color: GREEN,
-								}}>
-								Review
-							</Text>
-						</TouchableOpacity> */}
-						<TouchableOpacity
-							style={[
-								// generalStyles.shadowStyle,
-								{
-									backgroundColor: "white",
-									justifyContent: "center",
-									alignItems: "center",
-									borderRadius: 20,
-									height: 30,
-									width: 100,
-								},
-							]}
-							onPress={() => {
-								this.mainContentSwiperRef.current.goToPage(1, true);
-								this.setState({ archiveIconColor: "black" });
-								this.setState({ homeIconColor: "grey" });
-							}}>
-							<Entypo
-								name="archive"
-								size={24}
-								color={this.state.archiveIconColor}
-							/>
-						</TouchableOpacity>
-					</View>
 					<Onboarding
 						bottomBarHighlight={false}
 						bottomBarHeight={30}
@@ -11258,6 +11171,121 @@ export class TrackingPage extends React.Component {
 				</View>
 				{/* Slide Up Panel */}
 				{slideUpPanel}
+				<View
+					style={[
+						{
+							width: "100%",
+							height: 60,
+							position: "absolute",
+							bottom: 0,
+							backgroundColor: "transparent",
+							zIndex: 1,
+							justifyContent: "space-between",
+							alignItems: "center",
+							flexDirection: "row",
+							paddingHorizontal: "5%",
+						},
+					]}>
+					<TouchableOpacity
+						style={[
+							// generalStyles.shadowStyle,
+							{
+								backgroundColor: "white",
+								justifyContent: "center",
+								alignItems: "center",
+								borderRadius: 20,
+								height: 30,
+								width: 100,
+							},
+						]}
+						onPress={async () => {
+							this.setState({ archiveIconColor: "grey" });
+							this.setState({ homeIconColor: "black" });
+							this.mainContentSwiperRef.current.goToPage(0, true);
+							this.setState({ selectedStrategy: this.currentStrategy });
+							this.setState({
+								selectedKeywords: this.currentStrategy.keywords,
+							});
+							this.setState({
+								selectedStrategyPlans: this.currentStrategy.plans,
+							});
+							this.setState({
+								title: "Tracking",
+							});
+							this.setState({ selectedStrategyDate: "" });
+							if (this.state.currentMonth != "THIS_MONTH") {
+								this.resetCalendarToCurrentMonth();
+							}
+
+							this.setState({
+								selectedStrategyDate: this.currentStrategy.startDate,
+							});
+							this.setState({
+								monthCalStrategyStartDate: this.currentStrategy.startDate,
+							});
+							let eventDate = new Date(this.currentStrategy.startDate);
+							await this.setState({ selectedDateRaw: eventDate });
+							await this.setState({
+								currentMonthDate: this.state.selectedDateRaw,
+							});
+							this.scrollToThisWeek();
+						}}>
+						<Entypo name="home" size={24} color={this.state.homeIconColor} />
+					</TouchableOpacity>
+					{/* <TouchableOpacity
+							style={[
+								generalStyles.shadowStyle,
+								{
+									width: 100,
+									height: 40,
+									backgroundColor: "white",
+									borderRadius: 20,
+									flexDirection: "row",
+									justifyContent: "space-between",
+									alignItems: "center",
+									paddingHorizontal: 15,
+									marginBottom: 30,
+								},
+							]}
+							onPress={() => {
+								this.setState({ isPanelVis: "flex" });
+								this.evaluatePanelPopup();
+								this.mainContentSwiperRef.current.goToPage(1, true);
+							}}>
+							<FontAwesome5 name="flag-checkered" size={18} color={GREEN} />
+							<Text
+								style={{
+									fontFamily: "RobotoBoldItalic",
+									fontSize: 14,
+									color: GREEN,
+								}}>
+								Review
+							</Text>
+						</TouchableOpacity> */}
+					<TouchableOpacity
+						style={[
+							// generalStyles.shadowStyle,
+							{
+								backgroundColor: "white",
+								justifyContent: "center",
+								alignItems: "center",
+								borderRadius: 20,
+								height: 30,
+								width: 100,
+							},
+						]}
+						onPress={() => {
+							this.mainContentSwiperRef.current.goToPage(1, true);
+							this.setState({ archiveIconColor: "black" });
+							this.setState({ homeIconColor: "grey" });
+						}}>
+						<Entypo
+							name="archive"
+							size={24}
+							color={this.state.archiveIconColor}
+						/>
+					</TouchableOpacity>
+				</View>
 			</View>
 		);
 	}

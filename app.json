@@ -19,11 +19,11 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier":"com.umich.planneregy",
-      "buildNumber":"1.2.1",
-      "config":{
-        "googleSignIn":{
-          "reservedClientId":"com.googleusercontent.apps.695321657776-nqkqqcaib5rfa0peh2jdn60gopc8aon6"
+      "bundleIdentifier": "com.umich.planneregy",
+      "buildNumber": "1.2.2",
+      "config": {
+        "googleSignIn": {
+          "reservedClientId": "com.googleusercontent.apps.695321657776-nqkqqcaib5rfa0peh2jdn60gopc8aon6"
         }
       }
     },
@@ -35,6 +35,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0c2092a1-5962-4077-a9b1-358085364dd9"
+      }
     }
   }
 }

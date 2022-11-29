@@ -330,8 +330,9 @@ export class PlanOnCalendar extends React.Component {
 		};
 		if (this.isDataFromTracking) {
 			for (let event of this.plansBuddle) {
-				if (!event.isDeleted) {
-					this.onPlanBtnPressed(event);
+				let newEvent = Object.assign({}, event)
+				if (!newEvent.isDeleted) {
+					this.onPlanBtnPressed(newEvent);
 				}
 			}
 		}
@@ -880,12 +881,14 @@ export class PlanOnCalendar extends React.Component {
 		let duration = moment.duration(
 			moment(formattedEndTime).diff(moment(formattedStartTime))
 		);
+		// console.log("duration", duration);
 		let durationMinutes;
 		if (preEvent) {
 			newEvent.duration = preEvent.duration;
 			durationMinutes = preEvent.duration;
 		} else {
-			durationMinutes = parseInt(duration.asMinutes()) % 60;
+			durationMinutes = parseInt(duration.asMinutes());
+			console.log("durationMinutes",durationMinutes);
 			newEvent.duration = durationMinutes;
 		}
 		try {
@@ -2249,6 +2252,7 @@ export class PlanOnCalendar extends React.Component {
 									textAlign: "center",
 									fontFamily: "RobotoBoldItalic",
 								}}
+								maxLength={12}
 								ref={(input) => {
 									this.textInput = input;
 								}}
@@ -2534,6 +2538,7 @@ export class PlanOnCalendar extends React.Component {
 								textAlign: "center",
 								fontFamily: "RobotoBoldItalic",
 							}}
+							maxLength={12}
 							placeholder="Add Keywords"
 							ref={(input) => {
 								this.KeyWordTextInput = input;
@@ -3459,6 +3464,7 @@ export class PlanOnCalendar extends React.Component {
 									textAlign: "center",
 									fontFamily: "RobotoBoldItalic",
 								}}
+								maxLength={12}
 								ref={(input) => {
 									this.textInput = input;
 								}}
