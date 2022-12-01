@@ -102,10 +102,11 @@ export class BeforeLoginScreen extends React.Component {
       );
 
       let calendarEventListJSON = await calendarsEventList.json();
-
+      console.log("Before process event");
       //Process Google calendar events into list for calendar view
       let [previousMonthList, thisMonthList, nextMonthList, fullEventList] =
         this.processCalEvent(calendarEventListJSON.items);
+        console.log("after process event");
       //Get user-defined activity types
       let userDefineActivitiesNotExist =
         await this.dataModel.isUserDefineActivitiesExist(key);
@@ -338,8 +339,9 @@ export class BeforeLoginScreen extends React.Component {
   processCalEvent = (eventList) => {
     let currMonth = moment().format("YYYY-MM");
     let nextMonth = moment().add(1, "months").format("YYYY-MM");
-
+    // let nextMonth = "2022-12"
     let lastMonth = moment().subtract(1, "months").format("YYYY-MM");
+    // let lastMonth = "2022-10"
     //console.log(nextMonth,lastMonth);
     let previousMonthList = [];
     let thisMonthList = [];
