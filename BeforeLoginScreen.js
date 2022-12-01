@@ -321,7 +321,13 @@ export class BeforeLoginScreen extends React.Component {
     let month = currDate.getMonth();
     let year = currDate.getFullYear();
     let monthMin = month;
-    let monthMax = month + 2;
+    let monthMax;
+    if (month + 2 > 12) {
+      monthMax = month + 2 - 12;
+    } else {
+      monthMax = month + 2;
+    }
+    
     if (monthMin < 10) {
       monthMin = "0" + monthMin;
     }
