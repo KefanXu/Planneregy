@@ -60,7 +60,7 @@ import * as Progress from "react-native-progress";
 import SwitchSelector from "react-native-switch-selector";
 
 //Load layout component libraries
-import ChipsList from "react-native-expandable-chips-list";
+// import ChipsList from "react-native-expandable-chips-list";
 import SelectableChips from "react-native-chip/SelectableChips";
 import RemovableChips from "react-native-chip/RemovableChips";
 import Onboarding from "react-native-onboarding-swiper";
@@ -467,6 +467,7 @@ export class TrackingPage extends React.Component {
 			unplannedActivityPanelVis: "none",
 			addUnplannedActivityBtnVis: "flex",
 			currentGuideStep: 1,
+			bottomBtnVis: "flex"
 		};
 		this.processUserStrategies();
 		// this.processDailyReports_after();
@@ -518,6 +519,7 @@ export class TrackingPage extends React.Component {
 		this.setState({ valueForReload: 2 });
 	};
 	evaluatePanelPopup = async () => {
+		this.setState({bottomBtnVis:"none"})
 		this.setState({ isSelectStrategyDisable: true });
 		this.setState({ isReviewBtnDisabled: true });
 		if (this.state.evaluatePanelDisplay === "none") {
@@ -754,7 +756,7 @@ export class TrackingPage extends React.Component {
 				}
 			}
 			if (!isReportExist) {
-				console.log("add daily report");
+				console.log("add daily report after");
 				report.title = "Daily Report";
 				report.start = date;
 				report.end = report.start;
@@ -764,7 +766,7 @@ export class TrackingPage extends React.Component {
 				);
 				if (
 					reportStartDate >= formattedStartDate &&
-					!this.preList.some((e) => e.start === event.start)
+					!this.preList.some((e) => e.start === report.start)
 				) {
 					this.preList.push(report);
 					console.log("push daily report2", report);
@@ -795,7 +797,7 @@ export class TrackingPage extends React.Component {
 			await this.setState({ isBadgeVis: "none" });
 		}
 		// console.log("this.state.isBadgeVis", this.state.isBadgeVis);
-
+		// await this.setState({valueForReload:"reloaded"})
 		console.log("this.state.preList11", this.state.preList);
 	};
 	//Click the "Current Week" and scroll to the current week
@@ -1672,7 +1674,7 @@ export class TrackingPage extends React.Component {
 	//When user pressed the daily report btn
 	onDailyPressed = async (item) => {
 		let selectedDay = new Date(
-			moment(new Date()).add(1, "d").format("YYYY-MM-DD")
+			moment(item.start).add(1, "d").format("YYYY-MM-DD")
 		);
 		this.setState({ selectedDate: selectedDay });
 		this.setState({ dateTimePickerDate: selectedDay });
@@ -3446,7 +3448,7 @@ export class TrackingPage extends React.Component {
 		}
 		let accDuration = 0;
 		for (let event of selectedStrategyPlans) {
-			if (event.satisfactionScore && !event.isDeleted) {
+			if (event.satisfactionScore && !event.isDeleted && event.isReported) {
 				if (event.newDuration) {
 					accDuration = accDuration + event.newDuration;
 				} else {
@@ -7569,6 +7571,7 @@ export class TrackingPage extends React.Component {
 							zIndex: 1,
 						}}
 						onPress={() => {
+							this.setState({ bottomBtnVis:"flex"})
 							this.setState({ evaluatePanelDisplay: "none" });
 							this.setState({ swipeAblePanelDisplay: "flex" });
 							this.setState({ isPanelVis: "none" });
@@ -9106,7 +9109,7 @@ export class TrackingPage extends React.Component {
 					height: "100%",
 					justifyContent: "space-between",
 					alignItems: "center",
-					paddingVertical: "15%",
+					paddingTop: "15%",
 				}}>
 				<FlashMessage position="bottom" />
 
@@ -11049,141 +11052,21 @@ export class TrackingPage extends React.Component {
         >
           {finalConfirmationPage}
         </View> */}
-				{/* Body info */}
-				<View
-					style={[
-						generalStyles.shadowStyle,
-						{
-							height: 530,
-							width: "100%",
-							backgroundColor: "white",
-							borderRadius: 20,
-							paddingBottom: 20,
-							paddingTop: 20,
-							display: this.state.mainContentSwiperDisplay,
-							// position:"absolute",
-							// bottom:0,
-						},
-					]}>
-					{/* <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
-            {planSetUpPage}
-            {summaryPage}
-            {finalConfirmationPage}
-          </Swiper> */}
-					<Onboarding
-						bottomBarHighlight={false}
-						bottomBarHeight={30}
-						ref={this.mainContentSwiperRef}
-						imageContainerStyles={{ height: "100%" }}
-						showSkip={false}
-						showNext={false}
-						showDone={false}
-						pageIndexCallback={async (index) => {
-							this.setState({ mainContentSwiperDisplay: "flex" });
-							this.setState({ conformationPageDisplay: "none" });
-							this.mainContentSwiperRef.current.goToPage(index, true);
-
-							//
-							this.setState({ displayCalView: "flex" });
-							this.setState({ displayTitle: "flex" });
-							if (index === 1) {
-								this.setState({ archiveIconColor: "black" });
-								this.setState({ homeIconColor: "grey" });
-								this.setState({ panelHeight: 300 });
-								this._panel.hide();
-								this.setState({
-									hideIcon2: (
-										<Ionicons
-											name="chevron-up-circle"
-											size={25}
-											color="black"
-										/>
-									),
-								});
-								this.setState({ isPanelHided: true });
-								this.setState({
-									title: "Strategies",
-								});
-							} else if (index === 0) {
-								this.setState({ archiveIconColor: "grey" });
-								this.setState({ homeIconColor: "black" });
-								this._panel.show();
-								this.setState({
-									hideIcon2: (
-										<Ionicons
-											name="chevron-down-circle"
-											size={25}
-											color="black"
-										/>
-									),
-								});
-								this.setState({ isPanelHided: false });
-								this.onHideDetailPressed2();
-								// this.onHideDetailPressed2();
-								this.setState({ selectedStrategy: this.currentStrategy });
-								this.setState({
-									selectedKeywords: this.currentStrategy.keywords,
-								});
-								this.setState({
-									selectedStrategyPlans: this.currentStrategy.plans,
-								});
-								this.setState({ panelHeight: 250 });
-								this.setState({
-									title: "Tracking",
-								});
-								this.setState({ selectedStrategyDate: "" });
-								// this._panel.hide();
-								// console.log("this.state.currentMonth",this.state.currentMonth);
-								// if (this.state.currentMonth != "THIS_MONTH") {
-								// 	console.log("reset month");
-								this.resetCalendarToCurrentMonth();
-								// }
-
-								this.setState({
-									selectedStrategyDate: this.currentStrategy.startDate,
-								});
-								this.setState({
-									monthCalStrategyStartDate: this.currentStrategy.startDate,
-								});
-								let eventDate = new Date(this.currentStrategy.startDate);
-								await this.setState({ selectedDateRaw: eventDate });
-								await this.setState({
-									currentMonthDate: this.state.selectedDateRaw,
-								});
-								this.scrollToThisWeek();
-							}
-						}}
-						pages={[
-							{
-								title: "",
-								subtitle: "",
-								backgroundColor: "white",
-								image: planSetUpPage,
-							},
-							{
-								title: "",
-								subtitle: "",
-								backgroundColor: "white",
-								image: summaryPage,
-							},
-						]}
-					/>
-				</View>
-				{/* Slide Up Panel */}
-				{slideUpPanel}
+				{/* Bottom buttons */}
 				<View
 					style={[
 						{
 							width: "100%",
 							height: 60,
 							position: "absolute",
-							bottom: 0,
+							bottom: 10,
 							backgroundColor: "transparent",
 							zIndex: 1,
 							justifyContent: "space-between",
 							alignItems: "center",
 							flexDirection: "row",
 							paddingHorizontal: "5%",
+							display: this.state.bottomBtnVis
 						},
 					]}>
 					<TouchableOpacity
@@ -11286,6 +11169,130 @@ export class TrackingPage extends React.Component {
 						/>
 					</TouchableOpacity>
 				</View>
+				{/* Body info */}
+				<View
+					style={[
+						generalStyles.shadowStyle,
+						{
+							height: 530,
+							width: "100%",
+							backgroundColor: "white",
+							borderRadius: 20,
+							paddingBottom: 20,
+							paddingTop: 20,
+							display: this.state.mainContentSwiperDisplay,
+							// position:"absolute",
+							// bottom:0,
+						},
+					]}>
+					{/* <Swiper gesturesEnabled={() => false} ref={this.mainContentSwiperRef}>
+            {planSetUpPage}
+            {summaryPage}
+            {finalConfirmationPage}
+          </Swiper> */}
+
+					<Onboarding
+						bottomBarHighlight={false}
+						bottomBarHeight={30}
+						ref={this.mainContentSwiperRef}
+						imageContainerStyles={{ height: "100%" }}
+						showSkip={false}
+						showNext={false}
+						showDone={false}
+						pageIndexCallback={async (index) => {
+							this.setState({ mainContentSwiperDisplay: "flex" });
+							this.setState({ conformationPageDisplay: "none" });
+							this.mainContentSwiperRef.current.goToPage(index, true);
+
+							//
+							this.setState({ displayCalView: "flex" });
+							this.setState({ displayTitle: "flex" });
+							if (index === 1) {
+								this.setState({ archiveIconColor: "black" });
+								this.setState({ homeIconColor: "grey" });
+								this.setState({ panelHeight: 300 });
+								this._panel.hide();
+								this.setState({
+									hideIcon2: (
+										<Ionicons
+											name="chevron-up-circle"
+											size={25}
+											color="black"
+										/>
+									),
+								});
+								this.setState({ isPanelHided: true });
+								this.setState({
+									title: "Strategies",
+								});
+							} else if (index === 0) {
+								this.setState({ archiveIconColor: "grey" });
+								this.setState({ homeIconColor: "black" });
+								this._panel.show();
+								this.setState({
+									hideIcon2: (
+										<Ionicons
+											name="chevron-down-circle"
+											size={25}
+											color="black"
+										/>
+									),
+								});
+								this.setState({ isPanelHided: false });
+								this.onHideDetailPressed2();
+								// this.onHideDetailPressed2();
+								this.setState({ selectedStrategy: this.currentStrategy });
+								this.setState({
+									selectedKeywords: this.currentStrategy.keywords,
+								});
+								this.setState({
+									selectedStrategyPlans: this.currentStrategy.plans,
+								});
+								this.setState({ panelHeight: 250 });
+								this.setState({
+									title: "Tracking",
+								});
+								this.setState({ selectedStrategyDate: "" });
+								// this._panel.hide();
+								// console.log("this.state.currentMonth",this.state.currentMonth);
+								// if (this.state.currentMonth != "THIS_MONTH") {
+								// 	console.log("reset month");
+								this.resetCalendarToCurrentMonth();
+								// }
+
+								this.setState({
+									selectedStrategyDate: this.currentStrategy.startDate,
+								});
+								this.setState({
+									monthCalStrategyStartDate: this.currentStrategy.startDate,
+								});
+								let eventDate = new Date(this.currentStrategy.startDate);
+								await this.setState({ selectedDateRaw: eventDate });
+								await this.setState({
+									currentMonthDate: this.state.selectedDateRaw,
+								});
+								this.scrollToThisWeek();
+							}
+						}}
+						pages={[
+							{
+								title: "",
+								subtitle: "",
+								backgroundColor: "white",
+								image: planSetUpPage,
+							},
+							{
+								title: "",
+								subtitle: "",
+								backgroundColor: "white",
+								image: summaryPage,
+							},
+						]}
+					/>
+				</View>
+
+				{/* Slide Up Panel */}
+				{slideUpPanel}
 			</View>
 		);
 	}

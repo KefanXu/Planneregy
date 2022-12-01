@@ -57,7 +57,7 @@ import {
 import { Calendar } from "react-native-big-calendar";
 
 //Load layout component libraries
-import ChipsList from "react-native-expandable-chips-list";
+// import ChipsList from "react-native-expandable-chips-list";
 import SelectableChips from "react-native-chip/SelectableChips";
 import RemovableChips from "react-native-chip/RemovableChips";
 import Onboarding from "react-native-onboarding-swiper";
@@ -85,14 +85,14 @@ import { generalStyles } from "./styles/GeneralStyling";
 // 	"Gym",
 // ];
 let SAMPLE_KEYWORDS_DATA = [
-	{ title: "Light Exercise", isSelected: false },
-	{ title: "Moderate Exercise", isSelected: false },
-	{ title: "Intensive Exercise", isSelected: false },
-	{ title: "Morning", isSelected: false },
-	{ title: "Afternoon", isSelected: false },
-	{ title: "Home Workout", isSelected: false },
-	{ title: "Outdoor", isSelected: false },
-	{ title: "Gym", isSelected: false },
+	{ title: "Light Exercise", isSelected: false, isSample: true },
+	{ title: "Moderate Exercise", isSelected: false, isSample: true },
+	{ title: "Intensive Exercise", isSelected: false, isSample: true },
+	{ title: "Morning", isSelected: false, isSample: true },
+	{ title: "Afternoon", isSelected: false, isSample: true },
+	{ title: "Home Workout", isSelected: false, isSample: true },
+	{ title: "Outdoor", isSelected: false, isSample: true },
+	{ title: "Gym", isSelected: false, isSample: true },
 ];
 
 let TEST_DATA2 = [
@@ -327,6 +327,8 @@ export class PlanOnCalendar extends React.Component {
 			isAddingKeywordsModalVis: false,
 			//sample keywords list
 			keywordsListInPanel: SAMPLE_KEYWORDS_DATA,
+			//is example keywords visible
+			isExampleVis: false
 		};
 		if (this.isDataFromTracking) {
 			for (let event of this.plansBuddle) {
@@ -2152,7 +2154,7 @@ export class PlanOnCalendar extends React.Component {
 							style={{
 								backgroundColor: "black",
 								borderRadius: 40,
-								height: "50%",
+								height: "60%",
 								width: "100%",
 								justifyContent: "center",
 								alignItems: "center",
@@ -2229,13 +2231,13 @@ export class PlanOnCalendar extends React.Component {
 								fontSize: 11,
 								textAlign: "center",
 							}}>
-							Add Self-Defined Activity to Activity List
+							Add Self-Defined Activity
 						</Text>
 						{/* Add New Activity Text Field */}
 						<View
 							style={{
 								backgroundColor: "white",
-								height: "50%",
+								height: "60%",
 								borderRadius: 20,
 								borderWidth: 2,
 								borderColor: "black",
@@ -2464,48 +2466,64 @@ export class PlanOnCalendar extends React.Component {
 						}}
 						alertRequired={false}
 					/> */}
+					<TouchableOpacity style={{flexDirection:"row", alignItems:"center", marginTop:5}} onPress = {() => {
+						let isExampleVis = !this.state.isExampleVis;
+						this.setState({isExampleVis:isExampleVis})
+					}}>
+						{this.state.isExampleVis ? 
+						<AntDesign name="upcircle" size={20} color="black" /> : <AntDesign name="downcircle" size={20} color="black" />}
+						<Text style={{fontWeight:"bold", marginLeft:10}}>Show Examples</Text>
+					</TouchableOpacity>
 					<View
 						style={{
 							flexDirection: "row",
 							flexWrap: "wrap",
 							alignItems: "center",
 							marginTop: "5%",
+							// display: this.state.isExampleVis ? 'flex' : "none"
 						}}>
 						{this.state.keywordsListInPanel.map((item) => {
-							return (
-								<TouchableOpacity
-									style={{
-										height: 25,
-										borderRadius: 20,
-										backgroundColor: item.isSelected ? "#1AB700" : "black",
-										justifyContent: "space-between",
-										alignItems: "center",
-										alignSelf: "center",
-										marginBottom: 5,
-										marginRight: 5,
-										paddingHorizontal: 2,
-										flexDirection: "row",
-									}}
-									onPress={() => {
-										let updateList = this.state.keywordsListInPanel;
-										for (let keyword of updateList) {
-											if (keyword.title === item.title) {
-												keyword.isSelected = !keyword.isSelected;
-											}
-										}
-										this.setState({ keywordsListInPanel: updateList });
-									}}>
-									<Text
+							let isVis = true;
+							if (item.isSample && !this.state.isExampleVis) {
+								isVis = false;
+							}
+							if (isVis) {
+								return (
+									<TouchableOpacity
 										style={{
-											fontFamily: "RobotoBoldBlack",
-											color: "white",
-											paddingHorizontal: 20,
-											fontSize: 12,
+											height: 25,
+											borderRadius: 20,
+											backgroundColor: item.isSelected ? "#1AB700" : "black",
+											justifyContent: "space-between",
+											alignItems: "center",
+											alignSelf: "center",
+											marginBottom: 5,
+											marginRight: 5,
+											paddingHorizontal: 2,
+											flexDirection: "row",
+										}}
+										onPress={() => {
+											let updateList = this.state.keywordsListInPanel;
+											for (let keyword of updateList) {
+												if (keyword.title === item.title) {
+													keyword.isSelected = !keyword.isSelected;
+												}
+											}
+											this.setState({ keywordsListInPanel: updateList });
 										}}>
-										{item.title}
-									</Text>
-								</TouchableOpacity>
-							);
+										<Text
+											style={{
+												fontFamily: "RobotoBoldBlack",
+												color: "white",
+												paddingHorizontal: 20,
+												fontSize: 12,
+											}}>
+											{item.title}
+										</Text>
+									</TouchableOpacity>
+								);
+							}
+
 						})}
 					</View>
 				</ScrollView>
@@ -2579,7 +2597,7 @@ export class PlanOnCalendar extends React.Component {
 					}}
 						style={{
 							height: 32,
-							backgroundColor: "white",
+							backgroundColor: "black",
 							borderColor:"black",
 							borderWidth:2,
 							borderRadius: 20,
@@ -2587,8 +2605,8 @@ export class PlanOnCalendar extends React.Component {
 							alignItems: "center",
 							paddingHorizontal:10
 						}}>
-						<Text style={{ fontFamily: "RobotoBoldBlack", color: "black" }}>
-							Add All
+						<Text style={{ fontFamily: "RobotoBoldBlack", color: "white" }}>
+							Update Keywords
 						</Text>
 					</TouchableOpacity>
 				</View>
