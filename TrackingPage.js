@@ -1673,11 +1673,12 @@ export class TrackingPage extends React.Component {
 	};
 	//When user pressed the daily report btn
 	onDailyPressed = async (item) => {
-		let selectedDay = new Date(
-			moment(item.start).add(1, "d").format("YYYY-MM-DD")
-		);
-		this.setState({ selectedDate: selectedDay });
-		this.setState({ dateTimePickerDate: selectedDay });
+		// let selectedDay = new Date(
+		// 	moment(item.start).add(1, "d").format("YYYY-MM-DD")
+		// );
+		// this.setState({ selectedDate: selectedDay });
+		// this.setState({ dateTimePickerDate: selectedDay });
+		this.pickTheDate(moment(item.start).format("YYYY-MM-DD"));
 
 		this.dailyReportItem = item;
 		// console.log("item",item);
