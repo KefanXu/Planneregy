@@ -1673,11 +1673,11 @@ export class TrackingPage extends React.Component {
 	};
 	//When user pressed the daily report btn
 	onDailyPressed = async (item) => {
-		// let selectedDay = new Date(
-		// 	moment(item.start).add(1, "d").format("YYYY-MM-DD")
-		// );
-		// this.setState({ selectedDate: selectedDay });
-		// this.setState({ dateTimePickerDate: selectedDay });
+		let selectedDay = new Date(
+			moment(item.start).add(1, "d").format("YYYY-MM-DD")
+		);
+		this.setState({ selectedDate: selectedDay });
+		this.setState({ dateTimePickerDate: selectedDay });
 		this.pickTheDate(moment(item.start).format("YYYY-MM-DD"));
 
 		this.dailyReportItem = item;
@@ -2240,12 +2240,17 @@ export class TrackingPage extends React.Component {
 	onSubmitPressed_UserAddedActivity = async () => {
 		console.log("onSubmitPressed_UserAddedActivity");
 		let itemToSubmit = this.dailyReportItem;
-		itemToSubmit.isReported = true;
-		let formattedSelectedMonth = parseInt(
-			moment(itemToSubmit.start).format().slice(5, 7)
-		);
-		this.userPlans.push(itemToSubmit);
+		let formattedSelectedMonth;
+		if (itemToSubmit) {
+			itemToSubmit.isReported = true;
+			formattedSelectedMonth = parseInt(
+				moment(itemToSubmit.start).format().slice(5, 7)
+			);
+			this.userPlans.push(itemToSubmit);
+		}
 		this.processDailyReports_after();
+
+		
 
 		this.setState({ isReportModalVis: false });
 		for (let event of this.state.selfReportedActivityList) {
@@ -2266,6 +2271,7 @@ export class TrackingPage extends React.Component {
 		// 	}
 		// }
 		// this.processDailyReports_after();
+		this.processDailyReports_after();
 	};
 	//Submit the completed activity
 	onSubmitPressed_CompleteActivity = async () => {
@@ -2477,6 +2483,13 @@ export class TrackingPage extends React.Component {
 				event.isReported = true;
 			}
 		}
+		let plansBuddleToUpdate = this.state.plansBuddle;
+		for (let event of plansBuddleToUpdate) {
+			if (event.timeStamp === eventToUpdate.timeStamp) {
+				event.isReported = true;
+			}
+		}
+		this.setState({plansBuddle: plansBuddleToUpdate});
 		if (reportStatus === "PARTIALLY_COMPLETE_TIME") {
 			// Add a new partially completed activity
 
@@ -2970,6 +2983,7 @@ export class TrackingPage extends React.Component {
 						borderBottomRightRadius: 12,
 						borderTopRightRadius: 12,
 						borderWidth: 3,
+						width:"20%",
 						height: "100%",
 						backgroundColor: this.state.reportBtnColor,
 						borderColor: this.state.reportBtnColor,

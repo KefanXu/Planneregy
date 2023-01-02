@@ -317,6 +317,7 @@ export class BeforeLoginScreen extends React.Component {
 		let year = currDate.getFullYear();
 		let monthMin = month;
 		let monthMax;
+		let dateMin
 		if (month + 2 > 12) {
 			monthMax = month + 2 - 12;
 		} else {
@@ -325,11 +326,16 @@ export class BeforeLoginScreen extends React.Component {
 
 		if (monthMin < 10) {
 			monthMin = "0" + monthMin;
+			if (monthMin === "00") {
+			    dateMin = "timeMin=" + (year - 1) + "-" + 12 + "-01T10%3A00%3A00Z";
+			} else {
+				dateMin = "timeMin=" + year + "-" + monthMin + "-01T10%3A00%3A00Z";
+			}
 		}
 		if (monthMax < 10) {
 			monthMax = "0" + monthMax;
 		}
-		let dateMin = "timeMin=" + year + "-" + monthMin + "-01T10%3A00%3A00Z";
+		 
 		let monthDays = moment(year + "-" + monthMax, "YYYY-MM").daysInMonth();
 		let dateMax;
 		if (month + 2 > 12) {

@@ -41,22 +41,22 @@ export class OnboardingScreen extends React.Component {
               image: (
                 <View style={{ width: "80%" }}>
                   <Text style={{ fontFamily: "RobotoBoldBlack", fontSize: 24 }}>
-                    In this study, you will need to:{"\n"}
+                    In this study, you will:{"\n"}
                   </Text>
                   <Text
                     style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}
                   >
-                    1. Create physical exercise plans weekly{"\n"}
+                    1. Create physical exercise plans once a week{"\n"}
                   </Text>
                   <Text
                     style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}
                   >
-                    2. Report your plans{"\n"}
+                    2. Report your plans on a daily basis{"\n"}
                   </Text>
                   <Text
                     style={{ fontFamily: "RobotoBoldItalic", fontSize: 18 }}
                   >
-                    3. Review your plans weekly and try to improve it {"\n"}
+                    3. Review your plans in the end of each week and try to improve it {"\n"}
                   </Text>
                 </View>
               ),

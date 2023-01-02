@@ -24,11 +24,16 @@ export function Login({ navigation }) {
 
 	React.useEffect(async () => {
 		if (response?.type === "success") {
+			// console.log("response",response);
 			const { authentication } = response;
 			auth = authentication;
 
 			let accessToken = auth.accessToken;
-			//console.log("auth",auth);
+			console.log("auth",auth);
+
+			let refreshToken = auth.refreshToken;
+			console.log("refreshToken",refreshToken);
+
 			// console.log("dataModel.isLogin",dataModel.isLogin);
 			let userInfoResponse = await fetch(
 				"https://www.googleapis.com/userinfo/v2/me",
