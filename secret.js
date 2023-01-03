@@ -21,11 +21,10 @@ export const googleLoginConfig = {
 		"695321657776-nqkqqcaib5rfa0peh2jdn60gopc8aon6.apps.googleusercontent.com",
 	scopes: [
 		"https://www.googleapis.com/auth/userinfo.email",
-		// "https://www.googleapis.com/auth/userinfo.profile",
-		// "https://www.googleapis.com/auth/calendar.readonly",
+		"https://www.googleapis.com/auth/userinfo.profile",
+		"https://www.googleapis.com/auth/calendar.readonly",
 	],
 	prompt: "select_account",
-	offlineAccess: true,
 };
 
 export const WEATHER_API_KEY = "abbee2b48a0b745a46df80d5bb34cff5";

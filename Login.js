@@ -8,8 +8,6 @@ import * as Google from "expo-auth-session/providers/google";
 import * as SecureStore from "expo-secure-store";
 import * as Location from "expo-location";
 import moment, { min } from "moment";
-import axios from 'axios';
-
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -18,43 +16,25 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export function Login({ navigation }) {
 	const [request, response, promptAsync] =
-		Google.useIdTokenAuthRequest(googleLoginConfig);
+		Google.useAuthRequest(googleLoginConfig);
 	const [clickCount, setClickCount] = React.useState(0);
 	let auth;
 	let dataModel = getDataModel();
 	const [requestFrom, setRequestFrom] = React.useState("");
 
 	React.useEffect(async () => {
-		console.log("response", response);
-
 		if (response?.type === "success") {
 			// console.log("response",response);
 			const { authentication } = response;
 			auth = authentication;
 
 			let accessToken = auth.accessToken;
-			console.log("auth", auth);
+			console.log("auth",auth);
 
 			let refreshToken = auth.refreshToken;
-			console.log("refreshToken", refreshToken);
-			// await SecureStore.setItemAsync("REFRESH_TOKEN", JSON.stringify(refreshToken));
-			// // console.log("dataModel.isLogin",dataModel.isLogin);
-			// let refreshTokenStored = await SecureStore.getItemAsync("REFRESH_TOKEN")
-			// let refreshTokenStoredParsed = JSON.parse(refreshTokenStored);
-			// console.log("refreshTokenStoredParsed",refreshTokenStoredParsed)
-			// const refreshedResponse = await axios.post(
-			// 	"https://www.googleapis.com/oauth2/v4/token",
-			// 	{
-			// 		client_id:
-			// 			Platform.OS === "ios"
-			// 				? googleLoginConfig.iosClientId
-			// 				: googleLoginConfig.webClientId,
-			// 		grant_type: "refresh_token",
-			// 		refresh_token: refreshToken,
-			// 	}
-			// );
-			// console.log("refreshedResponse", refreshedResponse);
+			console.log("refreshToken",refreshToken);
 
+			// console.log("dataModel.isLogin",dataModel.isLogin);
 			let userInfoResponse = await fetch(
 				"https://www.googleapis.com/userinfo/v2/me",
 				{
