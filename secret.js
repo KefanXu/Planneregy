@@ -27,4 +27,4 @@ export const googleLoginConfig = {
 	prompt: "select_account",
 };
 
-export const WEATHER_API_KEY = "abbee2b48a0b745a46df80d5bb34cff5";
+export const WEATHER_API_KEY = "237c7b1a9185ae4d6dfcc6a43c47f74e";

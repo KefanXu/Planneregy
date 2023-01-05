@@ -31,11 +31,11 @@ import CalendarHeader from "./assets/svg/calendarHeader.svg";
 import Indicator from "./assets/svg/indicator.svg";
 import BottomIndicator from "./assets/svg/bottomIndicator.svg";
 import Guide from "./assets/svg/Guide.svg";
-import TipCalendar1 from "./assets/svg/tipCalendar1.svg";
-import TipCalendar2 from "./assets/svg/tipCalendar2.svg";
-import TipCalendar3 from "./assets/svg/tipCalendar3.svg";
-import TipCalendar4 from "./assets/svg/tipCalendar4.svg";
-import TipCalendar5 from "./assets/svg/tipCalendar5.svg";
+import TipCalendar1 from "./assets/svg/tipCalendar1.1.svg";
+import TipCalendar2 from "./assets/svg/tipCalendar1.2.svg";
+import TipCalendar3 from "./assets/svg/tipCalendar1.3.svg";
+import TipCalendar4 from "./assets/svg/tipCalendar1.4.svg";
+import TipCalendar5 from "./assets/svg/tipCalendar1.5.svg";
 
 //Load icon source
 import { Feather } from "@expo/vector-icons";

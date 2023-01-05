@@ -155,7 +155,12 @@ export class BeforeLoginScreen extends React.Component {
 
 					for (let weather of lastMonthWeather) {
 						let newWeather = Object.assign({}, weather);
-						newWeather.month = todayDate.getMonth() - 1;
+						
+						if (todayDate.getMonth() - 1 < 0) {
+							newWeather.month = 11;
+						} else {
+							newWeather.month = todayDate.getMonth() - 1;
+						}
 						weatherFullList.push(newWeather);
 					}
 					for (let weather of thisMonthWeather) {
@@ -165,7 +170,11 @@ export class BeforeLoginScreen extends React.Component {
 					}
 					for (let weather of nextMonthWeather) {
 						let newWeather = Object.assign({}, weather);
-						newWeather.month = todayDate.getMonth() + 1;
+						if (todayDate.getMonth() + 1 === 12) {
+							newWeather.month = 0;
+						} else {
+							newWeather.month = todayDate.getMonth() + 1;
+						}
 						weatherFullList.push(newWeather);
 					}
 					// console.log("weather processed");
@@ -182,10 +191,13 @@ export class BeforeLoginScreen extends React.Component {
 					let nextMonthWeatherJSON = await SecureStore.getItemAsync(
 						"nextMonthWeather"
 					);
+					
 					lastMonthWeather = JSON.parse(lastMonthWeatherJSON);
 					thisMonthWeather = JSON.parse(thisMonthWeatherJSON);
 					nextMonthWeather = JSON.parse(nextMonthWeatherJSON);
-
+					// console.log("lastMonthWeather",lastMonthWeather);
+					// console.log("thisMonthWeather",thisMonthWeather);
+					// console.log("nextMonthWeather",nextMonthWeather);
 					// navToScreen = "PlanOnCalendar";
 					// this.setState({ dataType: "weather" });
 					// [lastMonthWeather, thisMonthWeather, nextMonthWeather] =
@@ -222,7 +234,11 @@ export class BeforeLoginScreen extends React.Component {
 
 				for (let weather of lastMonthWeather) {
 					let newWeather = Object.assign({}, weather);
-					newWeather.month = todayDate.getMonth() - 1;
+					if (todayDate.getMonth() - 1 < 0) {
+						newWeather.month = 11;
+					} else {
+						newWeather.month = todayDate.getMonth() - 1;
+					}
 					weatherFullList.push(newWeather);
 				}
 				for (let weather of thisMonthWeather) {
@@ -232,7 +248,11 @@ export class BeforeLoginScreen extends React.Component {
 				}
 				for (let weather of nextMonthWeather) {
 					let newWeather = Object.assign({}, weather);
-					newWeather.month = todayDate.getMonth() + 1;
+					if (todayDate.getMonth() + 1 === 12) {
+						newWeather.month = 0;
+					} else {
+						newWeather.month = todayDate.getMonth() + 1;
+					}
 					weatherFullList.push(newWeather);
 				}
 				console.log("weather processed");
@@ -529,9 +549,9 @@ export class BeforeLoginScreen extends React.Component {
 			}
 		}
 
-		// console.log("lastMonthWeather", lastMonthWeather);
-		// console.log("thisMonthWeather", thisMonthWeather);
-		// console.log("nextMonthWeather", nextMonthWeather);
+		console.log("lastMonthWeather", lastMonthWeather);
+		console.log("thisMonthWeather", thisMonthWeather);
+		console.log("nextMonthWeather", nextMonthWeather);
 		return [lastMonthWeather, thisMonthWeather, nextMonthWeather];
 	};
 	//Get user's location to fetch weather info

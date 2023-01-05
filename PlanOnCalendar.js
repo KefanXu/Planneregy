@@ -4869,6 +4869,10 @@ export class PlanOnCalendar extends React.Component {
 												let currentGuideStep = this.state.currentGuideStep;
 												currentGuideStep++;
 												this.setState({ currentGuideStep: currentGuideStep });
+												console.log(
+													"this.state.currentGuideStep",
+													this.state.currentGuideStep
+												);
 											}}>
 											<Text
 												style={{
@@ -4882,9 +4886,16 @@ export class PlanOnCalendar extends React.Component {
 									}
 									prevButton={
 										<TouchableOpacity
-											onPress={() => {
-												this.tipModalSwiperRef.current.scrollBy(-1, false);
-											}}>
+										onPress={() => {
+											this.tipModalSwiperRef.current.scrollBy(-1, false);
+											let currentGuideStep = this.state.currentGuideStep;
+											currentGuideStep--;
+											this.setState({ currentGuideStep: currentGuideStep });
+											console.log(
+												"this.state.currentGuideStep",
+												this.state.currentGuideStep
+											);
+										}}>
 											<Text
 												style={{
 													fontWeight: "bold",
@@ -4914,6 +4925,7 @@ export class PlanOnCalendar extends React.Component {
 									{tip_TWO}
 									{tip_THREE}
 									{tip_FOUR}
+									{tip_FIVE}
 									{tip_FIVE}
 								</Swiper>
 							</View>
