@@ -238,8 +238,8 @@ class DataModel {
 		);
 		await Notification.scheduleNotificationAsync({
 			content: {
-				title: "You just finished your week under strategy " + newStrategyTitle,
-				body: "Take some time to review this strategy and plan for the next week!",
+				title: "🎯 You just finished your week under strategy " + newStrategyTitle,
+				body: "📋 Take some time to review this strategy and plan for the next week!",
 				data: { data: "goes here" },
 			},
 			trigger,

@@ -13,6 +13,7 @@ import {
 	FlatList,
 	Image,
 	Alert,
+	AppState,
 	// Modal,
 } from "react-native";
 import { Modal as RNModal } from "react-native";
@@ -467,7 +468,8 @@ export class TrackingPage extends React.Component {
 			unplannedActivityPanelVis: "none",
 			addUnplannedActivityBtnVis: "flex",
 			currentGuideStep: 1,
-			bottomBtnVis: "flex"
+			bottomBtnVis: "flex",
+			appState: AppState.currentState,
 		};
 		this.processUserStrategies();
 		// this.processDailyReports_after();
@@ -486,6 +488,7 @@ export class TrackingPage extends React.Component {
 		// }
 	}
 	componentDidMount() {
+		AppState.addEventListener("change", this._handleAppStateChange);
 		this.scrollToThisWeek();
 		this.dataModel = getDataModel();
 		this.dataModel.loadUserStrategies();
@@ -511,6 +514,32 @@ export class TrackingPage extends React.Component {
 		// this.processDailyReports_after();
 		// console.log("componentDidMount");
 	}
+	componentWillUnmount() {
+		AppState.removeEventListener("change", this._handleAppStateChange);
+	}
+
+	_handleAppStateChange = (nextAppState) => {
+		this.setState({ appState: nextAppState });
+
+		if (nextAppState === "background") {
+			// Do something here on app background.
+			console.log("App is in Background Mode.");
+		}
+
+		if (nextAppState === "active") {
+			// Do something here on app active foreground mode.
+			console.log("App is in Active Foreground Mode.");
+			this.props.navigation.navigate("BeforeLoginScreen", {
+				// userEmail: this.state.userEmail,
+			});
+		}
+
+		if (nextAppState === "inactive") {
+			// Do something here on app inactive mode.
+			console.log("App is in inactive Mode.");
+		}
+	};
+
 	onFocus = async () => {
 		this.scrollToThisWeek();
 		this.dataModel = getDataModel();
@@ -519,7 +548,7 @@ export class TrackingPage extends React.Component {
 		this.setState({ valueForReload: 2 });
 	};
 	evaluatePanelPopup = async () => {
-		this.setState({bottomBtnVis:"none"})
+		this.setState({ bottomBtnVis: "none" });
 		this.setState({ isSelectStrategyDisable: true });
 		this.setState({ isReviewBtnDisabled: true });
 		if (this.state.evaluatePanelDisplay === "none") {
@@ -1725,6 +1754,10 @@ export class TrackingPage extends React.Component {
 		);
 		this.setState({ selectedDate: selectedDay });
 		this.setState({ dateTimePickerDate: selectedDay });
+		this.pickTheDate(moment(selectedDay).format("YYYY-MM-DD"));
+
+		// this.setState({ selectedDate: selectedDay });
+		// this.setState({ dateTimePickerDate: selectedDay });
 		this.setState({ unplannedActivityPanelVis: "flex" });
 		this.setState({ isReportModalVis: true });
 		this.setState({ currentSwipeIndex: 8 });
@@ -2250,8 +2283,6 @@ export class TrackingPage extends React.Component {
 		}
 		this.processDailyReports_after();
 
-		
-
 		this.setState({ isReportModalVis: false });
 		for (let event of this.state.selfReportedActivityList) {
 			event.isReported = true;
@@ -2489,7 +2520,7 @@ export class TrackingPage extends React.Component {
 				event.isReported = true;
 			}
 		}
-		this.setState({plansBuddle: plansBuddleToUpdate});
+		this.setState({ plansBuddle: plansBuddleToUpdate });
 		if (reportStatus === "PARTIALLY_COMPLETE_TIME") {
 			// Add a new partially completed activity
 
@@ -2585,6 +2616,7 @@ export class TrackingPage extends React.Component {
 					}
 				}
 				await this.lastMonthEventReported(this.state.selectedDateRaw);
+				this.onDailyReportClose();
 				this.scrollToThisWeek();
 			}
 
@@ -2663,6 +2695,7 @@ export class TrackingPage extends React.Component {
 		this.userStrategies = this.dataModel.getUserStrategies();
 		let newValueForReload = this.state.valueForReload + 1;
 		await this.setState({ valueForReload: newValueForReload });
+		await this.processDailyReports_after();
 		this.processDailyReports_after();
 	};
 
@@ -2946,7 +2979,7 @@ export class TrackingPage extends React.Component {
 					style={{
 						flexDirection: "column",
 						justifyContent: "space-between",
-						width: "80%",
+						width: "100%",
 						paddingVertical: 0,
 						paddingHorizontal: 6,
 						height: "70%",
@@ -2983,7 +3016,9 @@ export class TrackingPage extends React.Component {
 						borderBottomRightRadius: 12,
 						borderTopRightRadius: 12,
 						borderWidth: 3,
-						width:"20%",
+						position: "absolute",
+						right: 0,
+						width: "20%",
 						height: "100%",
 						backgroundColor: this.state.reportBtnColor,
 						borderColor: this.state.reportBtnColor,
@@ -3005,9 +3040,10 @@ export class TrackingPage extends React.Component {
 					}}>
 					<Text
 						style={{
-							fontFamily: "RobotoRegular",
-							fontSize: 14,
+							fontFamily: "RobotoBoldBold",
+							fontSize: 12,
 							color: "white",
+							// fontWeight:"bold",
 							paddingHorizontal: 10,
 							alignSelf: "center",
 							backgroundColor: this.state.reportBtnColor,
@@ -3440,7 +3476,7 @@ export class TrackingPage extends React.Component {
 		} else {
 			selectedStrategyPlans = this.state.plansBuddle;
 		}
-		// console.log("selectedStrategyPlans", selectedStrategyPlans);
+		console.log("selectedStrategyPlans", selectedStrategyPlans);
 		let accCompletion = 0;
 		for (let event of selectedStrategyPlans) {
 			if (event.isActivityCompleted || event.partialStatus) {
@@ -7586,7 +7622,7 @@ export class TrackingPage extends React.Component {
 							zIndex: 1,
 						}}
 						onPress={() => {
-							this.setState({ bottomBtnVis:"flex"})
+							this.setState({ bottomBtnVis: "flex" });
 							this.setState({ evaluatePanelDisplay: "none" });
 							this.setState({ swipeAblePanelDisplay: "flex" });
 							this.setState({ isPanelVis: "none" });
@@ -10019,7 +10055,7 @@ export class TrackingPage extends React.Component {
 										let completionCnt = 0;
 
 										for (let event of item.plans) {
-											if (event.isActivityCompleted) {
+											if (event.isActivityCompleted || event.partialStatus) {
 												completionCnt++;
 											}
 										}
@@ -11081,7 +11117,7 @@ export class TrackingPage extends React.Component {
 							alignItems: "center",
 							flexDirection: "row",
 							paddingHorizontal: "5%",
-							display: this.state.bottomBtnVis
+							display: this.state.bottomBtnVis,
 						},
 					]}>
 					<TouchableOpacity
@@ -11129,6 +11165,14 @@ export class TrackingPage extends React.Component {
 							this.scrollToThisWeek();
 						}}>
 						<Entypo name="home" size={24} color={this.state.homeIconColor} />
+					</TouchableOpacity>
+					<TouchableOpacity
+						onPress={() => {
+							this.props.navigation.navigate("BeforeLoginScreen", {
+								// userEmail: this.state.userEmail,
+							});
+						}}>
+						<Ionicons name="refresh-circle" size={40} color="black" />
 					</TouchableOpacity>
 					{/* <TouchableOpacity
 							style={[
@@ -11214,6 +11258,7 @@ export class TrackingPage extends React.Component {
 						showSkip={false}
 						showNext={false}
 						showDone={false}
+						showPagination={false}
 						pageIndexCallback={async (index) => {
 							this.setState({ mainContentSwiperDisplay: "flex" });
 							this.setState({ conformationPageDisplay: "none" });
