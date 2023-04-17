@@ -20,7 +20,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.umich.planneregy",
-      "buildNumber": "1.4.7",
+      "buildNumber": "1.3.6",
       "config": {
         "googleSignIn": {
           "reservedClientId": "com.googleusercontent.apps.695321657776-nqkqqcaib5rfa0peh2jdn60gopc8aon6"
