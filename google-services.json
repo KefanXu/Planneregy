@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "695321657776",
+    "project_id": "planneregy",
+    "storage_bucket": "planneregy.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:695321657776:android:b69807e6593223c54cd675",
+        "android_client_info": {
+          "package_name": "com.umich.planneregy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "695321657776-26rc07qqld401s13km6o28r31dkk2qrs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDljEs4wXEN-5W-P6HOO6-zihfGNdbHoNs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "695321657776-26rc07qqld401s13km6o28r31dkk2qrs.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "695321657776-nqkqqcaib5rfa0peh2jdn60gopc8aon6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.umich.planneregy"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
