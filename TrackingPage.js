@@ -534,10 +534,13 @@ export class TrackingPage extends React.Component {
 			});
 		}
 
-		if (nextAppState === "inactive") {
-			// Do something here on app inactive mode.
-			console.log("App is in inactive Mode.");
-		}
+		// if (nextAppState === "inactive") {
+		// 	// Do something here on app inactive mode.
+		// 	console.log("App is in inactive Mode.");
+		// 	this.props.navigation.navigate("Login", {
+		// 		// userEmail: this.state.userEmail,
+		// 	});
+		// }
 	};
 
 	onFocus = async () => {
@@ -2302,7 +2305,7 @@ export class TrackingPage extends React.Component {
 		// 	}
 		// }
 		// this.processDailyReports_after();
-		this.processDailyReports_after();
+		await this.processDailyReports_after();
 	};
 	//Submit the completed activity
 	onSubmitPressed_CompleteActivity = async () => {
@@ -3478,13 +3481,22 @@ export class TrackingPage extends React.Component {
 		}
 		console.log("selectedStrategyPlans", selectedStrategyPlans);
 		let accCompletion = 0;
+		let totalPlans = 0;
 		for (let event of selectedStrategyPlans) {
-			if (event.isActivityCompleted || event.partialStatus) {
-				accCompletion++;
+			if (!event.isDeleted) {
+				totalPlans++;
+			}
+			if (event.isReported) {
+				if (
+					(event.isActivityCompleted || event.partialStatus != "NONE") &&
+					event.isReported
+				) {
+					accCompletion++;
+				}
 			}
 		}
 		let avgCompletion = (
-			(accCompletion / selectedStrategyPlans.length) *
+			(accCompletion / totalPlans) *
 			100
 		).toFixed(2);
 		return avgCompletion;
@@ -3500,11 +3512,15 @@ export class TrackingPage extends React.Component {
 		let accDuration = 0;
 		for (let event of selectedStrategyPlans) {
 			if (event.satisfactionScore && !event.isDeleted && event.isReported) {
-				if (event.newDuration) {
-					accDuration = accDuration + event.newDuration;
-				} else {
-					accDuration = accDuration + event.duration;
-				}
+				if (event.isActivityCompleted ||
+					event.partialStatus != "NONE") {
+						if (event.newDuration) {
+							accDuration = accDuration + event.newDuration;
+						} else {
+							accDuration = accDuration + event.duration;
+						}
+					}
+
 			}
 		}
 		let percentageDuration = (accDuration / 150).toFixed(2);
@@ -3522,10 +3538,15 @@ export class TrackingPage extends React.Component {
 			selectedStrategyPlans = this.state.plansBuddle;
 		}
 		let accCompletion = 0;
-		let totalPlans = selectedStrategyPlans.length;
+		let totalPlans = 0;
 		for (let event of selectedStrategyPlans) {
-			if (event.isActivityCompleted || event.partialStatus) {
-				accCompletion++;
+			if (event.isReported) {
+				if (event.isActivityCompleted || event.partialStatus != "NONE") {
+					accCompletion++;
+				}
+			}
+			if (!event.isDeleted) {
+				totalPlans++;
 			}
 		}
 		return [accCompletion, totalPlans];
@@ -3559,12 +3580,97 @@ export class TrackingPage extends React.Component {
 		}
 		let accDuration = 0;
 		for (let event of selectedStrategyPlans) {
-			if (event.satisfactionScore && !event.isDeleted) {
-				if (event.newDuration) {
-					accDuration = accDuration + event.newDuration;
+
+			if (!event.isDeleted) {
+				let newTiming = "";
+				let timing;
+				if (event.newStart2) {
+					timing =
+						moment(event.newStart2).format("ddd").toUpperCase() +
+						" " +
+						event.newStart2.slice(11, 16) +
+						" - " +
+						event.newEnd2.slice(11, 16) +
+						" | " +
+						event.duration +
+						" MIN";
 				} else {
-					accDuration = accDuration + event.duration;
+					timing =
+						moment(event.start).format("ddd").toUpperCase() +
+						" " +
+						event.start.slice(11, 16) +
+						" - " +
+						event.end.slice(11, 16) +
+						" | " +
+						event.duration +
+						" MIN";
 				}
+				// let itemBlockStyle;
+				if (event.newStart) {
+					newTiming =
+					event.newStart.slice(11, 16) +
+						" - " +
+						event.newEnd.slice(11, 16) +
+						" | " +
+						event.newDuration +
+						" MIN";
+				}
+
+				if (!event.isReported) {
+					// itemBlockStyle = this.itemUnreportedBlockStyle(
+					//   item,
+					//   timing
+					// );
+				} else {
+					if (event.isActivityCompleted) {
+						// itemBlockStyle = this.itemCompletedBlockStyle(
+						// 	item,
+						// 	timing
+
+						// );
+						// itemBlockStyle = "COMPLETE";
+						accDuration += event.duration;
+					} else {
+						if (event.isOtherActivity) {
+						} else {
+							if (event.partialStatus) {
+								if (event.partialStatus === "TIME") {
+									// itemBlockStyle =
+									// 	this.itemPartialCompleteStyle_TIME(
+									// 		item,
+									// 		timing,
+									// 		newTiming
+									// 	);
+										accDuration += event.newDuration;
+								} else if (event.partialStatus === "ACTIVITY") {
+									// itemBlockStyle =
+									// 	this.itemPartialCompleteStyle_ACTIVITY(
+									// 		item,
+									// 		timing
+									// 	);
+										accDuration += event.duration;
+								} else if (event.partialStatus === "NONE") {
+									// itemBlockStyle = this.itemUnCompletedBlockStyle(
+									// 	item,
+									// 	timing
+									// );
+									// accDuration += event.duration;
+								} else {
+									// itemBlockStyle =
+									// 	this.itemPartialCompleteStyle_TIME_ACTIVITY(
+									// 		item,
+									// 		timing,
+									// 		newTiming
+									// 	);
+									accDuration += event.newDuration;
+								}
+							} else {
+							}
+						}
+					}
+				}
+
+				// return itemBlockStyle;
 			}
 		}
 		return accDuration;
@@ -4472,14 +4578,20 @@ export class TrackingPage extends React.Component {
 
 						let completionRate;
 						let completionCnt = 0;
+						let totalPlans = 0;
 
 						for (let event of item.plans) {
-							if (event.isActivityCompleted) {
-								completionCnt++;
+							if (event.isReported) {
+								if (event.isActivityCompleted || event.partialStatus != "NONE") {
+									completionCnt++;
+								}
+							}
+							if (!event.isDeleted) {
+								totalPlans++;
 							}
 						}
 						completionRate = (
-							(completionCnt / item.plans.length) *
+							(completionCnt / totalPlans) *
 							100
 						).toFixed(2);
 
@@ -4488,9 +4600,11 @@ export class TrackingPage extends React.Component {
 						let accDuration = 0;
 						for (let event of item.plans) {
 							if (event.satisfactionScore) {
-								satisfaction = satisfaction + parseInt(event.satisfactionScore);
-								satisfactionCnt++;
-								accDuration += event.duration;
+								if (event.partialStatus != "NONE" || event.isActivityCompleted) {
+									satisfaction = satisfaction + parseInt(event.satisfactionScore);
+									satisfactionCnt++;
+									accDuration += event.duration;
+								}
 							}
 						}
 						let avgSatisfaction = (satisfaction / satisfactionCnt).toFixed(2);
@@ -4985,7 +5099,7 @@ export class TrackingPage extends React.Component {
 									<Text
 										style={{
 											fontFamily: "RobotoBoldBlack",
-											fontSize: 18,
+											fontSize: 15,
 											marginBottom: 0,
 											marginRight: 10,
 											alignItems: "center",
@@ -5003,6 +5117,8 @@ export class TrackingPage extends React.Component {
 										flexDirection: "column",
 										justifyContent: "center",
 										// backgroundColor: "red",
+										position:"absolute",
+										right:10,
 										alignItems: "center",
 										backgroundColor: "white",
 										borderRadius: 20,
@@ -7204,10 +7320,14 @@ export class TrackingPage extends React.Component {
 						let satisfactionCnt = 0;
 						let accDuration = 0;
 						for (let event of item.plans) {
-							if (event.satisfactionScore) {
-								satisfaction = satisfaction + parseInt(event.satisfactionScore);
+							if (event.satisfactionScore && event.isReported) {
+								satisfaction =
+									satisfaction + parseInt(event.satisfactionScore);
 								satisfactionCnt++;
-								accDuration += event.duration;
+								if (event.isActivityCompleted || event.partialStatus != "NONE") {
+									accDuration += event.duration;
+								}
+								
 							}
 						}
 						let avgSatisfaction = (satisfaction / satisfactionCnt).toFixed(2);
@@ -10052,15 +10172,25 @@ export class TrackingPage extends React.Component {
 											item.startDate === this.state.selectedStrategyDate;
 
 										let completionRate;
-										let completionCnt = 0;
+										let accCompletion = 0;
+										let totalPlans = 0;
 
 										for (let event of item.plans) {
-											if (event.isActivityCompleted || event.partialStatus) {
-												completionCnt++;
+											if (!event.isDeleted) {
+												totalPlans++;
 											}
+											if (event.isReported) {
+												if (
+													(event.isActivityCompleted || event.partialStatus != "NONE") &&
+													event.isReported
+												) {
+													accCompletion++;
+												}
+											}
+
 										}
 										completionRate = (
-											(completionCnt / item.plans.length) *
+											(accCompletion / totalPlans) *
 											100
 										).toFixed(2);
 
@@ -10068,11 +10198,110 @@ export class TrackingPage extends React.Component {
 										let satisfactionCnt = 0;
 										let accDuration = 0;
 										for (let event of item.plans) {
-											if (event.satisfactionScore) {
+											if (event.satisfactionScore && event.isReported) {
 												satisfaction =
 													satisfaction + parseInt(event.satisfactionScore);
 												satisfactionCnt++;
-												accDuration += event.duration;
+												// if (event.isActivityCompleted || event.partialStatus != "NONE") {
+												// 	if (event.newDuration >= 0) {
+												// 		accDuration += event.newDuration;
+												// 	} else {
+												// 		accDuration += event.duration;
+												// 	}
+													
+												// }
+												
+											}
+											if (!event.isDeleted) {
+												let newTiming = "";
+												let timing;
+												if (event.newStart2) {
+													timing =
+														moment(event.newStart2).format("ddd").toUpperCase() +
+														" " +
+														event.newStart2.slice(11, 16) +
+														" - " +
+														event.newEnd2.slice(11, 16) +
+														" | " +
+														event.duration +
+														" MIN";
+												} else {
+													timing =
+														moment(event.start).format("ddd").toUpperCase() +
+														" " +
+														event.start.slice(11, 16) +
+														" - " +
+														event.end.slice(11, 16) +
+														" | " +
+														event.duration +
+														" MIN";
+												}
+												// let itemBlockStyle;
+												if (event.newStart) {
+													newTiming =
+													event.newStart.slice(11, 16) +
+														" - " +
+														event.newEnd.slice(11, 16) +
+														" | " +
+														event.newDuration +
+														" MIN";
+												}
+								
+												if (!event.isReported) {
+													// itemBlockStyle = this.itemUnreportedBlockStyle(
+													//   item,
+													//   timing
+													// );
+												} else {
+													if (event.isActivityCompleted) {
+														// itemBlockStyle = this.itemCompletedBlockStyle(
+														// 	item,
+														// 	timing
+								
+														// );
+														// itemBlockStyle = "COMPLETE";
+														accDuration += event.duration;
+													} else {
+														if (event.isOtherActivity) {
+														} else {
+															if (event.partialStatus) {
+																if (event.partialStatus === "TIME") {
+																	// itemBlockStyle =
+																	// 	this.itemPartialCompleteStyle_TIME(
+																	// 		item,
+																	// 		timing,
+																	// 		newTiming
+																	// 	);
+																		accDuration += event.newDuration;
+																} else if (event.partialStatus === "ACTIVITY") {
+																	// itemBlockStyle =
+																	// 	this.itemPartialCompleteStyle_ACTIVITY(
+																	// 		item,
+																	// 		timing
+																	// 	);
+																		accDuration += event.duration;
+																} else if (event.partialStatus === "NONE") {
+																	// itemBlockStyle = this.itemUnCompletedBlockStyle(
+																	// 	item,
+																	// 	timing
+																	// );
+																	// accDuration += event.duration;
+																} else {
+																	// itemBlockStyle =
+																	// 	this.itemPartialCompleteStyle_TIME_ACTIVITY(
+																	// 		item,
+																	// 		timing,
+																	// 		newTiming
+																	// 	);
+																	accDuration += event.newDuration;
+																}
+															} else {
+															}
+														}
+													}
+												}
+								
+												// return itemBlockStyle;
 											}
 										}
 										let avgSatisfaction = (
@@ -10231,7 +10460,7 @@ export class TrackingPage extends React.Component {
 																<Text
 																	style={{
 																		fontFamily: "RobotoBoldBlack",
-																		fontSize: 18,
+																		fontSize: 15,
 																		marginBottom: 0,
 																		marginRight: 10,
 
@@ -10250,6 +10479,8 @@ export class TrackingPage extends React.Component {
 																	flexDirection: "column",
 																	justifyContent: "center",
 																	// backgroundColor: "red",
+																	position:"absolute",
+																	right:10,
 																	alignItems: "center",
 																	backgroundColor: "white",
 																	borderRadius: 20,
