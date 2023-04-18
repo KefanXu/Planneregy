@@ -539,8 +539,8 @@ export class MonthCalendar extends React.Component {
                               <View
                                 style={{
                                   width: "100%",
-                                  backgroundColor: item.partialStatus === "NONE" ? BLACK : YELLOW,
-                                  opacity: item.isOtherActivity ? 1 : item.partialStatus === "NONE" ? 1: 0.5,
+                                  backgroundColor: YELLOW,
+                                  opacity: item.isOtherActivity ? 1 : 0.5,
                                   borderRadius: 5,
                                   // flex: 1,
                                   height: 15,
@@ -553,7 +553,6 @@ export class MonthCalendar extends React.Component {
                                     textAlign: "center",
                                     fontSize: 8,
                                     fontWeight: "bold",
-                                    color: item.isOtherActivity ? BLACK : item.partialStatus === "NONE" ? "white": BLACK,
                                   }}
                                 >
                                   {/* {item.start} */}
@@ -601,7 +600,6 @@ export class MonthCalendar extends React.Component {
                                   backgroundColor: BLACK,
                                   borderRadius: 5,
                                   // flex: 1,
-                                  opacity: item.isDeleted ? 0 : 1,
                                   height: 15,
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -757,9 +755,9 @@ export class MonthCalendar extends React.Component {
                               <View
                                 style={{
                                   width: "100%",
-                                  backgroundColor: item.partialStatus === "NONE" ? BLACK : YELLOW,
-                                  opacity: item.isOtherActivity ? 1 : item.partialStatus === "NONE" ? 1: 0.5,
+                                  backgroundColor: YELLOW,
                                   height: 15,
+                                  opacity: item.isOtherActivity ? 1 : 0.5,
                                   alignItems: "center",
                                   justifyContent: "center",
                                   borderRadius: 5,
@@ -771,7 +769,6 @@ export class MonthCalendar extends React.Component {
                                     textAlign: "center",
                                     fontSize: 8,
                                     fontWeight: "bold",
-                                    color: item.isOtherActivity ? BLACK : item.partialStatus === "NONE" ? "white": BLACK,
                                   }}
                                 >
                                   {/* {item.start} */}
@@ -817,7 +814,6 @@ export class MonthCalendar extends React.Component {
                                 style={{
                                   width: "100%",
                                   backgroundColor: BLACK,
-                                  opacity: item.isDeleted ? 0 : 1,
                                   borderRadius: 5,
                                   height: 15,
                                   alignItems: "center",

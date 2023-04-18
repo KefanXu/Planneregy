@@ -14,11 +14,7 @@
         "gradleCommand": ":app:assembleRelease"
       }
     },
-    "production": {
-      "ios": {
-        "cocoapods": "1.11.2"
-      }
-    }
+    "production": {}
   },
   "submit": {
     "production": {}
